@@ -1,119 +1,285 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Send a File</title>
-    <style>
-        :root {
-            --bg: #0f1115;
-            --card: #171a21;
-            --accent: #5b8cff;
-            --accent-hover: #4a76e0;
-            --text: #e8eaed;
-            --muted: #9aa0a6;
-            --border: #2a2e37;
-            --success: #2e7d4f;
-            --error: #b3413e;
-        }
-        * { box-sizing: border-box; }
-        body {
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--bg);
-            color: var(--text);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            padding: 24px;
-        }
-        .card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 32px;
-            width: 100%;
-            max-width: 440px;
-        }
-        h1 {
-            font-size: 22px;
-            margin: 0 0 6px;
-        }
-        p.sub {
-            color: var(--muted);
-            margin: 0 0 24px;
-            font-size: 14px;
-        }
-        .dropzone {
-            border: 2px dashed var(--border);
-            border-radius: 12px;
-            padding: 32px 16px;
-            text-align: center;
-            cursor: pointer;
-            transition: border-color 0.15s, background 0.15s;
-        }
-        .dropzone.dragover {
-            border-color: var(--accent);
-            background: rgba(91, 140, 255, 0.08);
-        }
-        .dropzone svg {
-            margin-bottom: 8px;
-            opacity: 0.7;
-        }
-        .dropzone p {
-            margin: 4px 0;
-            font-size: 14px;
-            color: var(--muted);
-        }
-        #file-input {
-            display: none;
-        }
-        #file-list {
-            margin-top: 12px;
-            font-size: 13px;
-            color: var(--text);
-        }
-        #file-list div {
-            padding: 6px 10px;
-            background: #1e222b;
-            border-radius: 8px;
-            margin-bottom: 6px;
-        }
-        button {
-            width: 100%;
-            margin-top: 20px;
-            padding: 12px;
-            border: none;
-            border-radius: 10px;
-            background: var(--accent);
-            color: white;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.15s;
-        }
-        button:hover { background: var(--accent-hover); }
-        button:disabled { background: #3a3f4a; cursor: not-allowed; }
-        .messages {
-            margin-bottom: 20px;
-        }
-        .messages li {
-            list-style: none;
-            padding: 10px 14px;
-            border-radius: 8px;
-            font-size: 14px;
-            margin-bottom: 8px;
-        }
-        .messages .success { background: rgba(46, 125, 79, 0.2); color: #6fd99a; border: 1px solid var(--success); }
-        .messages .error { background: rgba(179, 65, 62, 0.2); color: #ff9d9a; border: 1px solid var(--error); }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Send a File</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --ink: #12131a;
+        --panel: #1b1e29;
+        --panel-2: #21242f;
+        --paper: #f4ecd8;
+        --paper-line: #d8cba9;
+        --stamp: #cf4520;
+        --stamp-dark: #a8371a;
+        --teal: #4fae8a;
+        --muted: #8890a3;
+        --line: #2b2f3d;
+        --text: #eef0f4;
+    }
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+            radial-gradient(ellipse 900px 500px at 20% -10%, rgba(207,69,32,0.14), transparent 60%),
+            radial-gradient(ellipse 700px 500px at 100% 110%, rgba(79,174,138,0.10), transparent 60%),
+            var(--ink);
+        color: var(--text);
+        font-family: 'Inter', -apple-system, sans-serif;
+        display: flex;
+        justify-content: center;
+        padding: 48px 20px 80px;
+    }
+    .wrap { width: 100%; max-width: 460px; }
+
+    .eyebrow {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 10px;
+        opacity: 0;
+        animation: fadeIn 0.5s ease forwards;
+    }
+    .eyebrow .dot {
+        width: 6px; height: 6px; border-radius: 50%;
+        background: var(--teal);
+        box-shadow: 0 0 0 3px rgba(79,174,138,0.18);
+    }
+
+    h1 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        font-size: 30px;
+        letter-spacing: -0.01em;
+        margin: 0 0 6px;
+        opacity: 0;
+        animation: fadeUp 0.55s ease 0.05s forwards;
+    }
+    p.sub {
+        color: var(--muted);
+        margin: 0 0 28px;
+        font-size: 14.5px;
+        line-height: 1.5;
+        opacity: 0;
+        animation: fadeUp 0.55s ease 0.12s forwards;
+    }
+
+    .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 22px;
+        opacity: 0;
+        animation: fadeUp 0.55s ease 0.18s forwards;
+    }
+
+    .dropzone {
+        position: relative;
+        border: 2px dashed #394057;
+        border-radius: 14px;
+        padding: 36px 16px;
+        text-align: center;
+        cursor: pointer;
+        transition: border-color 0.2s ease, background 0.2s ease, transform 0.15s ease;
+    }
+    .dropzone:hover { border-color: #4a5372; background: rgba(255,255,255,0.015); }
+    .dropzone.dragover {
+        border-color: var(--stamp);
+        background: rgba(207,69,32,0.07);
+        transform: scale(1.01);
+    }
+    .dropzone svg { margin-bottom: 10px; color: #5b6480; transition: color 0.2s ease, transform 0.2s ease; }
+    .dropzone.dragover svg { color: var(--stamp); transform: translateY(-2px); }
+    .dropzone p { margin: 3px 0; font-size: 14px; color: var(--muted); }
+    .dropzone p strong { color: var(--text); font-weight: 500; }
+    #file-input { display: none; }
+
+    #file-list { margin-top: 14px; display: flex; flex-direction: column; gap: 6px; }
+    #file-list div {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 9px 12px;
+        background: var(--panel-2);
+        border-radius: 9px;
+        font-size: 12.5px;
+        font-family: 'JetBrains Mono', monospace;
+        color: #c3c9d6;
+        animation: fadeUp 0.3s ease forwards;
+    }
+    #file-list span.fname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #file-list span.fsize { color: var(--muted); flex-shrink: 0; }
+
+    button.submit {
+        width: 100%;
+        margin-top: 18px;
+        padding: 13px;
+        border: none;
+        border-radius: 11px;
+        background: var(--stamp);
+        color: white;
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+        cursor: pointer;
+        transition: background 0.15s ease, transform 0.1s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+    button.submit:hover:not(:disabled) { background: var(--stamp-dark); transform: translateY(-1px); }
+    button.submit:active:not(:disabled) { transform: translateY(0); }
+    button.submit:disabled { background: #333849; color: #666e83; cursor: not-allowed; }
+
+    .messages { margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px; }
+    .messages li {
+        list-style: none;
+        padding: 11px 14px;
+        border-radius: 10px;
+        font-size: 13.5px;
+        animation: fadeUp 0.4s ease forwards;
+    }
+    .messages .success { background: rgba(79,174,138,0.14); color: #7fd6b3; border: 1px solid rgba(79,174,138,0.35); }
+    .messages .error { background: rgba(207,69,32,0.14); color: #ff9d80; border: 1px solid rgba(207,69,32,0.35); }
+
+    /* --- Sent tickets --- */
+    .tickets-heading {
+        margin: 40px 0 14px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .tickets-heading::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--line);
+    }
+
+    .ticket {
+        position: relative;
+        background: var(--paper);
+        color: #2a2416;
+        border-radius: 12px;
+        padding: 14px 16px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        opacity: 0;
+        transform: translateY(10px);
+        animation: ticketIn 0.5s cubic-bezier(.2,.8,.2,1) forwards;
+        overflow: hidden;
+    }
+    .ticket::before, .ticket::after {
+        content: '';
+        position: absolute;
+        width: 16px; height: 16px;
+        background: var(--ink);
+        border-radius: 50%;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+    .ticket::before { left: -8px; }
+    .ticket::after { right: -8px; }
+
+    .ticket .icon {
+        width: 38px; height: 38px;
+        border-radius: 9px;
+        background: rgba(42,36,22,0.08);
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+        font-size: 17px;
+    }
+    .ticket .meta { flex: 1; min-width: 0; }
+    .ticket .fname {
+        font-weight: 600;
+        font-size: 13.5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .ticket .fsub {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        color: #6b6247;
+        margin-top: 2px;
+    }
+    .ticket .dl {
+        flex-shrink: 0;
+        width: 34px; height: 34px;
+        border-radius: 8px;
+        background: var(--ink);
+        color: var(--paper);
+        display: flex; align-items: center; justify-content: center;
+        text-decoration: none;
+        transition: background 0.15s ease, transform 0.15s ease;
+    }
+    .ticket .dl:hover { background: var(--stamp); transform: scale(1.06); }
+
+    .stamp {
+        position: absolute;
+        top: 8px;
+        right: 14px;
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        color: var(--teal);
+        border: 1.5px solid var(--teal);
+        border-radius: 5px;
+        padding: 2px 7px;
+        transform: rotate(-8deg) scale(0);
+        opacity: 0;
+        animation: stampIn 0.5s cubic-bezier(.34,1.56,.64,1) 0.35s forwards;
+    }
+    .ticket:not(.is-new) .stamp { display: none; }
+
+    .empty-state {
+        text-align: center;
+        padding: 30px 10px;
+        color: var(--muted);
+        font-size: 13px;
+    }
+
+    @keyframes fadeIn { to { opacity: 1; } }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes ticketIn { to { opacity: 1; transform: translateY(0); } }
+    @keyframes stampIn {
+        0% { transform: rotate(-8deg) scale(0); opacity: 0; }
+        60% { transform: rotate(-8deg) scale(1.15); opacity: 1; }
+        100% { transform: rotate(-8deg) scale(1); opacity: 1; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; }
+    }
+</style>
 </head>
 <body>
-    <div class="card">
-        <h1>Send a File</h1>
-        <p class="sub">Choose or drag one or more files below to upload.</p>
+<div class="wrap">
+    <div class="eyebrow"><span class="dot"></span> Drop-off point</div>
+    <h1>Send a File</h1>
+    <p class="sub">Choose or drag files below. They'll land straight in the recipient's inbox — and you'll get a ticket for each one so you can grab it again later.</p>
 
+    <div class="card">
         {% if messages %}
         <ul class="messages">
             {% for message in messages %}
@@ -125,59 +291,88 @@
         <form method="post" enctype="multipart/form-data" id="upload-form">
             {% csrf_token %}
             <div class="dropzone" id="dropzone">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
                     <path d="M12 16V4M12 4l-4 4M12 4l4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
                 <p><strong>Tap to choose files</strong></p>
-                <p>or drag & drop here</p>
+                <p>or drag &amp; drop here</p>
                 <input type="file" name="file" id="file-input" multiple>
             </div>
             <div id="file-list"></div>
-            <button type="submit" id="submit-btn" disabled>Upload</button>
+            <button type="submit" class="submit" id="submit-btn" disabled>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Send
+            </button>
         </form>
     </div>
 
-    <script>
-        const dropzone = document.getElementById('dropzone');
-        const fileInput = document.getElementById('file-input');
-        const fileList = document.getElementById('file-list');
-        const submitBtn = document.getElementById('submit-btn');
+    {% if sent_files %}
+    <div class="tickets-heading">Your sent files</div>
+    {% for f in sent_files %}
+    <div class="ticket {% if f.id in just_uploaded_ids %}is-new{% endif %}">
+        <span class="stamp">SENT ✓</span>
+        <div class="icon">
+            {% if f.kind == 'image' %}🖼️{% elif f.kind == 'pdf' %}📄{% elif f.kind == 'doc' %}📝{% elif f.kind == 'sheet' %}📊{% elif f.kind == 'archive' %}🗜️{% elif f.kind == 'audio' %}🎵{% elif f.kind == 'video' %}🎬{% else %}📦{% endif %}
+        </div>
+        <div class="meta">
+            <div class="fname">{{ f.name }}</div>
+            <div class="fsub">{{ f.size }} · {{ f.uploaded_at }}</div>
+        </div>
+        <a class="dl" href="{{ f.url }}" download title="Download">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 3v12M12 15l-4-4M12 15l4-4M4 19h16" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </a>
+    </div>
+    {% endfor %}
+    {% endif %}
+</div>
 
-        dropzone.addEventListener('click', () => fileInput.click());
+<script>
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('file-input');
+    const fileList = document.getElementById('file-list');
+    const submitBtn = document.getElementById('submit-btn');
 
-        ['dragenter', 'dragover'].forEach(evt =>
-            dropzone.addEventListener(evt, (e) => {
-                e.preventDefault();
-                dropzone.classList.add('dragover');
-            })
-        );
-        ['dragleave', 'drop'].forEach(evt =>
-            dropzone.addEventListener(evt, (e) => {
-                e.preventDefault();
-                dropzone.classList.remove('dragover');
-            })
-        );
-        dropzone.addEventListener('drop', (e) => {
-            fileInput.files = e.dataTransfer.files;
-            renderFileList();
+    dropzone.addEventListener('click', () => fileInput.click());
+
+    ['dragenter', 'dragover'].forEach(evt =>
+        dropzone.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.add('dragover'); })
+    );
+    ['dragleave', 'drop'].forEach(evt =>
+        dropzone.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.remove('dragover'); })
+    );
+    dropzone.addEventListener('drop', (e) => {
+        fileInput.files = e.dataTransfer.files;
+        renderFileList();
+    });
+    fileInput.addEventListener('change', renderFileList);
+
+    function renderFileList() {
+        fileList.innerHTML = '';
+        const files = Array.from(fileInput.files);
+        files.forEach((f, i) => {
+            const div = document.createElement('div');
+            div.style.animationDelay = (i * 0.04) + 's';
+            const name = document.createElement('span');
+            name.className = 'fname';
+            name.textContent = f.name;
+            const size = document.createElement('span');
+            size.className = 'fsize';
+            size.textContent = (f.size / 1024).toFixed(1) + ' KB';
+            div.appendChild(name);
+            div.appendChild(size);
+            fileList.appendChild(div);
         });
-        fileInput.addEventListener('change', renderFileList);
+        submitBtn.disabled = files.length === 0;
+    }
 
-        function renderFileList() {
-            fileList.innerHTML = '';
-            const files = Array.from(fileInput.files);
-            files.forEach(f => {
-                const div = document.createElement('div');
-                div.textContent = `${f.name} (${(f.size / 1024).toFixed(1)} KB)`;
-                fileList.appendChild(div);
-            });
-            submitBtn.disabled = files.length === 0;
-        }
-
-        document.getElementById('upload-form').addEventListener('submit', () => {
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Uploading…';
-        });
-    </script>
+    document.getElementById('upload-form').addEventListener('submit', () => {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = 'Sending…';
+    });
+</script>
 </body>
 </html>
