@@ -1,0 +1,128 @@
+{% extends "frontend/base.html" %}
+{% block title %}Compress JPG — FileForge{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+    <div class="page-header">
+        <div class="icon-badge"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg></div>
+        <h1>Compress JPG</h1>
+        <p>Choose an image and set a target size. We'll get as close to it as possible without you having to guess a quality percentage.</p>
+    </div>
+
+    <div class="card">
+        <form id="tool-form">
+            <div class="dropzone" id="dropzone">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 16V4M12 4l-4 4M12 4l4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <p><strong>Tap to choose an image</strong></p>
+                <p>or drag &amp; drop here</p>
+                <input type="file" id="file-input" class="file-input-hidden" accept="image/*">
+            </div>
+            <div class="file-list" id="file-list"></div>
+
+            <div class="field-row">
+                <label for="target-kb">Target size (KB)</label>
+                <input type="number" id="target-kb" min="5" step="1" value="200" placeholder="e.g. 200">
+            </div>
+
+            <button type="submit" class="action-btn" id="submit-btn" disabled>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>
+                Compress
+            </button>
+        </form>
+
+        <div class="status-box" id="status-box"></div>
+
+        <div class="result-ticket" id="result-ticket">
+            <div class="icon">🖼️</div>
+            <div class="meta">
+                <div class="fname" id="result-name">compressed.jpg</div>
+                <div class="fsub" id="result-sub">Ready to download</div>
+            </div>
+            <a class="dl" id="result-link" download title="Download">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M12 15l-4-4M12 15l4-4M4 19h16" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('file-input');
+    const fileList = document.getElementById('file-list');
+    const submitBtn = document.getElementById('submit-btn');
+    const statusBox = document.getElementById('status-box');
+    const resultTicket = document.getElementById('result-ticket');
+    const resultName = document.getElementById('result-name');
+    const resultSub = document.getElementById('result-sub');
+    const resultLink = document.getElementById('result-link');
+    const targetInput = document.getElementById('target-kb');
+
+    dropzone.addEventListener('click', () => fileInput.click());
+    ['dragenter', 'dragover'].forEach(evt => dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.add('dragover'); }));
+    ['dragleave', 'drop'].forEach(evt => dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.remove('dragover'); }));
+    dropzone.addEventListener('drop', e => { fileInput.files = e.dataTransfer.files; renderFileList(); });
+    fileInput.addEventListener('change', renderFileList);
+
+    function renderFileList() {
+        fileList.innerHTML = '';
+        const files = Array.from(fileInput.files);
+        files.forEach(f => {
+            const div = document.createElement('div');
+            div.innerHTML = `<span class="fname">${f.name}</span><span class="fsize">${(f.size / 1024).toFixed(1)} KB</span>`;
+            fileList.appendChild(div);
+        });
+        submitBtn.disabled = files.length === 0;
+    }
+
+    function showStatus(type, msg) {
+        statusBox.className = 'status-box show ' + type;
+        statusBox.textContent = msg;
+    }
+    function hideStatus() { statusBox.className = 'status-box'; }
+
+    document.getElementById('tool-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        const targetKb = parseInt(targetInput.value, 10);
+        if (!targetKb || targetKb < 5) {
+            showStatus('error', 'Enter a target size of at least 5 KB.');
+            return;
+        }
+
+        hideStatus();
+        resultTicket.classList.remove('show');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner"></span> Compressing…';
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('target_kb', targetKb);
+
+        try {
+            const resp = await fetch('/api/jpg-compress/', { method: 'POST', body: formData });
+            if (!resp.ok) {
+                const err = await resp.json().catch(() => ({ error: 'Something went wrong.' }));
+                showStatus('error', err.error || 'Compression failed.');
+                return;
+            }
+            const blob = await resp.blob();
+            const url = URL.createObjectURL(blob);
+            resultLink.href = url;
+            resultLink.download = 'compressed.jpg';
+            resultName.textContent = 'compressed.jpg';
+            resultSub.textContent = (blob.size / 1024).toFixed(1) + ' KB';
+            resultTicket.classList.add('show');
+            showStatus('success', 'Compressed successfully.');
+        } catch (err) {
+            showStatus('error', 'Network error. Please try again.');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg> Compress';
+        }
+    });
+</script>
+{% endblock %}

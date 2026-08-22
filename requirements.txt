@@ -1,3 +1,8 @@
 Django==5.0.6
 whitenoise==6.6.0
 gunicorn==22.0.0
+PyMuPDF==1.28.2
+Pillow==12.1.1
+img2pdf==0.6.3
+pdf2docx==0.5.13
+python-docx==1.2.0

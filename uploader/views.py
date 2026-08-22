@@ -43,7 +43,7 @@ def upload_view(request):
 
         if not files:
             messages.error(request, "Please choose at least one file first.")
-            return redirect("upload")
+            return redirect("send_file_page")
 
         too_big = [f.name for f in files if f.size > settings.MAX_UPLOAD_SIZE]
         if too_big:
@@ -81,7 +81,7 @@ def upload_view(request):
 
         if files:
             messages.success(request, f"Sent {len(files)} file(s) successfully.")
-        return redirect("upload")
+        return redirect("send_file_page")
 
     history = request.session.get(SESSION_KEY, [])
     # Pop (read + clear) so the stamp only animates once, right after upload.
@@ -93,5 +93,6 @@ def upload_view(request):
         {
             "sent_files": history,
             "just_uploaded_ids": just_uploaded_ids,
+            "active": "send",
         },
     )
