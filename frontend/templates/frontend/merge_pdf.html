@@ -1,0 +1,130 @@
+{% extends "frontend/base.html" %}
+{% block title %}Merge PDF — FileForge{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+    <div class="page-header">
+        <div class="icon-badge"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="18" rx="1"/><rect x="13" y="3" width="8" height="18" rx="1"/><path d="M11 12h2"/></svg></div>
+        <h1>Merge PDF</h1>
+        <p>Choose two or more PDFs. They'll be combined into one file, in the order you select them below.</p>
+    </div>
+
+    <div class="card">
+        <form id="tool-form">
+            <div class="dropzone" id="dropzone">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 16V4M12 4l-4 4M12 4l4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <p><strong>Tap to choose PDFs</strong></p>
+                <p>or drag &amp; drop here (2 or more files)</p>
+                <input type="file" id="file-input" class="file-input-hidden" accept="application/pdf" multiple>
+            </div>
+            <div class="file-list" id="file-list"></div>
+
+            <button type="submit" class="action-btn" id="submit-btn" disabled>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Merge PDFs
+            </button>
+        </form>
+
+        <div class="status-box" id="status-box"></div>
+
+        <div class="result-ticket" id="result-ticket">
+            <div class="icon">📄</div>
+            <div class="meta">
+                <div class="fname" id="result-name">merged.pdf</div>
+                <div class="fsub">Ready to download</div>
+            </div>
+            <a class="dl" id="result-link" download title="Download">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M12 15l-4-4M12 15l4-4M4 19h16" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('file-input');
+    const fileList = document.getElementById('file-list');
+    const submitBtn = document.getElementById('submit-btn');
+    const statusBox = document.getElementById('status-box');
+    const resultTicket = document.getElementById('result-ticket');
+    const resultName = document.getElementById('result-name');
+    const resultLink = document.getElementById('result-link');
+
+    let selectedFiles = [];
+
+    dropzone.addEventListener('click', () => fileInput.click());
+    ['dragenter', 'dragover'].forEach(evt => dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.add('dragover'); }));
+    ['dragleave', 'drop'].forEach(evt => dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.remove('dragover'); }));
+    dropzone.addEventListener('drop', e => { addFiles(e.dataTransfer.files); });
+    fileInput.addEventListener('change', () => { addFiles(fileInput.files); fileInput.value = ''; });
+
+    function addFiles(fileListObj) {
+        for (const f of fileListObj) selectedFiles.push(f);
+        renderFileList();
+    }
+
+    function removeFile(index) {
+        selectedFiles.splice(index, 1);
+        renderFileList();
+    }
+
+    function renderFileList() {
+        fileList.innerHTML = '';
+        selectedFiles.forEach((f, i) => {
+            const div = document.createElement('div');
+            div.innerHTML = `<span class="fname">${i + 1}. ${f.name}</span><span class="fsize">${(f.size / 1024).toFixed(1)} KB</span>`;
+            const removeBtn = document.createElement('span');
+            removeBtn.textContent = ' ✕';
+            removeBtn.style.cursor = 'pointer';
+            removeBtn.style.marginLeft = '8px';
+            removeBtn.style.color = '#ff9d80';
+            removeBtn.addEventListener('click', () => removeFile(i));
+            div.appendChild(removeBtn);
+            fileList.appendChild(div);
+        });
+        submitBtn.disabled = selectedFiles.length < 2;
+    }
+
+    function showStatus(type, msg) {
+        statusBox.className = 'status-box show ' + type;
+        statusBox.textContent = msg;
+    }
+    function hideStatus() { statusBox.className = 'status-box'; }
+
+    document.getElementById('tool-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (selectedFiles.length < 2) return;
+
+        hideStatus();
+        resultTicket.classList.remove('show');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner"></span> Merging…';
+
+        const formData = new FormData();
+        selectedFiles.forEach(f => formData.append('files', f));
+
+        try {
+            const resp = await fetch('/api/merge-pdf/', { method: 'POST', body: formData });
+            if (!resp.ok) {
+                const err = await resp.json().catch(() => ({ error: 'Something went wrong.' }));
+                showStatus('error', err.error || 'Merge failed.');
+                return;
+            }
+            const blob = await resp.blob();
+            const url = URL.createObjectURL(blob);
+            resultLink.href = url;
+            resultLink.download = 'merged.pdf';
+            resultName.textContent = 'merged.pdf';
+            resultTicket.classList.add('show');
+            showStatus('success', 'Merged successfully.');
+        } catch (err) {
+            showStatus('error', 'Network error. Please try again.');
+        } finally {
+            submitBtn.disabled = selectedFiles.length < 2;
+            submitBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke-linecap="round" stroke-linejoin="round"/></svg> Merge PDFs';
+        }
+    });
+</script>
+{% endblock %}

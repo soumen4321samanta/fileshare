@@ -28,11 +28,13 @@
     <nav class="site-nav" id="site-nav">
         <a href="{% url 'home' %}" class="{% if active == 'home' %}active{% endif %}">Home</a>
         <a href="{% url 'send_file_page' %}" class="{% if active == 'send' %}active{% endif %}">Send a file</a>
-        <a href="{% url 'jpg-to-pdf' %}" class="{% if active == 'jpg_to_pdf' %}active{% endif %}">JPG → PDF</a>
-        <a href="{% url 'pdf-to-jpg' %}" class="{% if active == 'pdf_to_jpg' %}active{% endif %}">PDF → JPG</a>
-        <a href="{% url 'jpg-compress-page' %}" class="{% if active == 'jpg_compress' %}active{% endif %}">Compress JPG</a>
-        <a href="{% url 'pdf-compress-page' %}" class="{% if active == 'pdf_compress' %}active{% endif %}">Compress PDF</a>
-        <a href="{% url 'pdf-to-word' %}" class="{% if active == 'pdf_to_word' %}active{% endif %}">PDF → Word</a>
+        <a href="{% url 'jpg_to_pdf' %}" class="{% if active == 'jpg_to_pdf' %}active{% endif %}">JPG → PDF</a>
+        <a href="{% url 'pdf_to_jpg' %}" class="{% if active == 'pdf_to_jpg' %}active{% endif %}">PDF → JPG</a>
+    
+        <a href="{% url 'jpg_compress' %}" class="{% if active == 'jpg_compress' %}active{% endif %}">Compress JPG</a>
+        <a href="{% url 'pdf_compress' %}" class="{% if active == 'pdf_compress' %}active{% endif %}">Compress PDF</a>
+        <a href="{% url 'merge_pdf' %}" class="{% if active == 'merge_pdf' %}active{% endif %}">Merge PDF</a>
+        <a href="{% url 'pdf_to_word' %}" class="{% if active == 'pdf_to_word' %}active{% endif %}">PDF → Word</a>
         <a href="#" class="soon">Word → PDF (soon)</a>
     </nav>
 </header>

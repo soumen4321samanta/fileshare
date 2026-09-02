@@ -16,6 +16,73 @@ def _error(message, status=400):
     return JsonResponse({"error": message}, status=status)
 
 
+def _repair_missing_docx_styles(docx_bytes):
+    """pdf2docx sometimes references a paragraph/character/table style (most
+    commonly 'Hyperlink', when the source PDF has clickable links) without
+    actually defining it in styles.xml. LibreOffice/Google Docs tolerate
+    this silently, but Microsoft Word's stricter validator refuses to open
+    the file at all ("problems with the contents"). This patches in a
+    definition for any referenced-but-missing style so Word opens it fine.
+    """
+    from lxml import etree
+
+    W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
+    ns = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
+
+    zin = zipfile.ZipFile(io.BytesIO(docx_bytes))
+    names = zin.namelist()
+    data = {n: zin.read(n) for n in names}
+
+    if "word/styles.xml" not in data or "word/document.xml" not in data:
+        return docx_bytes
+
+    styles_root = etree.fromstring(data["word/styles.xml"])
+    defined = set(s.get(W + "styleId") for s in styles_root.findall("w:style", ns))
+
+    doc_root = etree.fromstring(data["word/document.xml"])
+    tag_to_type = {"pStyle": "paragraph", "rStyle": "character", "tblStyle": "table"}
+    missing = {}
+    for tag, style_type in tag_to_type.items():
+        for el in doc_root.findall(f".//w:{tag}", ns):
+            style_id = el.get(W + "val")
+            if style_id and style_id not in defined:
+                missing[style_id] = style_type
+
+    if not missing:
+        return docx_bytes
+
+    known = {
+        "Hyperlink": (
+            '<w:style w:type="character" w:styleId="Hyperlink">'
+            '<w:name w:val="Hyperlink"/><w:basedOn w:val="DefaultParagraphFont"/>'
+            '<w:uiPriority w:val="99"/><w:unhideWhenUsed/>'
+            '<w:rPr><w:color w:val="0563C1" w:themeColor="hyperlink"/><w:u w:val="single"/></w:rPr>'
+            "</w:style>"
+        ),
+    }
+
+    styles_str = data["word/styles.xml"].decode("utf-8")
+    injected = []
+    for style_id, style_type in missing.items():
+        if style_id in known:
+            injected.append(known[style_id])
+        else:
+            injected.append(
+                f'<w:style w:type="{style_type}" w:styleId="{style_id}">'
+                f'<w:name w:val="{style_id}"/></w:style>'
+            )
+    styles_str = styles_str.replace("</w:styles>", "".join(injected) + "</w:styles>")
+    data["word/styles.xml"] = styles_str.encode("utf-8")
+
+    out = io.BytesIO()
+    with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as zout:
+        for name, content in data.items():
+            zout.writestr(name, content)
+    return out.getvalue()
+
+
+
+
 # ---------------------------------------------------------------------------
 # JPG -> PDF
 # ---------------------------------------------------------------------------
@@ -325,6 +392,15 @@ def pdf_to_word(request):
 
         with open(tmp_docx_path, "rb") as docx_file:
             docx_bytes = docx_file.read()
+
+        docx_bytes = _repair_missing_docx_styles(docx_bytes)
+
+        # Sanity-check the file is actually a valid, openable .docx before
+        # sending it back - pdf2docx can occasionally produce a file that
+        # "succeeds" with no exception but is malformed enough that Word
+        # refuses to open it. Catching that here means the person gets a
+        # clear error instead of a file that looks fine but is broken.
+        DocxDocument(io.BytesIO(docx_bytes))
     except Exception:
         return _error(
             "Could not produce a valid Word file from this PDF. This can "
@@ -344,4 +420,47 @@ def pdf_to_word(request):
         as_attachment=True,
         filename="converted.docx",
         content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    )
+
+
+
+# ---------------------------------------------------------------------------
+# Merge PDF (combine multiple PDFs into one, in the order they're given)
+# ---------------------------------------------------------------------------
+@csrf_exempt
+@require_POST
+def merge_pdf(request):
+    files = request.FILES.getlist("files")
+    if len(files) < 2:
+        return _error("Please attach at least two PDF files to merge.")
+
+    total_size = sum(f.size for f in files)
+    if total_size > MAX_UPLOAD_SIZE:
+        return _error("Combined file size is over the 25MB limit.")
+
+    merged = pymupdf.open()
+    try:
+        for f in files:
+            src = pymupdf.open(stream=f.read(), filetype="pdf")
+            merged.insert_pdf(src)
+            src.close()
+    except Exception:
+        merged.close()
+        return _error(
+            "Could not merge these files - make sure every file is a valid PDF."
+        )
+
+    if merged.page_count == 0:
+        merged.close()
+        return _error("The merged PDF has no pages.")
+
+    out_buf = io.BytesIO()
+    merged.save(out_buf)
+    merged.close()
+
+    return FileResponse(
+        io.BytesIO(out_buf.getvalue()),
+        as_attachment=True,
+        filename="merged.pdf",
+        content_type="application/pdf",
     )

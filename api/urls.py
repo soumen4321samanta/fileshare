@@ -8,4 +8,5 @@ urlpatterns = [
     path("jpg-compress/", views.jpg_compress, name="api_jpg_compress"),
     path("pdf-compress/", views.pdf_compress, name="api_pdf_compress"),
     path("pdf-to-word/", views.pdf_to_word, name="api_pdf_to_word"),
+    path("merge-pdf/", views.merge_pdf, name="api_merge_pdf"),
 ]
