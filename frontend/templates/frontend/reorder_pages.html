@@ -1,0 +1,248 @@
+{% extends "frontend/base.html" %}
+{% block title %}Reorder PDF Pages — FileForge{% endblock %}
+
+{% block extra_head %}
+<style>
+    .page-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+        gap: 10px;
+        margin-top: 16px;
+    }
+    .page-item {
+        position: relative;
+        border-radius: 9px;
+        overflow: hidden;
+        border: 2px solid var(--line);
+        background: var(--panel-2);
+        cursor: grab;
+        transition: border-color 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
+    }
+    .page-item img { width: 100%; display: block; pointer-events: none; }
+    .page-item .page-num {
+        position: absolute; bottom: 4px; left: 5px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px; background: rgba(0,0,0,0.65); color: white;
+        padding: 1px 6px; border-radius: 5px;
+    }
+    .page-item .orig-badge {
+        position: absolute; top: 4px; right: 4px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 9px; background: rgba(79,174,138,0.85); color: white;
+        padding: 1px 5px; border-radius: 5px;
+    }
+    .page-item .move-btns {
+        position: absolute; top: 4px; left: 4px;
+        display: flex; flex-direction: column; gap: 2px;
+    }
+    .page-item .move-btns button {
+        width: 19px; height: 17px; border: none; border-radius: 4px;
+        background: rgba(18,19,26,0.75); color: white; cursor: pointer;
+        font-size: 10px; line-height: 1; display: flex; align-items: center; justify-content: center;
+        transition: background 0.15s ease;
+    }
+    .page-item .move-btns button:hover { background: var(--stamp); }
+    .page-item .move-btns button:disabled { opacity: 0.25; cursor: not-allowed; }
+    .page-item.dragging { opacity: 0.4; }
+    .page-item.drag-over { border-color: var(--stamp); transform: scale(1.03); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+    <div class="page-header">
+        <div class="icon-badge"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></div>
+        <h1>Reorder PDF Pages</h1>
+        <p>Choose a PDF. Drag pages on desktop, or use the ▲▼ buttons (works everywhere, including phones) to set the new order.</p>
+    </div>
+
+    <div class="card">
+        <div class="dropzone" id="dropzone">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 16V4M12 4l-4 4M12 4l4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <p><strong>Tap to choose a PDF</strong></p>
+            <p>or drag &amp; drop here</p>
+            <input type="file" id="file-input" class="file-input-hidden" accept="application/pdf">
+        </div>
+
+        <div class="status-box" id="loading-box"></div>
+        <div class="page-grid" id="page-grid"></div>
+        <div class="status-box" id="status-box"></div>
+
+        <button type="button" class="action-btn" id="submit-btn" disabled>Save New Order</button>
+
+        <div class="result-ticket" id="result-ticket">
+            <div class="icon">📄</div>
+            <div class="meta">
+                <div class="fname" id="result-name">reordered.pdf</div>
+                <div class="fsub">Ready to download</div>
+            </div>
+            <a class="dl" id="result-link" download title="Download">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M12 15l-4-4M12 15l4-4M4 19h16" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('file-input');
+    const loadingBox = document.getElementById('loading-box');
+    const pageGrid = document.getElementById('page-grid');
+    const statusBox = document.getElementById('status-box');
+    const submitBtn = document.getElementById('submit-btn');
+    const resultTicket = document.getElementById('result-ticket');
+    const resultName = document.getElementById('result-name');
+    const resultLink = document.getElementById('result-link');
+
+    let selectedFile = null;
+    let draggedEl = null;
+
+    dropzone.addEventListener('click', () => fileInput.click());
+    ['dragenter', 'dragover'].forEach(evt => dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.add('dragover'); }));
+    ['dragleave', 'drop'].forEach(evt => dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.remove('dragover'); }));
+    dropzone.addEventListener('drop', e => { handleFile(e.dataTransfer.files[0]); });
+    fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
+
+    async function handleFile(file) {
+        if (!file) return;
+        selectedFile = file;
+        pageGrid.innerHTML = '';
+        resultTicket.classList.remove('show');
+        statusBox.className = 'status-box';
+        submitBtn.disabled = true;
+
+        loadingBox.className = 'status-box show info';
+        loadingBox.textContent = 'Loading page previews…';
+
+        const formData = new FormData();
+        formData.append('file', file);
+        try {
+            const resp = await fetch('/api/pdf-thumbnails/', { method: 'POST', body: formData });
+            const data = await resp.json();
+            if (!resp.ok) {
+                loadingBox.className = 'status-box show error';
+                loadingBox.textContent = data.error || 'Could not load previews.';
+                return;
+            }
+            loadingBox.className = 'status-box';
+            renderGrid(data.pages);
+            submitBtn.disabled = false;
+        } catch (err) {
+            loadingBox.className = 'status-box show error';
+            loadingBox.textContent = 'Network error loading previews.';
+        }
+    }
+
+    function renderGrid(pages) {
+        pageGrid.innerHTML = '';
+        pages.forEach(p => {
+            const div = document.createElement('div');
+            div.className = 'page-item';
+            div.draggable = true;
+            div.dataset.origPage = p.page;
+            div.innerHTML = `
+                <img src="${p.thumbnail}" alt="Page ${p.page}">
+                <span class="orig-badge">was ${p.page}</span>
+                <div class="move-btns">
+                    <button type="button" class="move-up" title="Move earlier">▲</button>
+                    <button type="button" class="move-down" title="Move later">▼</button>
+                </div>
+                <span class="page-num"></span>
+            `;
+            div.querySelector('.move-up').addEventListener('click', (e) => {
+                e.stopPropagation();
+                const prev = div.previousElementSibling;
+                if (prev) { pageGrid.insertBefore(div, prev); renumber(); }
+            });
+            div.querySelector('.move-down').addEventListener('click', (e) => {
+                e.stopPropagation();
+                const next = div.nextElementSibling;
+                if (next) { pageGrid.insertBefore(next, div); renumber(); }
+            });
+            attachDragHandlers(div);
+            pageGrid.appendChild(div);
+        });
+        renumber();
+    }
+
+    function attachDragHandlers(el) {
+        el.addEventListener('dragstart', (e) => {
+            draggedEl = el;
+            el.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        el.addEventListener('dragend', () => {
+            el.classList.remove('dragging');
+            draggedEl = null;
+            document.querySelectorAll('.page-item').forEach(x => x.classList.remove('drag-over'));
+        });
+        el.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            if (el !== draggedEl) el.classList.add('drag-over');
+        });
+        el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
+        el.addEventListener('drop', (e) => {
+            e.preventDefault();
+            el.classList.remove('drag-over');
+            if (!draggedEl || draggedEl === el) return;
+            const items = Array.from(pageGrid.children);
+            const draggedIdx = items.indexOf(draggedEl);
+            const targetIdx = items.indexOf(el);
+            if (draggedIdx < targetIdx) {
+                el.after(draggedEl);
+            } else {
+                el.before(draggedEl);
+            }
+            renumber();
+        });
+    }
+
+    function renumber() {
+        Array.from(pageGrid.children).forEach((el, i) => {
+            el.querySelector('.page-num').textContent = i + 1;
+        });
+    }
+
+    function getCurrentOrder() {
+        return Array.from(pageGrid.children).map(el => el.dataset.origPage);
+    }
+
+    submitBtn.addEventListener('click', async () => {
+        if (!selectedFile) return;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner"></span> Saving…';
+        statusBox.className = 'status-box';
+
+        const orderStr = getCurrentOrder().join(',');
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        formData.append('order', orderStr);
+
+        try {
+            const resp = await fetch('/api/pdf-reorder-pages/', { method: 'POST', body: formData });
+            if (!resp.ok) {
+                const err = await resp.json().catch(() => ({ error: 'Reorder failed.' }));
+                statusBox.className = 'status-box show error';
+                statusBox.textContent = err.error || 'Reorder failed.';
+                return;
+            }
+            const blob = await resp.blob();
+            const url = URL.createObjectURL(blob);
+            resultLink.href = url;
+            resultLink.download = 'reordered.pdf';
+            resultName.textContent = 'reordered.pdf';
+            resultTicket.classList.add('show');
+            statusBox.className = 'status-box show success';
+            statusBox.textContent = 'New order saved.';
+        } catch (err) {
+            statusBox.className = 'status-box show error';
+            statusBox.textContent = 'Network error. Please try again.';
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Save New Order';
+        }
+    });
+</script>
+{% endblock %}

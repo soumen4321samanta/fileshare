@@ -31,3 +31,7 @@ def merge_pdf_page(request):
 
 def pdf_delete_pages_page(request):
     return render(request, "frontend/pdf_delete_pages.html", {"active": "pdf_delete_pages"})
+
+
+def reorder_pages_page(request):
+    return render(request,"frontend/reorder_pages.html",{"active":"reorder_pages"})

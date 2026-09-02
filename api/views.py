@@ -604,3 +604,50 @@ def pdf_thumbnails(request):
     doc.close()
 
     return JsonResponse({"pages": pages, "total": len(pages)})
+
+
+
+
+
+
+@csrf_exempt
+@require_POST
+def pdf_reorder_pages(request):
+    f=request.FILES.get("file")
+    order_spec=request.POST.get("order","")
+
+    if not f:
+        return _error("Please attach a PDF file.")
+    if f.size>MAX_UPLOAD_SIZE:
+        return _error("File is over the 25MB Limit.")
+    if not order_spec.strip():
+        return _error("Please provide the new page order.")
+
+    try:
+        doc=pymupdf.open(stream=f.read(),filetype="pdf")
+    except Exception:
+        return _error("Could not open this file as a PDF.")
+
+    total_pages=doc.page_count
+
+    try:
+        order=[int(x.strip()) for x in order_spec.split(",") if x.strip()]
+    except ValueError:
+        doc.close()
+        return _error("Invalid page Order.")
+
+    if sorted(order)!= list(range(1,total_pages + 1)):
+        doc.close()
+        return _error("The new order must include every page exactly one.")
+    zero_indexed=[p - 1 for p in order ]
+    doc.select(zero_indexed)
+    out_buf=io.BytesIO()
+    doc.save(out_buf)
+    doc.close()
+
+    return FileResponse(
+        io.BytesIO(out_buf.getvalue()),
+        as_attachment=True,
+        filename="reordered.pdf",
+        content_type="application/pdf",
+    )
