@@ -464,3 +464,143 @@ def merge_pdf(request):
         filename="merged.pdf",
         content_type="application/pdf",
     )
+
+
+# ---------------------------------------------------------------------------
+# Delete pages from a PDF
+# ---------------------------------------------------------------------------
+def _parse_page_spec(spec, total_pages):
+    """Parse a spec like '2,4-6' (1-indexed, as shown to the person) into a
+    set of 0-indexed page numbers. Out-of-range numbers are silently
+    ignored; malformed text raises ValueError."""
+
+    result=set()
+    parts=[p.strip() for p in spec.split(",") if p.strip()]
+
+    if not parts:
+        raise ValueError("empty")
+    for part in parts:
+        if "-" in part:
+            start_str,end_str=part.split("-",1)
+            start,end=int(start_str),int(end_str)
+            if start>end:
+                start,end=end,start
+            for p in range(start,end+1):
+                if 1<= p <= total_pages:
+                    result.add(p-1)
+        else:
+            p=int(part)
+            if 1<= p <= total_pages:
+                result.add(p-1)
+    return result
+
+@csrf_exempt
+@require_POST
+def pdf_delete_pages(request):
+    f=request.FILES.get("file")
+    pages_spec=request.POST.get("pages","")
+
+    if not f:
+        return _error("Please attach a PDF file.")
+    if f.size>MAX_UPLOAD_SIZE:
+        return _error("File is over the 25MB Limit.")
+
+    if not pages_spec.strip():
+        return _error("Please enter which page(s) to delete, e.g. '2,4-6")
+    try:
+        doc=pymupdf.open(stream=f.read(),filetype="pdf")
+    except Exception:
+        return _error("Could not open this file as a PDF.")
+
+    total_pages=doc.page_count
+    try:
+        to_delete=_parse_page_spec(pages_spec,total_pages)
+    except ValueError:
+        doc.close()
+        return _error("Could not parse the page specification. Use a format like '2,4-6'.")
+
+    if not to_delete:
+        doc.close()
+        return _error("No valid pages to delete were specified.")
+    keep = [i for i in range(total_pages) if i not in to_delete]
+
+    if not keep:
+        doc.close()
+        return _error("Cannot delete all pages - at least one page must remain.")
+
+    doc.select(keep)
+    out_buf=io.BytesIO()
+    doc.save(out_buf)
+    doc.close()
+
+    return FileResponse(
+        io.BytesIO(out_buf.getvalue()),
+        as_attachment=True,
+        filename="edited.pdf",
+        content_type="application/pdf",
+    )
+
+
+@csrf_exempt
+@require_POST
+def pdf_page_count(request):
+    """Small helper the frontend calls right after a file is selected, so
+    it can show 'This PDF has N pages' before the person types which ones
+    to delete."""
+    f = request.FILES.get("file")
+    if not f:
+        return _error("Please attach a PDF file.")
+    try:
+        doc = pymupdf.open(stream=f.read(), filetype="pdf")
+        count = doc.page_count
+        doc.close()
+    except Exception:
+        return _error("Could not open this file as a PDF.")
+    return JsonResponse({"pages": count})
+
+
+
+
+MAX_THUMB_PAGES = 60
+
+
+@csrf_exempt
+@require_POST
+def pdf_thumbnails(request):
+    """Renders every page as a small JPEG thumbnail (base64 data URI) so the
+    frontend can show a visual page picker instead of asking for typed page
+    numbers."""
+    f = request.FILES.get("file")
+    if not f:
+        return _error("Please attach a PDF file.")
+    if f.size > MAX_UPLOAD_SIZE:
+        return _error("File is over the 25MB limit.")
+
+    try:
+        doc = pymupdf.open(stream=f.read(), filetype="pdf")
+    except Exception:
+        return _error("Could not open this file as a PDF.")
+
+    if doc.page_count == 0:
+        doc.close()
+        return _error("This PDF has no pages.")
+
+    if doc.page_count > MAX_THUMB_PAGES:
+        total_pages = doc.page_count
+        doc.close()
+        return _error(
+            f"This PDF has {total_pages} pages - previews are limited to "
+            f"{MAX_THUMB_PAGES} pages to keep things fast."
+        )
+
+    import base64
+
+    pages = []
+    for i, page in enumerate(doc):
+        pix = page.get_pixmap(dpi=60)
+        img_bytes = pix.tobytes("jpg")
+        b64 = base64.b64encode(img_bytes).decode("ascii")
+        pages.append({"page": i + 1, "thumbnail": f"data:image/jpeg;base64,{b64}"})
+    doc.close()
+
+    return JsonResponse({"pages": pages, "total": len(pages)})

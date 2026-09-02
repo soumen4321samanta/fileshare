@@ -10,4 +10,6 @@ urlpatterns = [
     path("pdf-compress/", views.pdf_compress_page, name="pdf_compress"),
     path("pdf-to-word/", views.pdf_to_word_page, name="pdf_to_word"),
     path("merge-pdf/", views.merge_pdf_page, name="merge_pdf"),
+    path("pdf-delete-pages/", views.pdf_delete_pages_page, name="pdf_delete_pages_page"),
+
 ]

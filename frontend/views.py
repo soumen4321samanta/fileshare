@@ -27,3 +27,7 @@ def pdf_to_word_page(request):
 
 def merge_pdf_page(request):
     return render(request, "frontend/merge_pdf.html", {"active": "merge_pdf"})
+
+
+def pdf_delete_pages_page(request):
+    return render(request, "frontend/pdf_delete_pages.html", {"active": "pdf_delete_pages"})
