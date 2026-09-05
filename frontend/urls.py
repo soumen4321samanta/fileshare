@@ -12,4 +12,6 @@ urlpatterns = [
     path("merge-pdf/", views.merge_pdf_page, name="merge_pdf"),
     path("pdf-delete-pages/", views.pdf_delete_pages_page, name="pdf_delete_pages_page"),
     path("reorder-pages/",views.reorder_pages_page,name="reorder_pages_page"),
+    path("rotate-pages/",views.rotate_pages_page,name="rotate_pages_page"),
+    path("ocr/",views.ocr_page,name="ocr_page"),
 ]

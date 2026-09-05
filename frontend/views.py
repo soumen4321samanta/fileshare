@@ -35,3 +35,11 @@ def pdf_delete_pages_page(request):
 
 def reorder_pages_page(request):
     return render(request,"frontend/reorder_pages.html",{"active":"reorder_pages"})
+
+
+def rotate_pages_page(request):
+    return render(request,"frontend/rotate_pages.html",{"active":"rotate_pages"})
+
+
+def ocr_page(request):
+    return render(request,"frontend/ocr.html",{"active":"ocr"})

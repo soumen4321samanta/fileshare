@@ -13,4 +13,6 @@ urlpatterns = [
     path("pdf-page-count/", views.pdf_page_count, name="api_pdf_page_count"),
     path("pdf-thumbnails/", views.pdf_thumbnails, name="api_pdf_thumbnails"),
     path("pdf-reorder-pages/",views.pdf_reorder_pages,name="api_pdf_reorder_pages"),
+    path("pdf-rotate-pages/",views.pdf_rotate_pages,name="api_pdf_rotate_pages"),
+    path("pdf-ocr/",views.pdf_ocr,name="api_pdf_ocr"),
 ]

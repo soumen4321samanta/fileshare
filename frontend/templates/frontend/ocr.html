@@ -1,0 +1,105 @@
+{% extends "frontend/base.html" %}
+{% block title %}OCR — Make PDF Searchable — FileForge{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+    <div class="page-header">
+        <div class="icon-badge"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4a1 1 0 011-1h3M20 7V4a1 1 0 00-1-1h-3M4 17v3a1 1 0 001 1h3M20 17v3a1 1 0 01-1 1h-3M9 9h6M9 13h4"/></svg></div>
+        <h1>OCR — Make PDF Searchable</h1>
+        <p>Choose a scanned or photo-based PDF. We'll read the text on every page and make it selectable, searchable, and copyable — the page will look exactly the same.</p>
+    </div>
+
+    <div class="card">
+        <div class="dropzone" id="dropzone">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 16V4M12 4l-4 4M12 4l4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <p><strong>Tap to choose a PDF</strong></p>
+            <p>or drag &amp; drop here</p>
+            <input type="file" id="file-input" class="file-input-hidden" accept="application/pdf">
+        </div>
+        <div class="file-list" id="file-list"></div>
+
+        <button type="button" class="action-btn" id="submit-btn" disabled>Run OCR</button>
+
+        <div class="status-box" id="status-box"></div>
+
+        <div class="result-ticket" id="result-ticket">
+            <div class="icon">📄</div>
+            <div class="meta">
+                <div class="fname" id="result-name">searchable.pdf</div>
+                <div class="fsub">Ready to download</div>
+            </div>
+            <a class="dl" id="result-link" download title="Download">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M12 15l-4-4M12 15l4-4M4 19h16" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('file-input');
+    const fileList = document.getElementById('file-list');
+    const submitBtn = document.getElementById('submit-btn');
+    const statusBox = document.getElementById('status-box');
+    const resultTicket = document.getElementById('result-ticket');
+    const resultName = document.getElementById('result-name');
+    const resultLink = document.getElementById('result-link');
+
+    let selectedFile = null;
+
+    dropzone.addEventListener('click', () => fileInput.click());
+    ['dragenter', 'dragover'].forEach(evt => dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.add('dragover'); }));
+    ['dragleave', 'drop'].forEach(evt => dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.remove('dragover'); }));
+    dropzone.addEventListener('drop', e => { handleFile(e.dataTransfer.files[0]); });
+    fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
+
+    function handleFile(file) {
+        if (!file) return;
+        selectedFile = file;
+        fileList.innerHTML = `<div><span class="fname">${file.name}</span><span class="fsize">${(file.size / 1024).toFixed(1)} KB</span></div>`;
+        submitBtn.disabled = false;
+    }
+
+    function showStatus(type, msg) {
+        statusBox.className = 'status-box show ' + type;
+        statusBox.textContent = msg;
+    }
+    function hideStatus() { statusBox.className = 'status-box'; }
+
+    submitBtn.addEventListener('click', async () => {
+        if (!selectedFile) return;
+        hideStatus();
+        resultTicket.classList.remove('show');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner"></span> Reading text… this can take a moment';
+
+        const t0 = performance.now();
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+
+        try {
+            const resp = await fetch('/api/pdf-ocr/', { method: 'POST', body: formData });
+            const elapsed = ((performance.now() - t0) / 1000).toFixed(1);
+            if (!resp.ok) {
+                const err = await resp.json().catch(() => ({ error: 'OCR failed.' }));
+                showStatus('error', err.error || 'OCR failed.');
+                return;
+            }
+            const blob = await resp.blob();
+            const url = URL.createObjectURL(blob);
+            resultLink.href = url;
+            resultLink.download = 'searchable.pdf';
+            resultName.textContent = 'searchable.pdf';
+            resultTicket.classList.add('show');
+            showStatus('success', `Done in ${elapsed}s — text is now selectable and searchable.`);
+        } catch (err) {
+            showStatus('error', 'Network error. Please try again.');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Run OCR';
+        }
+    });
+</script>
+{% endblock %}

@@ -651,3 +651,121 @@ def pdf_reorder_pages(request):
         filename="reordered.pdf",
         content_type="application/pdf",
     )
+
+
+
+@csrf_exempt
+@require_POST
+def pdf_rotate_pages(request):
+    f=request.FILES.get("file")
+    angles_spec=request.POST.get("angles","")
+
+    if not f:
+        return _error("Please attach a PDF file.")
+    if f.size>MAX_UPLOAD_SIZE:
+        return _error("File is over the 25MB limit.")
+    if not angles_spec.strip():
+        return _error("Please Provide rotation angles for each page,")
+
+    try:
+        doc=pymupdf.open(stream=f.read(),filetype="pdf")
+    except Exception:
+        return _error("Could not open the file as a PDF.")
+
+    total_pages=doc.page_count
+
+    try:
+        angles=[int(x.strip()) for x in angles_spec.split(",")]
+    except ValueError:
+        doc.close()
+        return _error("Invalid rotation angles.")
+
+    if len(angles)!=total_pages:
+        doc.close()
+        return _error("Rotation data doesn't match the number of pages.")
+
+    if any(a not in (0,90,180,270) for a in angles):
+        doc.close()
+        return _error("Angles must be 0,90,180 or 270 degrees")
+
+    if all(a==0 for a in angles):
+        doc.close()
+        return _error("No pages were rotated -nothing to save.")
+
+
+    for i, page in enumerate(doc):
+        delta=angles[i]
+        if delta:
+            page.set_rotation((page.rotation + delta) % 360)
+
+    out_buf=io.BytesIO()
+    doc.save(out_buf)
+    doc.close()
+
+    return FileResponse(
+        io.BytesIO(out_buf.getvalue()),
+        as_attachment=True,
+        filename="rotated.pdf",
+        content_type="application/pdf",
+    )
+
+
+MAX_OCR_PAGES=30
+
+@csrf_exempt
+@require_POST
+def pdf_ocr(request):
+    """Makes a scanned/image PDF searchable by running OCR on every page
+    and embedding an invisible text layer, using PyMuPDF's built-in
+    pdfocr_tobytes() (backed by Tesseract). The visual appearance is
+    unchanged - only text becomes selectable/searchable/copyable."""
+
+    f=request.FILES.get("file")
+    if not f:
+        return _error("Please attach a PDF file.")
+    if f.size>MAX_UPLOAD_SIZE:
+        return _error("File is over the 25MB limit.")
+
+    try:
+        doc=pymupdf.open(stream=f.read(),filetype="pdf")
+    except Exception:
+        return _error("Could not open this file as a PDF.")
+
+
+    if doc.page_count==0:
+        doc.close()
+        return _error("This PDF has no pages.")
+
+    if doc.page_count>MAX_OCR_PAGES:
+        total_pages=doc.page_count
+        doc.close()
+        return _error(
+            f"This PDF has {total_pages} pages - OCR is limited to {MAX_OCR_PAGES} pages."
+        )
+
+    out_doc=pymupdf.open()
+    try:
+        for page in doc:
+            pix=page.get_pixmap(dpi=200)
+            ocr_bytes=pix.pdfocr_tobytes(language="eng")
+            ocr_page_doc=pymupdf.open("pdf",ocr_bytes)
+            out_doc.insert_pdf(ocr_page_doc)
+            ocr_page_doc.close()
+    except Exception:
+        doc.close()
+        out_doc.close()
+        return _error("Could not perform OCR on this PDF.",500)
+
+    doc.close()
+    out_buf=io.BytesIO()
+    out_doc.save(out_buf)
+    out_doc.close()
+
+    return FileResponse(
+        io.BytesIO(out_buf.getvalue()),
+        as_attachment=True,
+        filename="ocr.pdf",
+        content_type="application/pdf",
+    )
+    
+            

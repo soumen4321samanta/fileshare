@@ -1,0 +1,204 @@
+{% extends "frontend/base.html" %}
+{% block title %}Rotate PDF Pages — FileForge{% endblock %}
+
+{% block extra_head %}
+<style>
+    .page-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+        gap: 14px;
+        margin-top: 16px;
+    }
+    .page-item {
+        border-radius: 10px;
+        border: 2px solid var(--line);
+        background: var(--panel-2);
+        padding: 8px;
+        text-align: center;
+    }
+    .thumb-wrap {
+        display: flex; align-items: center; justify-content: center;
+        height: 110px; overflow: visible;
+    }
+    .page-item img {
+        max-width: 90px; max-height: 100px;
+        transition: transform 0.25s ease;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+    .page-item .page-num {
+        margin-top: 6px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px; color: var(--muted);
+    }
+    .rotate-btn {
+        margin-top: 6px; width: 100%; padding: 6px; border-radius: 7px;
+        background: var(--panel); border: 1px solid var(--line); color: var(--text);
+        cursor: pointer; font-size: 12px;
+        display: flex; align-items: center; justify-content: center; gap: 4px;
+        transition: background 0.15s ease, border-color 0.15s ease;
+    }
+    .rotate-btn:hover { background: var(--stamp); border-color: var(--stamp); }
+    .rotate-btn.active { border-color: var(--teal); color: var(--teal); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+    <div class="page-header">
+        <div class="icon-badge"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0118-6M22 12.5a10 10 0 01-18 6"/></svg></div>
+        <h1>Rotate PDF Pages</h1>
+        <p>Choose a PDF, then tap "Rotate" on any page to turn it 90° at a time. Rotate again to keep turning.</p>
+    </div>
+
+    <div class="card">
+        <div class="dropzone" id="dropzone">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 16V4M12 4l-4 4M12 4l4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <p><strong>Tap to choose a PDF</strong></p>
+            <p>or drag &amp; drop here</p>
+            <input type="file" id="file-input" class="file-input-hidden" accept="application/pdf">
+        </div>
+
+        <div class="status-box" id="loading-box"></div>
+        <div class="page-grid" id="page-grid"></div>
+        <div class="status-box" id="status-box"></div>
+
+        <button type="button" class="action-btn" id="submit-btn" disabled>Save Rotated PDF</button>
+
+        <div class="result-ticket" id="result-ticket">
+            <div class="icon">📄</div>
+            <div class="meta">
+                <div class="fname" id="result-name">rotated.pdf</div>
+                <div class="fsub">Ready to download</div>
+            </div>
+            <a class="dl" id="result-link" download title="Download">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M12 15l-4-4M12 15l4-4M4 19h16" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('file-input');
+    const loadingBox = document.getElementById('loading-box');
+    const pageGrid = document.getElementById('page-grid');
+    const statusBox = document.getElementById('status-box');
+    const submitBtn = document.getElementById('submit-btn');
+    const resultTicket = document.getElementById('result-ticket');
+    const resultName = document.getElementById('result-name');
+    const resultLink = document.getElementById('result-link');
+
+    let selectedFile = null;
+    let rotations = {};
+
+    dropzone.addEventListener('click', () => fileInput.click());
+    ['dragenter', 'dragover'].forEach(evt => dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.add('dragover'); }));
+    ['dragleave', 'drop'].forEach(evt => dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.remove('dragover'); }));
+    dropzone.addEventListener('drop', e => { handleFile(e.dataTransfer.files[0]); });
+    fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
+
+    async function handleFile(file) {
+        if (!file) return;
+        selectedFile = file;
+        rotations = {};
+        pageGrid.innerHTML = '';
+        resultTicket.classList.remove('show');
+        statusBox.className = 'status-box';
+        submitBtn.disabled = true;
+
+        loadingBox.className = 'status-box show info';
+        loadingBox.textContent = 'Loading page previews…';
+
+        const formData = new FormData();
+        formData.append('file', file);
+        try {
+            const resp = await fetch('/api/pdf-thumbnails/', { method: 'POST', body: formData });
+            const data = await resp.json();
+            if (!resp.ok) {
+                loadingBox.className = 'status-box show error';
+                loadingBox.textContent = data.error || 'Could not load previews.';
+                return;
+            }
+            loadingBox.className = 'status-box';
+            renderGrid(data.pages);
+        } catch (err) {
+            loadingBox.className = 'status-box show error';
+            loadingBox.textContent = 'Network error loading previews.';
+        }
+    }
+
+    function renderGrid(pages) {
+        pageGrid.innerHTML = '';
+        pages.forEach(p => {
+            rotations[p.page] = 0;
+            const div = document.createElement('div');
+            div.className = 'page-item';
+            div.innerHTML = `
+                <div class="thumb-wrap"><img src="${p.thumbnail}" alt="Page ${p.page}"></div>
+                <div class="page-num">Page ${p.page}</div>
+                <button type="button" class="rotate-btn">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0118-6M22 12.5a10 10 0 01-18 6"/></svg>
+                    Rotate
+                </button>
+            `;
+            div.querySelector('.rotate-btn').addEventListener('click', () => rotatePage(p.page, div));
+            pageGrid.appendChild(div);
+        });
+        updateSubmitState();
+    }
+
+    function rotatePage(pageNum, container) {
+        rotations[pageNum] = (rotations[pageNum] + 90) % 360;
+        const img = container.querySelector('img');
+        img.style.transform = `rotate(${rotations[pageNum]}deg)`;
+        const btn = container.querySelector('.rotate-btn');
+        btn.classList.toggle('active', rotations[pageNum] !== 0);
+        btn.lastChild.textContent = rotations[pageNum] === 0 ? ' Rotate' : ` ${rotations[pageNum]}°`;
+        updateSubmitState();
+    }
+
+    function updateSubmitState() {
+        submitBtn.disabled = !Object.values(rotations).some(a => a !== 0);
+    }
+
+    submitBtn.addEventListener('click', async () => {
+        if (!selectedFile) return;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner"></span> Saving…';
+        statusBox.className = 'status-box';
+
+        const pageNumbers = Object.keys(rotations).map(Number).sort((a,b)=>a-b);
+        const anglesStr = pageNumbers.map(p => rotations[p]).join(',');
+
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        formData.append('angles', anglesStr);
+
+        try {
+            const resp = await fetch('/api/pdf-rotate-pages/', { method: 'POST', body: formData });
+            if (!resp.ok) {
+                const err = await resp.json().catch(() => ({ error: 'Rotate failed.' }));
+                statusBox.className = 'status-box show error';
+                statusBox.textContent = err.error || 'Rotate failed.';
+                return;
+            }
+            const blob = await resp.blob();
+            const url = URL.createObjectURL(blob);
+            resultLink.href = url;
+            resultLink.download = 'rotated.pdf';
+            resultName.textContent = 'rotated.pdf';
+            resultTicket.classList.add('show');
+            statusBox.className = 'status-box show success';
+            statusBox.textContent = 'Rotated PDF ready.';
+        } catch (err) {
+            statusBox.className = 'status-box show error';
+            statusBox.textContent = 'Network error. Please try again.';
+        } finally {
+            updateSubmitState();
+            submitBtn.textContent = 'Save Rotated PDF';
+        }
+    });
+</script>
+{% endblock %}

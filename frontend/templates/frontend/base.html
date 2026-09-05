@@ -36,6 +36,8 @@
         <a href="{% url 'merge_pdf' %}" class="{% if active == 'merge_pdf' %}active{% endif %}">Merge PDF</a>
         <a href="{% url 'pdf_delete_pages_page' %}" class="{% if active == 'pdf_delete_pages' %}active{% endif %}">Delete Pages</a>
         <a href="{% url 'reorder_pages_page' %}" class="{% if active == 'reorder_pages' %}active{% endif %}">Reorder Pages</a>
+        <a href="{% url 'rotate_pages_page' %}" class="{% if active == 'rotate_pages' %}active{% endif %}">Rotate Pages</a>
+        <a href="{% url 'ocr_page' %}" class="{% if active == 'ocr' %}active{% endif %}">OCR</a>
 
 
         <a href="{% url 'pdf_to_word' %}" class="{% if active == 'pdf_to_word' %}active{% endif %}">PDF → Word</a>
