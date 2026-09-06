@@ -751,10 +751,11 @@ def pdf_ocr(request):
             ocr_page_doc=pymupdf.open("pdf",ocr_bytes)
             out_doc.insert_pdf(ocr_page_doc)
             ocr_page_doc.close()
-    except Exception:
+    except Exception as e:
         doc.close()
         out_doc.close()
-        return _error("Could not perform OCR on this PDF.",500)
+        import traceback
+        return _error(f"OCR debug error: {repr(e)} | {traceback.format_exc()[-500:]}", 500)
 
     doc.close()
     out_buf=io.BytesIO()
