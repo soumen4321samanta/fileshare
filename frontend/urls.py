@@ -14,4 +14,5 @@ urlpatterns = [
     path("reorder-pages/",views.reorder_pages_page,name="reorder_pages_page"),
     path("rotate-pages/",views.rotate_pages_page,name="rotate_pages_page"),
     path("ocr/",views.ocr_page,name="ocr_page"),
+    path("editor/", views.editor_page, name="editor_page"),
 ]

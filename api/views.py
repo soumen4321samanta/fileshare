@@ -1,4 +1,5 @@
 import io
+import json
 import os
 import zipfile
 
@@ -769,4 +770,130 @@ def pdf_ocr(request):
         content_type="application/pdf",
     )
     
-            
+@csrf_exempt
+@require_POST
+def pdf_page_image(request):
+    """Renders a single page at higher resolution than the thumbnail
+    endpoint, for use as the editing canvas background."""
+    f = request.FILES.get("file")
+    page_num = request.POST.get("page")
+
+    if not f:
+        return _error("Please attach a PDF file.")
+    if f.size > MAX_UPLOAD_SIZE:
+        return _error("File is over the 25MB limit.")
+    try:
+        page_num = int(page_num)
+    except (TypeError, ValueError):
+        return _error("Invalid page number.")
+
+    try:
+        doc = pymupdf.open(stream=f.read(), filetype="pdf")
+    except Exception:
+        return _error("Could not open this file as a PDF.")
+
+    if page_num < 1 or page_num > doc.page_count:
+        total = doc.page_count
+        doc.close()
+        return _error(f"Page {page_num} doesn't exist - this PDF has {total} pages.")
+
+    page = doc[page_num - 1]
+    pix = page.get_pixmap(dpi=150)
+    img_bytes = pix.tobytes("jpg")
+    doc.close()
+
+    return HttpResponse(img_bytes, content_type="image/jpeg")
+
+
+@csrf_exempt
+@require_POST
+def pdf_edit(request):
+    """Applies a list of edit operations (erase existing content via
+    redaction, insert new text) to a PDF and returns the result.
+
+    'operations' is a JSON string: a list of dicts, each either
+    {"type": "erase", "page": 1, "rect": [x0, y0, x1, y1]}  (PDF point
+    coordinates) or
+    {"type": "text", "page": 1, "x": .., "y": .., "text": "..",
+     "fontsize": 14, "fontname": "helv", "color": [r, g, b]}
+    """
+    f = request.FILES.get("file")
+    operations_raw = request.POST.get("operations", "")
+
+    if not f:
+        return _error("Please attach a PDF file.")
+    if f.size > MAX_UPLOAD_SIZE:
+        return _error("File is over the 25MB limit.")
+    if not operations_raw.strip():
+        return _error("No edits were made.")
+
+    try:
+        operations = json.loads(operations_raw)
+        if not isinstance(operations, list) or not operations:
+            raise ValueError
+    except (ValueError, TypeError):
+        return _error("Invalid edit data.")
+
+    try:
+        doc = pymupdf.open(stream=f.read(), filetype="pdf")
+    except Exception:
+        return _error("Could not open this file as a PDF.")
+
+    total_pages = doc.page_count
+
+    ALLOWED_FONTS = {"helv", "times-roman", "cour", "helv-bold", "times-bold"}
+
+    try:
+        erase_by_page = {}
+        for op in operations:
+            if op.get("type") == "erase":
+                p = int(op["page"])
+                if p < 1 or p > total_pages:
+                    raise ValueError("page out of range")
+                rect = [float(v) for v in op["rect"]]
+                if len(rect) != 4:
+                    raise ValueError("bad rect")
+                erase_by_page.setdefault(p, []).append(rect)
+
+        for page_num, rects in erase_by_page.items():
+            page = doc[page_num - 1]
+            for rect in rects:
+                page.add_redact_annot(pymupdf.Rect(*rect), fill=(1, 1, 1))
+            page.apply_redactions()
+
+        for op in operations:
+            if op.get("type") == "text":
+                p = int(op["page"])
+                if p < 1 or p > total_pages:
+                    raise ValueError("page out of range")
+                text = str(op["text"])[:500]
+                if not text.strip():
+                    continue
+                fontsize = float(op.get("fontsize", 14))
+                fontsize = max(6, min(fontsize, 96))
+                fontname = op.get("fontname", "helv")
+                if fontname not in ALLOWED_FONTS:
+                    fontname = "helv"
+                color = op.get("color", [0, 0, 0])
+                color = tuple(max(0, min(float(c), 1)) for c in color[:3])
+                x = float(op["x"])
+                y = float(op["y"])
+                page = doc[p - 1]
+                page.insert_text((x, y), text, fontsize=fontsize, fontname=fontname, color=color)
+    except (KeyError, ValueError, TypeError, IndexError):
+        doc.close()
+        return _error("Invalid edit data.")
+    except Exception:
+        doc.close()
+        return _error("Could not apply these edits.", 500)
+
+    out_buf = io.BytesIO()
+    doc.save(out_buf)
+    doc.close()
+
+    return FileResponse(
+        io.BytesIO(out_buf.getvalue()),
+        as_attachment=True,
+        filename="edited.pdf",
+        content_type="application/pdf",
+    )

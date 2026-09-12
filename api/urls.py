@@ -15,4 +15,6 @@ urlpatterns = [
     path("pdf-reorder-pages/",views.pdf_reorder_pages,name="api_pdf_reorder_pages"),
     path("pdf-rotate-pages/",views.pdf_rotate_pages,name="api_pdf_rotate_pages"),
     path("pdf-ocr/",views.pdf_ocr,name="api_pdf_ocr"),
+    path("pdf-page-image/", views.pdf_page_image, name="api_pdf_page_image"),
+    path("pdf-edit/", views.pdf_edit, name="api_pdf_edit"),
 ]

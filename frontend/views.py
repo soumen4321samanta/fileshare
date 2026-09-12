@@ -43,3 +43,6 @@ def rotate_pages_page(request):
 
 def ocr_page(request):
     return render(request,"frontend/ocr.html",{"active":"ocr"})
+
+def editor_page(request):
+    return render(request, "frontend/editor.html", {"active": "editor"})

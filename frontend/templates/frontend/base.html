@@ -39,6 +39,9 @@
         <a href="{% url 'rotate_pages_page' %}" class="{% if active == 'rotate_pages' %}active{% endif %}">Rotate Pages</a>
         <a href="{% url 'ocr_page' %}" class="{% if active == 'ocr' %}active{% endif %}">OCR</a>
 
+        <a href="{% url 'editor_page' %}" class="{% if active == 'editor' %}active{% endif %}">PDF Editor</a>
+
+
 
         <a href="{% url 'pdf_to_word' %}" class="{% if active == 'pdf_to_word' %}active{% endif %}">PDF → Word</a>
         <a href="#" class="soon">Word → PDF (soon)</a>
