@@ -888,7 +888,7 @@ def pdf_edit(request):
         return _error("Could not apply these edits.", 500)
 
     out_buf = io.BytesIO()
-    doc.save(out_buf)
+    doc.save(out_buf, garbage=4, deflate=True)
     doc.close()
 
     return FileResponse(
