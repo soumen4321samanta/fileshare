@@ -28,23 +28,74 @@
     <nav class="site-nav" id="site-nav">
         <a href="{% url 'home' %}" class="{% if active == 'home' %}active{% endif %}">Home</a>
         <a href="{% url 'send_file_page' %}" class="{% if active == 'send' %}active{% endif %}">Send a file</a>
-        <a href="{% url 'jpg_to_pdf' %}" class="{% if active == 'jpg_to_pdf' %}active{% endif %}">JPG → PDF</a>
-        <a href="{% url 'pdf_to_jpg' %}" class="{% if active == 'pdf_to_jpg' %}active{% endif %}">PDF → JPG</a>
-    
-        <a href="{% url 'jpg_compress' %}" class="{% if active == 'jpg_compress' %}active{% endif %}">Compress JPG</a>
-        <a href="{% url 'pdf_compress' %}" class="{% if active == 'pdf_compress' %}active{% endif %}">Compress PDF</a>
-        <a href="{% url 'merge_pdf' %}" class="{% if active == 'merge_pdf' %}active{% endif %}">Merge PDF</a>
-        <a href="{% url 'pdf_delete_pages_page' %}" class="{% if active == 'pdf_delete_pages' %}active{% endif %}">Delete Pages</a>
-        <a href="{% url 'reorder_pages_page' %}" class="{% if active == 'reorder_pages' %}active{% endif %}">Reorder Pages</a>
-        <a href="{% url 'rotate_pages_page' %}" class="{% if active == 'rotate_pages' %}active{% endif %}">Rotate Pages</a>
-        <a href="{% url 'ocr_page' %}" class="{% if active == 'ocr' %}active{% endif %}">OCR</a>
 
-        <a href="{% url 'editor_page' %}" class="{% if active == 'editor' %}active{% endif %}">PDF Editor</a>
+        <div class="nav-group">
+            <button type="button" class="nav-group-btn {% if active == 'merge_pdf' or active == 'pdf_delete_pages' or active == 'reorder_pages' or active == 'rotate_pages' or active == 'pdf_compress' or active == 'editor' or active == 'ocr' %}active{% endif %}">
+                PDF Tools
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <div class="nav-dropdown">
+                <a href="{% url 'merge_pdf' %}" class="{% if active == 'merge_pdf' %}active{% endif %}">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="18" rx="1"/><rect x="13" y="3" width="8" height="18" rx="1"/><path d="M11 12h2"/></svg>
+                    <span><strong>Merge PDF</strong><em>Combine several into one</em></span>
+                </a>
+                <a href="{% url 'pdf_delete_pages_page' %}" class="{% if active == 'pdf_delete_pages' %}active{% endif %}">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 9l6 6M15 9l-6 6"/></svg>
+                    <span><strong>Delete Pages</strong><em>Remove pages you don't need</em></span>
+                </a>
+                <a href="{% url 'reorder_pages_page' %}" class="{% if active == 'reorder_pages' %}active{% endif %}">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+                    <span><strong>Reorder Pages</strong><em>Rearrange page order</em></span>
+                </a>
+                <a href="{% url 'rotate_pages_page' %}" class="{% if active == 'rotate_pages' %}active{% endif %}">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0118-6M22 12.5a10 10 0 01-18 6"/></svg>
+                    <span><strong>Rotate Pages</strong><em>Turn pages 90° at a time</em></span>
+                </a>
+                <a href="{% url 'pdf_compress' %}" class="{% if active == 'pdf_compress' %}active{% endif %}">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>
+                    <span><strong>Compress PDF</strong><em>Shrink to a target size</em></span>
+                </a>
+                <div class="nav-dropdown-sep"></div>
+                <a href="{% url 'editor_page' %}" class="{% if active == 'editor' %}active{% endif %}">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                    <span><strong>PDF Editor</strong><em>Erase and add text</em></span>
+                </a>
+                <a href="{% url 'ocr_page' %}" class="{% if active == 'ocr' %}active{% endif %}">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4a1 1 0 011-1h3M20 7V4a1 1 0 00-1-1h-3M4 17v3a1 1 0 001 1h3M20 17v3a1 1 0 01-1 1h-3M9 9h6M9 13h4"/></svg>
+                    <span><strong>OCR</strong><em>Make scans searchable</em></span>
+                </a>
+            </div>
+        </div>
 
-
-
-        <a href="{% url 'pdf_to_word' %}" class="{% if active == 'pdf_to_word' %}active{% endif %}">PDF → Word</a>
-        <a href="#" class="soon">Word → PDF (soon)</a>
+        <div class="nav-group">
+            <button type="button" class="nav-group-btn {% if active == 'jpg_to_pdf' or active == 'pdf_to_jpg' or active == 'jpg_compress' or active == 'pdf_to_word' %}active{% endif %}">
+                Convert
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <div class="nav-dropdown">
+                <a href="{% url 'jpg_to_pdf' %}" class="{% if active == 'jpg_to_pdf' %}active{% endif %}">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+                    <span><strong>JPG → PDF</strong><em>Images into one PDF</em></span>
+                </a>
+                <a href="{% url 'pdf_to_jpg' %}" class="{% if active == 'pdf_to_jpg' %}active{% endif %}">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                    <span><strong>PDF → JPG</strong><em>Each page as an image</em></span>
+                </a>
+                <a href="{% url 'pdf_to_word' %}" class="{% if active == 'pdf_to_word' %}active{% endif %}">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h5"/></svg>
+                    <span><strong>PDF → Word</strong><em>Editable .docx file</em></span>
+                </a>
+                <a href="{% url 'jpg_compress' %}" class="{% if active == 'jpg_compress' %}active{% endif %}">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>
+                    <span><strong>Compress JPG</strong><em>Shrink to a target size</em></span>
+                </a>
+                <div class="nav-dropdown-sep"></div>
+                <span class="nav-dropdown-soon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+                    <span><strong>Word → PDF</strong><em>Coming soon</em></span>
+                </span>
+            </div>
+        </div>
     </nav>
 </header>
 
@@ -62,6 +113,21 @@
     if (navToggle) {
         navToggle.addEventListener('click', () => siteNav.classList.toggle('open'));
     }
+
+    // Dropdown menus: hover opens them on desktop (CSS), but on touch devices
+    // hover doesn't exist - so tapping the group button toggles it instead.
+    document.querySelectorAll('.nav-group-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const group = btn.parentElement;
+            const wasOpen = group.classList.contains('open');
+            document.querySelectorAll('.nav-group').forEach(g => g.classList.remove('open'));
+            if (!wasOpen) group.classList.add('open');
+        });
+    });
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.nav-group').forEach(g => g.classList.remove('open'));
+    });
 </script>
 {% block extra_scripts %}{% endblock %}
 </body>

@@ -3,90 +3,101 @@
 {% block title %}FileForge — free file tools{% endblock %}
 
 {% block content %}
-<div class="page-wrap">
-    <div class="page-header">
-        <h1 style="font-size: 32px;">Every file tool<br>in one place.</h1>
-        <p>Send files, convert images and PDFs, and compress anything down to the size you need — all free, no signup.</p>
+<div class="home-wrap">
+    <div class="home-hero">
+        <div class="eyebrow"><span class="dot"></span> No signup · No watermarks</div>
+        <h1>Every file tool,<br>in <span class="accent">one place</span>.</h1>
+        <p>Send files, convert between formats, compress to an exact size, and edit PDFs right in your browser — all free.</p>
     </div>
 
+    <div class="section-label">Share</div>
     <div class="tool-grid">
-        <a href="{% url 'send_file_page' %}" class="tool-card">
-            <div class="icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <a href="{% url 'send_file_page' %}" class="tool-card featured">
+            <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
             <h3>Send a file</h3>
-            <p>Drop a file, get a shareable ticket back.</p>
+            <p>Drop a file and get a shareable ticket back.</p>
         </a>
+    </div>
 
-        <a href="{% url 'jpg_to_pdf' %}" class="tool-card">
-            <div class="icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></div>
-            <h3>JPG to PDF</h3>
-            <p>Combine one or more images into a PDF.</p>
-        </a>
-
-        <a href="{% url 'pdf_to_jpg' %}" class="tool-card">
-            <div class="icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div>
-            <h3>PDF to JPG</h3>
-            <p>Turn each page of a PDF into an image.</p>
-        </a>
-
-        <a href="{% url 'jpg_compress' %}" class="tool-card">
-            <div class="icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg></div>
-            <h3>Compress JPG</h3>
-            <p>Shrink an image down to a target size.</p>
-        </a>
-
-        <a href="{% url 'pdf_compress' %}" class="tool-card">
-            <div class="icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg></div>
-            <h3>Compress PDF</h3>
-            <p>Shrink a PDF down to a target size.</p>
+    <div class="section-label">Edit PDFs</div>
+    <div class="tool-grid">
+        <a href="{% url 'editor_page' %}" class="tool-card featured">
+            <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
+            <h3>PDF Editor</h3>
+            <p>Erase existing content and add new text anywhere.</p>
         </a>
 
         <a href="{% url 'merge_pdf' %}" class="tool-card">
-            <div class="icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="18" rx="1"/><rect x="13" y="3" width="8" height="18" rx="1"/><path d="M11 12h2"/></svg></div>
+            <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="18" rx="1"/><rect x="13" y="3" width="8" height="18" rx="1"/><path d="M11 12h2"/></svg></div>
             <h3>Merge PDF</h3>
             <p>Combine multiple PDFs into one file.</p>
         </a>
 
         <a href="{% url 'pdf_delete_pages_page' %}" class="tool-card">
-            <div class="icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 9l6 6M15 9l-6 6"/></svg></div>
+            <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 9l6 6M15 9l-6 6"/></svg></div>
             <h3>Delete Pages</h3>
-            <p>Remove specific pages from a PDF.</p>
+            <p>Pick pages visually and remove them.</p>
         </a>
 
         <a href="{% url 'reorder_pages_page' %}" class="tool-card">
-            <div class="icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></div>
+            <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></div>
             <h3>Reorder Pages</h3>
             <p>Rearrange pages by dragging or using ▲▼.</p>
         </a>
-        
+
         <a href="{% url 'rotate_pages_page' %}" class="tool-card">
-            <div class="icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0118-6M22 12.5a10 10 0 01-18 6"/></svg></div>
+            <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0118-6M22 12.5a10 10 0 01-18 6"/></svg></div>
             <h3>Rotate Pages</h3>
             <p>Turn individual pages 90° at a time.</p>
         </a>
 
         <a href="{% url 'ocr_page' %}" class="tool-card">
-            <div class="icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4a1 1 0 011-1h3M20 7V4a1 1 0 00-1-1h-3M4 17v3a1 1 0 001 1h3M20 17v3a1 1 0 01-1 1h-3M9 9h6M9 13h4"/></svg></div>
+            <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4a1 1 0 011-1h3M20 7V4a1 1 0 00-1-1h-3M4 17v3a1 1 0 001 1h3M20 17v3a1 1 0 01-1 1h-3M9 9h6M9 13h4"/></svg></div>
             <h3>OCR</h3>
-            <p>Make a scanned PDF searchable & copyable.</p>
+            <p>Make a scanned PDF searchable and copyable.</p>
+        </a>
+    </div>
+
+    <div class="section-label">Convert</div>
+    <div class="tool-grid">
+        <a href="{% url 'jpg_to_pdf' %}" class="tool-card">
+            <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></div>
+            <h3>JPG to PDF</h3>
+            <p>Combine one or more images into a PDF.</p>
+        </a>
+
+        <a href="{% url 'pdf_to_jpg' %}" class="tool-card">
+            <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div>
+            <h3>PDF to JPG</h3>
+            <p>Turn each page of a PDF into an image.</p>
         </a>
 
         <a href="{% url 'pdf_to_word' %}" class="tool-card">
-            <div class="icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h5"/></svg></div>
+            <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h5"/></svg></div>
             <h3>PDF to Word</h3>
             <p>Get an editable .docx from a PDF.</p>
         </a>
 
         <div class="tool-card disabled">
-            <div class="icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></div>
+            <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></div>
             <h3>Word to PDF</h3>
             <p>Coming soon.</p>
             <span class="badge">SOON</span>
         </div>
+    </div>
 
-        <a href="{% url 'editor_page' %}" class="tool-card">
-            <div class="icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
-            <h3>PDF Editor</h3>
-            <p>Erase content and add new text to a PDF.</p>
+    <div class="section-label">Compress</div>
+    <div class="tool-grid">
+        <a href="{% url 'pdf_compress' %}" class="tool-card">
+            <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg></div>
+            <h3>Compress PDF</h3>
+            <p>Shrink a PDF down to a target size.</p>
+        </a>
+
+        <a href="{% url 'jpg_compress' %}" class="tool-card">
+            <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg></div>
+            <h3>Compress JPG</h3>
+            <p>Shrink an image down to a target size.</p>
         </a>
     </div>
 </div>
