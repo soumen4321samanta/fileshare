@@ -104,7 +104,44 @@
 </main>
 
 <footer class="site-footer">
-    FileForge — free file tools. Files are processed and not stored permanently.
+    <div class="footer-glow"></div>
+    <div class="footer-inner">
+        <div class="footer-brand">
+            <a href="{% url 'home' %}" class="site-logo">
+                <span class="mark">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                FileForge
+            </a>
+            <p>Every file tool, in one place. No signup, no watermarks — just fast, private tools that run in your browser.</p>
+        </div>
+
+        <div class="footer-col">
+            <h4>PDF Tools</h4>
+            <a href="{% url 'merge_pdf' %}">Merge PDF</a>
+            <a href="{% url 'pdf_delete_pages_page' %}">Delete Pages</a>
+            <a href="{% url 'editor_page' %}">PDF Editor</a>
+            <a href="{% url 'ocr_page' %}">OCR</a>
+        </div>
+
+        <div class="footer-col">
+            <h4>Convert</h4>
+            <a href="{% url 'jpg_to_pdf' %}">JPG to PDF</a>
+            <a href="{% url 'pdf_to_jpg' %}">PDF to JPG</a>
+            <a href="{% url 'pdf_to_word' %}">PDF to Word</a>
+        </div>
+
+        <div class="footer-col">
+            <h4>Compress</h4>
+            <a href="{% url 'pdf_compress' %}">Compress PDF</a>
+            <a href="{% url 'jpg_compress' %}">Compress JPG</a>
+        </div>
+    </div>
+
+    <div class="footer-bottom">
+        <span>© {% now "Y" %} FileForge — files are processed and not stored permanently.</span>
+        <span class="footer-status"><span class="status-dot"></span> All systems normal</span>
+    </div>
 </footer>
 
 <script>
@@ -113,6 +150,36 @@
     if (navToggle) {
         navToggle.addEventListener('click', () => siteNav.classList.toggle('open'));
     }
+
+    // ---- Scroll-reveal animation for tool cards & section labels ----
+    const revealTargets = document.querySelectorAll('.tool-card, .section-label');
+    if (revealTargets.length) {
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach((entry, i) => {
+                if (entry.isIntersecting) {
+                    // small stagger between cards revealing together
+                    setTimeout(() => entry.target.classList.add('in-view'), i * 40);
+                    revealObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+        revealTargets.forEach(el => revealObserver.observe(el));
+    }
+
+    // ---- Ripple effect on action buttons (works for buttons added later too) ----
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('button.action-btn');
+        if (!btn || btn.disabled) return;
+        const rect = btn.getBoundingClientRect();
+        const ripple = document.createElement('span');
+        const size = Math.max(rect.width, rect.height);
+        ripple.className = 'ripple';
+        ripple.style.width = ripple.style.height = size + 'px';
+        ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+        ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+        btn.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 650);
+    });
 
     // Dropdown menus: hover opens them on desktop (CSS), but on touch devices
     // hover doesn't exist - so tapping the group button toggles it instead.
