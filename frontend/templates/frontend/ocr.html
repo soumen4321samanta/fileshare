@@ -38,6 +38,7 @@
 
 {% block extra_scripts %}
 <script>
+FF.ready(function(){
     const dropzone = document.getElementById('dropzone');
     const fileInput = document.getElementById('file-input');
     const fileList = document.getElementById('file-list');
@@ -101,5 +102,6 @@
             submitBtn.textContent = 'Run OCR';
         }
     });
+});
 </script>
 {% endblock %}

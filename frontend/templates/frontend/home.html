@@ -134,7 +134,7 @@
 </div>
 
 <script>
-    // ---- Hero: parallax floaters on mouse move ----
+FF.ready(function () {
     const hero = document.getElementById('hero');
     const floaters = document.querySelectorAll('#hero-floaters .floater');
     if (hero && window.matchMedia('(pointer: fine)').matches) {
@@ -154,7 +154,6 @@
                 el.style.setProperty('--my', '0px');
             });
         });
-
     }
 
     // ---- Animated counting stats (runs once when scrolled into view) ----
@@ -202,5 +201,6 @@
             if (e.animationName === 'floaterPop') el.classList.remove('floater-pop');
         });
     });
+});
 </script>
 {% endblock %}

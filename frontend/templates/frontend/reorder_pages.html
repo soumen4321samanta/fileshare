@@ -86,6 +86,7 @@
 
 {% block extra_scripts %}
 <script>
+FF.ready(function(){
     const dropzone = document.getElementById('dropzone');
     const fileInput = document.getElementById('file-input');
     const loadingBox = document.getElementById('loading-box');
@@ -244,5 +245,6 @@
             submitBtn.textContent = 'Save New Order';
         }
     });
+});
 </script>
 {% endblock %}

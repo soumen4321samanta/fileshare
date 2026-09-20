@@ -1009,3 +1009,5 @@ button.action-btn .ripple {
 @media (prefers-reduced-motion: reduce) {
     .hero-stats, .floater-pop { animation: none !important; }
 }
+
+#main-content.page-loading { opacity: 0.5; transition: opacity 0.15s ease; }

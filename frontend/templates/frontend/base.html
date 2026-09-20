@@ -13,6 +13,114 @@
 </head>
 <body>
 
+<script>
+/* ================= PJAX-STYLE ROUTER (must load before any page content script) ================= */
+(function () {
+    const FF = {
+        ready(fn) { fn(); } // called immediately — main element already exists by the time content scripts run
+    };
+    window.FF = FF;
+
+    // ---- Things that depend on whatever is currently inside #main-content.
+    // Must re-run every time content is swapped in, not just on first load. ----
+    function initMainContent() {
+        const revealTargets = document.querySelectorAll('#main-content .tool-card, #main-content .section-label');
+        if (revealTargets.length) {
+            const revealObserver = new IntersectionObserver((entries) => {
+                entries.forEach((entry, i) => {
+                    if (entry.isIntersecting) {
+                        setTimeout(() => entry.target.classList.add('in-view'), i * 40);
+                        revealObserver.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+            revealTargets.forEach(el => revealObserver.observe(el));
+        }
+    }
+    window.FFInitMainContent = initMainContent;
+
+    async function loadPage(url, push = true) {
+        const mainEl = document.getElementById('main-content');
+        try {
+            mainEl.classList.add('page-loading');
+            const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            if (!res.ok) throw new Error('Bad response');
+            const html = await res.text();
+
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            const newMain = doc.getElementById('main-content');
+            const newTitle = doc.querySelector('title');
+            if (!newMain) throw new Error('No #main-content in response');
+
+            mainEl.innerHTML = newMain.innerHTML;
+            if (newTitle) document.title = newTitle.textContent;
+
+            // re-run any inline/external <script> tags that came inside main content
+            mainEl.querySelectorAll('script').forEach(oldScript => {
+                const newScript = document.createElement('script');
+                if (oldScript.src) {
+                    newScript.src = oldScript.src;
+                } else {
+                    newScript.textContent = oldScript.textContent;
+                }
+                oldScript.replaceWith(newScript);
+            });
+
+            initMainContent();
+            updateActiveNav(url);
+
+            // close mobile nav if it was open
+            const siteNav = document.getElementById('site-nav');
+            if (siteNav) siteNav.classList.remove('open');
+
+            if (push) history.pushState({ url }, '', url);
+            window.scrollTo({ top: 0, behavior: 'instant' });
+        } catch (err) {
+            window.location.href = url;
+        } finally {
+            mainEl.classList.remove('page-loading');
+        }
+    }
+
+    function updateActiveNav(url) {
+        document.querySelectorAll('.site-nav > a, .nav-dropdown a, .nav-group-btn').forEach(a => {
+            a.classList.remove('active');
+        });
+        document.querySelectorAll('.site-nav > a, .nav-dropdown a').forEach(a => {
+            if (a.getAttribute('href') === url) {
+                a.classList.add('active');
+                const group = a.closest('.nav-group');
+                if (group) group.querySelector('.nav-group-btn').classList.add('active');
+            }
+        });
+    }
+
+    document.addEventListener('click', (e) => {
+        const link = e.target.closest('a');
+        if (!link) return;
+        if (link.target === '_blank' || link.hasAttribute('download')) return;
+        if (e.metaKey || e.ctrlKey || e.shiftKey) return;
+
+        const href = link.getAttribute('href');
+        if (!href || href.startsWith('#')) return;
+        if (!href.startsWith('/')) return;
+
+        e.preventDefault();
+        if (href === window.location.pathname) return;
+        loadPage(href);
+    });
+
+    window.addEventListener('popstate', () => {
+        loadPage(window.location.pathname, false);
+    });
+
+    // run once for the initial hard page load
+    document.addEventListener('DOMContentLoaded', initMainContent);
+})();
+</script>
+
 <header class="site-header">
     <a href="{% url 'home' %}" class="site-logo">
         <span class="mark">
@@ -99,7 +207,7 @@
     </nav>
 </header>
 
-<main>
+<main id="main-content">
     {% block content %}{% endblock %}
 </main>
 
@@ -151,22 +259,7 @@
         navToggle.addEventListener('click', () => siteNav.classList.toggle('open'));
     }
 
-    // ---- Scroll-reveal animation for tool cards & section labels ----
-    const revealTargets = document.querySelectorAll('.tool-card, .section-label');
-    if (revealTargets.length) {
-        const revealObserver = new IntersectionObserver((entries) => {
-            entries.forEach((entry, i) => {
-                if (entry.isIntersecting) {
-                    // small stagger between cards revealing together
-                    setTimeout(() => entry.target.classList.add('in-view'), i * 40);
-                    revealObserver.unobserve(entry.target);
-                }
-            });
-        }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
-        revealTargets.forEach(el => revealObserver.observe(el));
-    }
-
-    // ---- Ripple effect on action buttons (works for buttons added later too) ----
+    // ---- Ripple effect on action buttons (works for buttons added later too, since we delegate) ----
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('button.action-btn');
         if (!btn || btn.disabled) return;
@@ -196,6 +289,7 @@
         document.querySelectorAll('.nav-group').forEach(g => g.classList.remove('open'));
     });
 </script>
+
 {% block extra_scripts %}{% endblock %}
 </body>
 </html>

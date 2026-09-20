@@ -48,6 +48,7 @@
 
 {% block extra_scripts %}
 <script>
+FF.ready(function(){
     const dropzone = document.getElementById('dropzone');
     const fileInput = document.getElementById('file-input');
     const fileList = document.getElementById('file-list');
@@ -124,5 +125,6 @@
             submitBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg> Compress';
         }
     });
+});
 </script>
 {% endblock %}

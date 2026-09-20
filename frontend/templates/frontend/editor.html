@@ -129,6 +129,7 @@
 
 {% block extra_scripts %}
 <script>
+FF.ready(function(){
     const dropzone = document.getElementById('dropzone');
     const fileInput = document.getElementById('file-input');
     const editorArea = document.getElementById('editor-area');
@@ -400,5 +401,6 @@
             btn.textContent = 'Save PDF';
         }
     });
+});
 </script>
 {% endblock %}
