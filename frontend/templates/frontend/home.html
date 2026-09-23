@@ -23,6 +23,27 @@
         </h1>
         <p>Send files, convert between formats, compress to an exact size, and edit PDFs right in your browser — all free.</p>
 
+
+        <div class="hero-filters" id="hero-filters">
+            <a href="#section-share" class="filter-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Share
+            </a>
+            <a href="#section-edit" class="filter-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                Edit PDFs
+            </a>
+            <a href="#section-convert" class="filter-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+                Convert
+            </a>
+            <a href="#section-compress" class="filter-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>
+                Compress
+            </a>
+        </div>
+
+       
         <div class="hero-stats" id="hero-stats">
             <div class="stat">
                 <span class="stat-num" data-target="12000" data-suffix="+">0</span>
@@ -41,7 +62,7 @@
         </div>
     </div>
 
-    {% comment %} <div class="section-label">Share</div>
+    {% comment %} <div class="section-label" id="section-share">Share</div>
     <div class="tool-grid">
         <a href="{% url 'send_file_page' %}" class="tool-card featured">
             <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
@@ -50,7 +71,7 @@
         </a>
     </div> {% endcomment %}
 
-    <div class="section-label">Edit PDFs</div>
+    <div class="section-label" id="section-edit">Edit PDFs</div>
     <div class="tool-grid">
         <a href="{% url 'editor_page' %}" class="tool-card featured">
             <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
@@ -89,7 +110,7 @@
         </a>
     </div>
 
-    <div class="section-label">Convert</div>
+    <div class="section-label" id="section-convert">Convert</div>
     <div class="tool-grid">
         <a href="{% url 'jpg_to_pdf' %}" class="tool-card">
             <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></div>
@@ -117,7 +138,7 @@
         </div>
     </div>
 
-    <div class="section-label">Compress</div>
+    <div class="section-label" id="section-compress">Compress</div>
     <div class="tool-grid">
         <a href="{% url 'pdf_compress' %}" class="tool-card">
             <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg></div>
@@ -193,14 +214,40 @@ FF.ready(function () {
         el.style.pointerEvents = 'auto';
         el.style.cursor = 'pointer';
         el.addEventListener('click', () => {
-            el.classList.remove('floater-pop'); // reset if clicked again fast
-            void el.offsetWidth; // force reflow so animation restarts
+            el.classList.remove('floater-pop');
+            void el.offsetWidth;
             el.classList.add('floater-pop');
         });
         el.addEventListener('animationend', (e) => {
             if (e.animationName === 'floaterPop') el.classList.remove('floater-pop');
         });
     });
+
+    // ---- Hero filter buttons: smooth-scroll to section (no page reload) ----
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const target = document.querySelector(btn.getAttribute('href'));
+            if (!target) return;
+            const headerHeight = document.querySelector('.site-header').offsetHeight || 70;
+            const top = target.getBoundingClientRect().top + window.scrollY - headerHeight - 14;
+            window.scrollTo({ top, behavior: 'smooth' });
+        });
+    });
+
+    const sectionEls = ['section-share', 'section-edit', 'section-convert', 'section-compress']
+        .map(id => document.getElementById(id)).filter(Boolean);
+    if (sectionEls.length) {
+        const sectionObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    filterBtns.forEach(b => b.classList.toggle('active', b.getAttribute('href') === '#' + entry.target.id));
+                }
+            });
+        }, { rootMargin: '-30% 0px -60% 0px', threshold: 0 });
+        sectionEls.forEach(el => sectionObserver.observe(el));
+    }
 });
 </script>
 {% endblock %}

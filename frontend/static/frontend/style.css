@@ -551,6 +551,8 @@ button.action-btn:disabled { background: #333849; color: #666e83; cursor: not-al
     text-transform: uppercase;
     color: var(--text);
     margin: 44px 0 18px;
+    scroll-margin-top: 90px;
+
 }
 .section-label::before {
     content: '';
@@ -1011,3 +1013,45 @@ button.action-btn .ripple {
 }
 
 #main-content.page-loading { opacity: 0.5; transition: opacity 0.15s ease; }
+
+
+.hero-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 26px;
+    animation: fadeUp 0.6s 0.32s cubic-bezier(0.16,1,0.3,1) both;
+}
+.filter-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 16px;
+    border-radius: 100px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.02);
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+.filter-btn svg { flex-shrink: 0; opacity: 0.8; }
+.filter-btn:hover {
+    border-color: #4a5372;
+    background: var(--panel);
+    color: var(--text);
+    transform: translateY(-2px);
+}
+.filter-btn.active {
+    border-color: rgba(207,69,32,0.4);
+    background: rgba(207,69,32,0.12);
+    color: var(--text);
+}
+.filter-btn.active svg { color: var(--stamp); opacity: 1; }
+
+@media (max-width: 560px) {
+    .filter-btn { padding: 8px 13px; font-size: 12px; }
+}
