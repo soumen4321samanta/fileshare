@@ -13,4 +13,4 @@ COPY . .
 
 RUN python manage.py collectstatic --no-input
 
-CMD ["sh", "-c", "python manage.py migrate && gunicorn fileshare.wsgi:application --bind 0.0.0.0:$PORT"]
+CMD ["sh", "-c", "python manage.py migrate && python manage.py createsuperuser_if_none_exists && gunicorn fileshare.wsgi:application --bind 0.0.0.0:$PORT"]
