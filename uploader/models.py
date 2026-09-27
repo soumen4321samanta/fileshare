@@ -39,3 +39,26 @@ class UploadedFile(models.Model):
                 return f"{size:.1f} {unit}"
             size /= 1024
         return f"{size:.1f} TB"
+
+
+class SiteSettings(models.Model):
+    site_name=models.CharField(max_length=50,default="Filoo")
+    tagline=models.CharField(max_length=200,default="Every file tool, in one place.")
+    logo=models.ImageField(upload_to="site/",blank=True,null=True)
+
+    class Meta:
+        verbose_name="Site Settings"
+        verbose_name_plural="Site Settings"
+
+    def __str__(self):
+        return self.site_name
+
+    def save(self, *args,**kwargs):
+        self.pk=1
+        super().save(*args,**kwargs)
+
+    @classmethod
+    def load(cls):
+        obj,created=cls.objects.get_or_create(pk=1)
+        return obj
+    

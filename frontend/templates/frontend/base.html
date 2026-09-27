@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{% block title %}FileForge{% endblock %}</title>
+<title>{% block title %}{{ site.site_name }}{% endblock %}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
@@ -128,7 +128,7 @@
             <span class="mark">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </span>
-            FileForge
+            {{ site.site_name }}
         </a>
 
         <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu">
@@ -222,9 +222,9 @@
                 <span class="mark">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </span>
-                FileForge
+                {{ site.site_name }}
             </a>
-            <p>Every file tool, in one place. No signup, no watermarks — just fast, private tools that run in your browser.</p>
+            <p>{{ site.tagline }}</p>
             <div class="trust-badges">
                 <span class="trust-badge">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
@@ -260,7 +260,7 @@
     </div>
 
     <div class="footer-bottom">
-        <span>© {% now "Y" %} FileForge — files are processed and not stored permanently.</span>
+        <span>© {% now "Y" %} {{ site.site_name }} — {{ site.tagline }}</span>
         <span class="footer-status"><span class="status-dot"></span> All systems normal</span>
     </div>
 </footer>

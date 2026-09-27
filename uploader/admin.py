@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
+from .models import SiteSettings
 
 from .models import UploadedFile
 
@@ -17,3 +18,14 @@ class UploadedFileAdmin(admin.ModelAdmin):
         return "-"
 
     download_link.short_description = "File"
+
+@admin.register(SiteSettings)
+class SiteSettingsAdmin(admin.ModelAdmin):
+    def has_add_permission(self,request):
+        return not SiteSettings.objects.exists()
+
+    def has_delete_permission(self,request,obj=None):
+        return False
+
+
+
