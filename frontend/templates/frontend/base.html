@@ -9,21 +9,25 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="{% static 'frontend/favicon.svg' %}">
-<link rel="stylesheet" href="{% static 'frontend/style.css' %}">
+{# CSS বদলালে ?v= সংখ্যাটা বাড়িয়ে দিন (cache এড়াতে) #}
+<link rel="stylesheet" href="{% static 'frontend/style.css' %}?v=3">
 {% block extra_head %}{% endblock %}
 </head>
 <body>
 
+<div class="cursor-glow" id="cursor-glow" aria-hidden="true"></div>
+
 <script>
-/* ================= PJAX-STYLE ROUTER (must load before any page content script) ================= */
+/* ================= PJAX-STYLE ROUTER ================= */
 (function () {
+    document.documentElement.classList.add('js'); // CSS reveal animation গুলো শুধু JS থাকলেই কাজ করবে
+
     const FF = {
-        ready(fn) { fn(); } // called immediately — main element already exists by the time content scripts run
+        ready(fn) { fn(); } // main element আগে থেকেই আছে, তাই সরাসরি চালাও
     };
     window.FF = FF;
 
-    // ---- Things that depend on whatever is currently inside #main-content.
-    // Must re-run every time content is swapped in, not just on first load. ----
+    // #main-content এর ভেতরের জিনিসের উপর নির্ভরশীল কাজ — প্রতিবার content বদলালে আবার চলবে
     function initMainContent() {
         const revealTargets = document.querySelectorAll('#main-content .tool-card, #main-content .section-label');
         if (revealTargets.length) {
@@ -40,39 +44,59 @@
     }
     window.FFInitMainContent = initMainContent;
 
+    // পুরনো <script> কে নতুন করে বানিয়ে চালানো (innerHTML দিয়ে বসানো script নিজে চলে না)
+    function runScripts(container) {
+        container.querySelectorAll('script').forEach(oldScript => {
+            const newScript = document.createElement('script');
+            if (oldScript.src) {
+                newScript.src = oldScript.src;
+            } else {
+                // block { } এর ভেতরে রাখা হয়েছে যাতে const/let দ্বিতীয়বার চললে
+                // "Identifier has already been declared" error না আসে
+                newScript.textContent = '{\n' + oldScript.textContent + '\n}';
+            }
+            oldScript.replaceWith(newScript);
+        });
+    }
+
     async function loadPage(url, push = true) {
         const mainEl = document.getElementById('main-content');
+        const scriptsEl = document.getElementById('page-scripts');
         try {
             mainEl.classList.add('page-loading');
             const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
             if (!res.ok) throw new Error('Bad response');
             const html = await res.text();
 
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-
+            const doc = new DOMParser().parseFromString(html, 'text/html');
             const newMain = doc.getElementById('main-content');
+            const newScripts = doc.getElementById('page-scripts');
             const newTitle = doc.querySelector('title');
             if (!newMain) throw new Error('No #main-content in response');
 
             mainEl.innerHTML = newMain.innerHTML;
             if (newTitle) document.title = newTitle.textContent;
 
-            // re-run any inline/external <script> tags that came inside main content
-            mainEl.querySelectorAll('script').forEach(oldScript => {
-                const newScript = document.createElement('script');
-                if (oldScript.src) {
-                    newScript.src = oldScript.src;
-                } else {
-                    newScript.textContent = oldScript.textContent;
-                }
-                oldScript.replaceWith(newScript);
-            });
+            // #main-content এর ভেতরের script চালাও
+            runScripts(mainEl);
+
+            // extra_scripts ব্লকের script-ও চালাও (আগে এটাই মিস হচ্ছিল —
+            // এই কারণেই ২য় পেজে upload কাজ করছিল না)
+            if (scriptsEl) {
+                scriptsEl.innerHTML = newScripts ? newScripts.innerHTML : '';
+                runScripts(scriptsEl);
+            }
+
+            // নতুন পেজ ঢোকার animation
+            mainEl.classList.remove('page-enter');
+            void mainEl.offsetWidth; // animation restart করার জন্য reflow
+            mainEl.classList.add('page-enter');
+            setTimeout(() => mainEl.classList.remove('page-enter'), 600);
 
             initMainContent();
-            updateActiveNav(url);
+            updateActiveNav(url.split('?')[0]);
 
-            // close mobile nav if it was open
+            // mobile nav খোলা থাকলে বন্ধ করো
             const siteNav = document.getElementById('site-nav');
             if (siteNav) siteNav.classList.remove('open');
 
@@ -99,6 +123,7 @@
     }
 
     document.addEventListener('click', (e) => {
+        if (e.defaultPrevented) return;
         const link = e.target.closest('a');
         if (!link) return;
         if (link.target === '_blank' || link.hasAttribute('download')) return;
@@ -106,24 +131,50 @@
 
         const href = link.getAttribute('href');
         if (!href || href.startsWith('#')) return;
-        if (!href.startsWith('/')) return;
+        if (!href.startsWith('/') || href.startsWith('//')) return;
 
         e.preventDefault();
-        if (href === window.location.pathname) return;
+        if (href === window.location.pathname + window.location.search) return;
         loadPage(href);
     });
 
     window.addEventListener('popstate', () => {
-        loadPage(window.location.pathname, false);
+        loadPage(window.location.pathname + window.location.search, false);
     });
 
-    // run once for the initial hard page load
+    // scroll progress bar + back-to-top (element এখন scroll এর সময় খোঁজা হয়, তাই null হয় না)
+    window.addEventListener('scroll', () => {
+        const h = document.documentElement;
+        const bar = document.getElementById('header-progress');
+        const max = h.scrollHeight - h.clientHeight;
+        if (bar && max > 0) bar.style.width = (h.scrollTop / max * 100) + '%';
+
+        const btn = document.getElementById('back-to-top');
+        if (btn) btn.classList.toggle('show', window.scrollY > 400);
+
+        // back-to-top এর চারপাশের progress ring
+        const ring = document.querySelector('.btt-bar');
+        if (ring && max > 0) ring.style.strokeDashoffset = 128.8 * (1 - h.scrollTop / max);
+
+        // scroll করলে header ছোট হয়ে যাবে
+        const hdr = document.querySelector('.site-header');
+        if (hdr) hdr.classList.toggle('scrolled', window.scrollY > 30);
+    }, { passive: true });
+
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('#back-to-top')) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    });
+
+    // প্রথমবার hard load এর জন্য
     document.addEventListener('DOMContentLoaded', initMainContent);
 })();
 </script>
 
 <header class="site-header">
-    <div class="site-header-inner"> 
+    <div class="header-progress" id="header-progress"></div>
+    <div class="site-header-inner">
         <a href="{% url 'home' %}" class="site-logo">
             <span class="mark">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -207,6 +258,11 @@
                 </div>
             </div>
         </nav>
+
+        <a href="{% url 'send_file_page' %}" class="header-cta">
+            Get Started
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
     </div>
 </header>
 
@@ -225,6 +281,7 @@
                 {{ site.site_name }}
             </a>
             <p>{{ site.tagline }}</p>
+
             <div class="trust-badges">
                 <span class="trust-badge">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
@@ -234,6 +291,20 @@
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     Instant processing
                 </span>
+            </div>
+
+            <div class="footer-newsletter">
+                <input type="email" placeholder="you@example.com" class="newsletter-input" autocomplete="off" aria-label="Email address">
+                <button type="button" class="newsletter-btn" aria-label="Subscribe">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+            </div>
+
+            {# href গুলোতে আপনার আসল লিংক বসান। লিংক না থাকলে পুরো .footer-social div টা মুছে দিন #}
+            <div class="footer-social">
+                <a href="https://twitter.com/" target="_blank" rel="noopener noreferrer" aria-label="Twitter"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M22 5.9c-.7.3-1.5.6-2.3.7.8-.5 1.5-1.3 1.8-2.3-.8.5-1.7.8-2.6 1a4.1 4.1 0 00-7 3.7A11.6 11.6 0 013 4.9a4.1 4.1 0 001.3 5.5c-.7 0-1.3-.2-1.9-.5v.1c0 2 1.4 3.6 3.3 4a4.1 4.1 0 01-1.9.1c.5 1.7 2.1 2.9 4 2.9A8.2 8.2 0 012 18.6a11.6 11.6 0 006.3 1.8c7.5 0 11.7-6.3 11.7-11.7v-.5c.8-.6 1.5-1.3 2-2.1z"/></svg></a>
+                <a href="https://github.com/" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 00-3.2 19.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.3 1.1 2.9.8.1-.7.4-1.1.6-1.4-2.3-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.5-1.3.1-2.7 0 0 .8-.3 2.7 1a9.4 9.4 0 015 0c1.9-1.3 2.7-1 2.7-1 .6 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.9-2.3 4.7-4.6 5 .4.3.7.9.7 1.9v2.8c0 .3.2.6.7.5A10 10 0 0012 2z"/></svg></a>
+                <a href="https://www.linkedin.com/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M6.9 8.4H3.3V21h3.6V8.4zM5.1 3a2.1 2.1 0 100 4.2 2.1 2.1 0 000-4.2zM21 21v-6.9c0-3.7-2-5.4-4.6-5.4a4 4 0 00-3.6 2h-.1v-1.7H9.3V21h3.6v-6.3c0-1.7.3-3.3 2.4-3.3 2 0 2 1.9 2 3.4V21H21z"/></svg></a>
             </div>
         </div>
 
@@ -265,14 +336,22 @@
     </div>
 </footer>
 
+<button id="back-to-top" class="back-to-top" aria-label="Back to top">
+    <svg class="btt-ring" viewBox="0 0 44 44" aria-hidden="true"><circle class="btt-track" cx="22" cy="22" r="20.5"/><circle class="btt-bar" cx="22" cy="22" r="20.5"/></svg>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 19V5M5 12l7-7 7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</button>
+
 <script>
     const navToggle = document.getElementById('nav-toggle');
     const siteNav = document.getElementById('site-nav');
     if (navToggle) {
-        navToggle.addEventListener('click', () => siteNav.classList.toggle('open'));
+        navToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            siteNav.classList.toggle('open');
+        });
     }
 
-    // ---- Ripple effect on action buttons (works for buttons added later too, since we delegate) ----
+    // ---- Ripple effect on action buttons (delegated, তাই পরে যোগ হওয়া বাটনেও কাজ করে) ----
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('button.action-btn');
         if (!btn || btn.disabled) return;
@@ -287,8 +366,7 @@
         setTimeout(() => ripple.remove(), 650);
     });
 
-    // Dropdown menus: hover opens them on desktop (CSS), but on touch devices
-    // hover doesn't exist - so tapping the group button toggles it instead.
+    // Dropdown: desktop এ hover (CSS), touch ডিভাইসে ট্যাপ করলে toggle হবে
     document.querySelectorAll('.nav-group-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -301,8 +379,84 @@
     document.addEventListener('click', () => {
         document.querySelectorAll('.nav-group').forEach(g => g.classList.remove('open'));
     });
+
+    /* ================= ADVANCED ANIMATIONS ================= */
+    (function () {
+        const noHover = matchMedia('(hover: none)').matches;
+        const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        // 1) Tool card spotlight: mouse যেখানে, glow সেখানে
+        document.addEventListener('mousemove', (e) => {
+            const card = e.target.closest && e.target.closest('.tool-card');
+            if (!card) return;
+            const r = card.getBoundingClientRect();
+            card.style.setProperty('--sx', (e.clientX - r.left) + 'px');
+            card.style.setProperty('--sy', (e.clientY - r.top) + 'px');
+        }, { passive: true });
+
+        // 2) Cursor glow: পুরো পেজে mouse এর পেছনে নরম আলো
+        const glow = document.getElementById('cursor-glow');
+        if (glow && !noHover && !reduced) {
+            let tx = 0, ty = 0, x = 0, y = 0, raf = null;
+            const tick = () => {
+                x += (tx - x) * 0.12;
+                y += (ty - y) * 0.12;
+                glow.style.transform = 'translate(' + x + 'px,' + y + 'px)';
+                raf = (Math.abs(tx - x) > 0.5 || Math.abs(ty - y) > 0.5) ? requestAnimationFrame(tick) : null;
+            };
+            document.addEventListener('mousemove', (e) => {
+                tx = e.clientX; ty = e.clientY;
+                glow.classList.add('on');
+                if (!raf) raf = requestAnimationFrame(tick);
+            }, { passive: true });
+            document.documentElement.addEventListener('mouseleave', () => glow.classList.remove('on'));
+        }
+
+        // 3) Magnetic "Get Started" বাটন
+        const cta = document.querySelector('.header-cta');
+        if (cta && !noHover && !reduced) {
+            let base = null;
+            cta.addEventListener('mouseenter', () => { base = cta.getBoundingClientRect(); });
+            cta.addEventListener('mousemove', (e) => {
+                if (!base) return;
+                cta.style.setProperty('--tx', ((e.clientX - base.left - base.width / 2) * 0.25) + 'px');
+                cta.style.setProperty('--ty', ((e.clientY - base.top - base.height / 2) * 0.35) + 'px');
+            });
+            cta.addEventListener('mouseleave', () => {
+                base = null;
+                cta.style.setProperty('--tx', '0px');
+                cta.style.setProperty('--ty', '0px');
+            });
+        }
+
+        // 4) Footer: scroll করে নামলে একটার পর একটা ভেসে উঠবে
+        const footerParts = document.querySelectorAll('.footer-brand, .footer-col, .footer-bottom');
+        footerParts.forEach((el, i) => {
+            el.classList.add('reveal-up');
+            el.style.setProperty('--d', i);
+        });
+        if ('IntersectionObserver' in window) {
+            const io = new IntersectionObserver((entries) => {
+                entries.forEach(en => {
+                    if (en.isIntersecting) {
+                        en.target.classList.add('in-view');
+                        io.unobserve(en.target);
+                    }
+                });
+            }, { threshold: 0.15 });
+            footerParts.forEach(el => io.observe(el));
+        } else {
+            footerParts.forEach(el => el.classList.add('in-view'));
+        }
+
+        // পেজ লোডের সময়েই header এর অবস্থা ঠিক করো
+        window.dispatchEvent(new Event('scroll'));
+    })();
 </script>
 
+{# extra_scripts এখন #page-scripts এর ভেতরে, যাতে router নেভিগেশনের সময় এগুলো আবার লোড করতে পারে #}
+<div id="page-scripts">
 {% block extra_scripts %}{% endblock %}
+</div>
 </body>
 </html>

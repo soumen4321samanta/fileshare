@@ -39,7 +39,8 @@ body {
     z-index: 50;
     display: block;
     padding: 14px 24px;
-    background: rgba(18, 19, 26, 0.85);
+    background: rgba(18, 19, 26, 0.9);
+    -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
     border-bottom: 1px solid var(--line);
     animation: headerSlideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -53,6 +54,17 @@ body {
     align-items: center;
     justify-content: space-between;
     gap: 20px;
+}
+
+/* scroll progress bar (sits on the header's bottom border) */
+.header-progress {
+    position: absolute;
+    bottom: -1px; left: 0;
+    height: 2px;
+    width: 0%;
+    background: linear-gradient(90deg, var(--stamp), var(--teal));
+    transition: width 0.1s ease-out;
+    z-index: 51;
 }
 
 .site-logo {
@@ -125,6 +137,29 @@ body {
 }
 .site-nav > a:hover::after,
 .site-nav > a.active::after { transform: scaleX(1); }
+
+/* header CTA button */
+.header-cta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 16px;
+    border-radius: 100px;
+    background: var(--stamp);
+    color: white;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+.header-cta:hover {
+    background: var(--stamp-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px -4px rgba(207,69,32,0.5);
+}
+.header-cta svg { transition: transform 0.2s ease; }
+.header-cta:hover svg { transform: translateX(2px); }
 
 
 /* ---- Nav dropdown groups (PDF Tools / Convert) ---- */
@@ -228,16 +263,15 @@ body {
 /* ---- Header / nav responsive (mobile) ---- */
 @media (max-width: 860px) {
     .site-header-inner { position: relative; }
-    .site-nav {
-        left: -24px;
-        right: -24px;
-        width: calc(100% + 48px);
-    }
     .nav-toggle { display: flex; }
+    .header-cta { display: none; }
+
     .site-nav {
         display: none;
         position: absolute;
-        top: 100%; left: 0; right: 0;
+        top: calc(100% + 14px);   /* header এর নিচের padding পার করে */
+        left: -24px;              /* header এর side padding এর সমান */
+        right: -24px;
         flex-direction: column;
         align-items: stretch;
         background: var(--panel);
@@ -385,6 +419,7 @@ main { flex: 1; }
     font-family: 'JetBrains Mono', monospace;
 }
 
+/* trust badges */
 .trust-badges {
     display: flex;
     flex-wrap: wrap;
@@ -405,6 +440,62 @@ main { flex: 1; }
 }
 .trust-badge svg { flex-shrink: 0; }
 
+/* newsletter */
+.footer-newsletter {
+    display: flex;
+    gap: 8px;
+    margin-top: 18px;
+    max-width: 280px;
+}
+.newsletter-input {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 13px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: var(--panel-2);
+    color: var(--text);
+    font-size: 12.5px;
+    font-family: 'Inter', sans-serif;
+}
+.newsletter-input:focus { outline: none; border-color: var(--stamp); }
+.newsletter-input::placeholder { color: #5b6480; }
+.newsletter-btn {
+    flex-shrink: 0;
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    border: none;
+    background: var(--stamp);
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+.newsletter-btn:hover { background: var(--stamp-dark); transform: translateY(-1px); }
+
+/* social icons */
+.footer-social {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+}
+.footer-social a {
+    width: 32px; height: 32px;
+    border-radius: 9px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.15s ease, border-color 0.15s ease, transform 0.15s ease, background 0.15s ease;
+}
+.footer-social a:hover {
+    color: var(--stamp);
+    border-color: rgba(207,69,32,0.35);
+    background: rgba(207,69,32,0.08);
+    transform: translateY(-2px);
+}
+
 .status-dot {
     width: 6px; height: 6px;
     border-radius: 50%;
@@ -420,6 +511,28 @@ main { flex: 1; }
 @media (max-width: 480px) {
     .footer-inner { grid-template-columns: 1fr; }
 }
+
+
+/* ---- Back-to-top floating button ---- */
+.back-to-top {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--text);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s, border-color 0.15s ease, background 0.15s ease;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+    z-index: 40;
+}
+.back-to-top.show { opacity: 1; visibility: visible; transform: translateY(0); }
+.back-to-top:hover { border-color: var(--stamp); background: var(--panel-2); }
 
 
 /* ============================================================
@@ -1117,4 +1230,146 @@ button.action-btn .ripple {
     .footer-glow, .hero-stats, .floater-pop {
         animation: none !important;
     }
+}
+
+
+/* ============================================================
+   12. ADVANCED ANIMATIONS
+   ============================================================ */
+
+/* ---- Header: scroll করলে ছোট + শক্ত ব্যাকগ্রাউন্ড ---- */
+.site-header {
+    transition: padding 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+}
+.site-header.scrolled {
+    padding-top: 8px;
+    padding-bottom: 8px;
+    background: rgba(18, 19, 26, 0.95);
+    box-shadow: 0 10px 30px -12px rgba(0,0,0,0.65);
+}
+
+/* ---- Dropdown: item গুলো একটা একটা করে নামে ---- */
+.nav-group .nav-dropdown > * {
+    opacity: 0;
+    transform: translateY(-6px);
+    transition: opacity 0.25s ease, transform 0.25s ease, background 0.13s ease;
+}
+.nav-group:hover .nav-dropdown > *,
+.nav-group.open .nav-dropdown > * {
+    opacity: 1;
+    transform: translateY(0);
+    transition-delay: calc(var(--i, 0) * 35ms + 40ms);
+}
+.nav-dropdown > *:nth-child(1) { --i: 0; }
+.nav-dropdown > *:nth-child(2) { --i: 1; }
+.nav-dropdown > *:nth-child(3) { --i: 2; }
+.nav-dropdown > *:nth-child(4) { --i: 3; }
+.nav-dropdown > *:nth-child(5) { --i: 4; }
+.nav-dropdown > *:nth-child(6) { --i: 5; }
+.nav-dropdown > *:nth-child(7) { --i: 6; }
+.nav-dropdown > *:nth-child(8) { --i: 7; }
+
+/* ---- Tool card: mouse-follow spotlight ---- */
+.tool-card:not(.featured):hover {
+    background:
+        radial-gradient(260px circle at var(--sx, 50%) var(--sy, 50%), rgba(207,69,32,0.16), transparent 70%),
+        linear-gradient(180deg, var(--panel), rgba(27,30,41,0.6));
+}
+.tool-card.featured:hover {
+    background:
+        radial-gradient(260px circle at var(--sx, 50%) var(--sy, 50%), rgba(207,69,32,0.24), transparent 70%),
+        linear-gradient(150deg, rgba(207,69,32,0.12), var(--panel) 65%);
+}
+
+/* ---- Header CTA: magnetic + shimmer ---- */
+.header-cta {
+    position: relative;
+    overflow: hidden;
+    transform: translate(var(--tx, 0px), var(--ty, 0px));
+}
+.header-cta:hover {
+    transform: translate(var(--tx, 0px), calc(var(--ty, 0px) - 1px));
+}
+.header-cta::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -75%;
+    width: 50%; height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(255,255,255,0.35), transparent);
+    transform: skewX(-20deg);
+    animation: ctaShine 4.5s ease-in-out 1.5s infinite;
+    pointer-events: none;
+}
+@keyframes ctaShine {
+    0%        { left: -75%; }
+    35%, 100% { left: 130%; }
+}
+
+/* ---- Page transition (SPA navigation) ---- */
+#main-content.page-enter {
+    animation: pageEnter 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes pageEnter {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- Footer staggered reveal (শুধু JS চালু থাকলে) ---- */
+.js .reveal-up {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    transition-delay: calc(var(--d, 0) * 90ms);
+}
+.js .reveal-up.in-view {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ---- Back-to-top: scroll progress ring ---- */
+.btt-ring {
+    position: absolute;
+    inset: -1px;
+    width: 44px; height: 44px;
+    transform: rotate(-90deg);
+    pointer-events: none;
+}
+.btt-ring circle { fill: none; stroke-width: 2; }
+.btt-track { stroke: var(--line); }
+.btt-bar {
+    stroke: var(--stamp);
+    stroke-linecap: round;
+    stroke-dasharray: 128.8;
+    stroke-dashoffset: 128.8;
+    transition: stroke-dashoffset 0.1s linear;
+}
+.back-to-top > svg:not(.btt-ring) { transition: transform 0.2s ease; }
+.back-to-top:hover > svg:not(.btt-ring) { transform: translateY(-2px); }
+
+/* ---- Cursor glow (পুরো পেজের নরম আলো) ---- */
+.cursor-glow {
+    position: fixed;
+    top: 0; left: 0;
+    width: 520px; height: 520px;
+    margin: -260px 0 0 -260px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: -1;
+    background: radial-gradient(circle, rgba(207,69,32,0.09), rgba(79,174,138,0.05) 45%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    will-change: transform;
+}
+.cursor-glow.on { opacity: 1; }
+@media (hover: none) { .cursor-glow { display: none; } }
+
+/* mobile: header ছোট হলে menu এর gap ও কমবে */
+@media (max-width: 860px) {
+    .site-header.scrolled .site-nav { top: calc(100% + 8px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .header-cta::before, .cursor-glow { animation: none !important; display: none; }
+    .js .reveal-up { opacity: 1; transform: none; }
 }
