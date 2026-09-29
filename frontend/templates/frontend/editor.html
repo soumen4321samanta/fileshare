@@ -16,22 +16,10 @@
         font-family: 'JetBrains Mono', monospace; font-size: 12px;
     }
 
-    /* Viewer: zoom করলে page এর বড় অংশ এর ভেতরে scroll/pan হয় */
-    .viewer {
-        display: block;
-        max-width: 100%;
-        max-height: 75vh;
-        max-height: 75dvh;
-        overflow: auto;
-        border-radius: 10px;
-        /* pinch-zoom আর pan আমরা নিজেরা handle করি, তাই browser এর নিজের gesture বন্ধ */
-        touch-action: none;
-        -webkit-overflow-scrolling: touch;
-    }
-
     .page-container {
         position: relative;
         display: inline-block;
+        max-width: 100%;
         border: 1px solid var(--line);
         border-radius: 10px;
         overflow: hidden;
@@ -40,12 +28,14 @@
         -webkit-user-select: none;
         -webkit-touch-callout: none;
         -webkit-tap-highlight-color: transparent;
+        /* Erase mode: touch করে drag করলে page scroll হবে না */
         touch-action: none;
-        vertical-align: top;
     }
+    /* Text mode: শুধু tap লাগে, তাই scroll চালু রাখা হলো */
+    .page-container.text-mode { touch-action: pan-x pan-y; }
 
     .page-container img {
-        display: block; max-width: none; height: auto;
+        display: block; max-width: 100%; height: auto;
         -webkit-user-drag: none; user-drag: none;
         pointer-events: none; /* image নিজে কোনো touch/drag event ধরবে না */
     }
@@ -99,13 +89,6 @@
     }
     .page-nav button:hover { border-color: var(--stamp); }
     .page-nav span { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted); }
-    .zoom-row { display: flex; gap: 8px; align-items: center; justify-content: center; margin-top: 10px; }
-    .zoom-row button {
-        width: 38px; padding: 8px 0; border-radius: 8px; border: 1px solid var(--line);
-        background: var(--panel-2); color: var(--text); cursor: pointer; font-size: 16px; line-height: 1;
-    }
-    .zoom-row button:hover { border-color: var(--stamp); }
-    .zoom-row span { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted); min-width: 48px; text-align: center; }
 </style>
 {% endblock %}
 
@@ -114,7 +97,7 @@
     <div class="page-header">
         <div class="icon-badge"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
         <h1>PDF Editor</h1>
-        <p>Choose a PDF. Drag to erase existing content (then move or resize the box), or tap "Add Text" then click anywhere to place new text. Pinch with two fingers to zoom.</p>
+        <p>Choose a PDF. Drag to erase existing content (then move or resize the box), or tap "Add Text" then click anywhere to place new text.</p>
     </div>
 
     <div class="card">
@@ -139,17 +122,8 @@
                 <input type="color" id="font-color" value="#cf4520">
             </div>
 
-            <div class="viewer" id="viewer">
-                <div class="page-container" id="page-container">
-                    <img id="page-image" src="" draggable="false">
-                </div>
-            </div>
-
-            <div class="zoom-row">
-                <button type="button" id="zoom-out" aria-label="Zoom out">−</button>
-                <span id="zoom-label">100%</span>
-                <button type="button" id="zoom-in" aria-label="Zoom in">+</button>
-                <button type="button" id="zoom-reset" aria-label="Reset zoom" style="width:auto; padding:8px 12px; font-size:13px;">Fit</button>
+            <div class="page-container" id="page-container">
+                <img id="page-image" src="" draggable="false">
             </div>
 
             <div class="page-nav">
@@ -182,11 +156,9 @@ FF.ready(function(){
     const dropzone = document.getElementById('dropzone');
     const fileInput = document.getElementById('file-input');
     const editorArea = document.getElementById('editor-area');
-    const viewer = document.getElementById('viewer');
     const pageContainer = document.getElementById('page-container');
     const pageImage = document.getElementById('page-image');
     const pageIndicator = document.getElementById('page-indicator');
-    const zoomLabel = document.getElementById('zoom-label');
     const statusBox = document.getElementById('status-box');
     const resultTicket = document.getElementById('result-ticket');
     const resultName = document.getElementById('result-name');
@@ -204,16 +176,10 @@ FF.ready(function(){
     let operations = [];
     let isLoading = false;
     let selectedOp = null;              // এখন যে erase box select করা আছে
-    let zoom = 1;
-    const MIN_ZOOM = 1, MAX_ZOOM = 5;
     const boxEls = new Map();           // op -> তার DOM element
     const HANDLE_DIRS = ['nw','n','ne','e','se','s','sw','w'];
     const clamp = (v, a, b) => Math.max(a, Math.min(v, b));
     const PDF_SCALE = 72 / 150; // matches the 150 dpi used by /api/pdf-page-image/
-
-    // যে যে আঙুল এখন screen ছুঁয়ে আছে (pinch বোঝার জন্য)
-    const touches = new Map();
-    let lastDist = 0, lastMid = null;
 
     dropzone.addEventListener('click', () => fileInput.click());
     ['dragenter', 'dragover'].forEach(evt => dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.add('dragover'); }));
@@ -227,6 +193,7 @@ FF.ready(function(){
         currentTool = tool;
         toolErase.classList.toggle('active', tool === 'erase');
         toolText.classList.toggle('active', tool === 'text');
+        // text mode-এ scroll চালু, erase mode-এ বন্ধ (CSS: .text-mode)
         pageContainer.classList.toggle('text-mode', tool === 'text');
         selectedOp = null;
         redrawOverlay();
@@ -249,7 +216,6 @@ FF.ready(function(){
         selectedFile = file;
         operations = [];
         selectedOp = null;
-        zoom = 1;
         hideStatus();
         resultTicket.classList.remove('show');
 
@@ -278,96 +244,10 @@ FF.ready(function(){
         await loaded;
         if (oldUrl && oldUrl.startsWith('blob:')) URL.revokeObjectURL(oldUrl);
 
-        applyZoom(zoom);   // width সেট করে overlay-ও redraw করে
+        redrawOverlay();
         pageContainer.style.opacity = '1';
         isLoading = false;
     }
-
-    // ---- Zoom ----
-    // Zoom মানে image এর CSS width বদলানো। বাকি সব কোড scale = clientWidth / naturalWidth
-    // দিয়ে হিসাব করে, তাই overlay redraw করলেই সব ঠিক জায়গায় বসে যায়।
-    function baseWidth() {
-        return Math.min(pageImage.naturalWidth, viewer.clientWidth - 2);
-    }
-
-    function applyZoom(newZoom, fx, fy) {
-        if (!pageImage.naturalWidth) return;
-        newZoom = clamp(newZoom, MIN_ZOOM, MAX_ZOOM);
-        const vr = viewer.getBoundingClientRect();
-        const px = (fx === undefined ? vr.left + vr.width / 2 : fx) - vr.left;
-        const py = (fy === undefined ? vr.top + vr.height / 2 : fy) - vr.top;
-        const oldW = pageImage.clientWidth || 1;
-        const cx = viewer.scrollLeft + px;
-        const cy = viewer.scrollTop + py;
-
-        const newW = baseWidth() * newZoom;
-        pageImage.style.width = newW + 'px';
-
-        // আঙুলের নিচের বিন্দুটা যেন একই জায়গায় থাকে
-        const ratio = newW / oldW;
-        viewer.scrollLeft = cx * ratio - px;
-        viewer.scrollTop = cy * ratio - py;
-
-        zoom = newZoom;
-        zoomLabel.textContent = Math.round(zoom * 100) + '%';
-        redrawOverlay();
-    }
-
-    document.getElementById('zoom-in').addEventListener('click', () => applyZoom(zoom * 1.25));
-    document.getElementById('zoom-out').addEventListener('click', () => applyZoom(zoom / 1.25));
-    document.getElementById('zoom-reset').addEventListener('click', () => {
-        applyZoom(1);
-        viewer.scrollLeft = 0;
-        viewer.scrollTop = 0;
-    });
-    window.addEventListener('resize', () => applyZoom(zoom));
-
-    // Desktop: Ctrl + mouse wheel (বা trackpad pinch) দিয়ে zoom
-    viewer.addEventListener('wheel', (e) => {
-        if (!e.ctrlKey) return;
-        e.preventDefault();
-        applyZoom(zoom * (e.deltaY < 0 ? 1.1 : 1 / 1.1), e.clientX, e.clientY);
-    }, { passive: false });
-
-    // Touch: দুই আঙুলে pinch = zoom, দুই আঙুল সরালে = pan
-    // (capture phase-এ ধরা হয়, যাতে box/text এর stopPropagation এর আগেই আমরা আঙুল গুনতে পারি)
-    viewer.addEventListener('pointerdown', (e) => {
-        if (e.pointerType !== 'touch') return;
-        touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
-        if (touches.size >= 2) {
-            // দ্বিতীয় আঙুল পড়লে আধা-আঁকা erase box বাতিল
-            if (dragBox) dragBox.remove();
-            dragBox = null;
-            dragStart = null;
-            lastDist = 0;
-            lastMid = null;
-        }
-    }, true);
-
-    viewer.addEventListener('pointermove', (e) => {
-        if (!touches.has(e.pointerId)) return;
-        touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
-        if (touches.size < 2) return;
-        const [a, b] = [...touches.values()];
-        const dist = Math.hypot(a.x - b.x, a.y - b.y);
-        const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
-        if (lastDist && lastMid) {
-            applyZoom(zoom * dist / lastDist, lastMid.x, lastMid.y);
-            viewer.scrollLeft += lastMid.x - mid.x;
-            viewer.scrollTop += lastMid.y - mid.y;
-        }
-        lastDist = dist;
-        lastMid = mid;
-    }, true);
-
-    function endTouch(e) {
-        if (!touches.has(e.pointerId)) return;
-        touches.delete(e.pointerId);
-        lastDist = 0;
-        lastMid = null;
-    }
-    viewer.addEventListener('pointerup', endTouch, true);
-    viewer.addEventListener('pointercancel', endTouch, true);
 
     function redrawOverlay() {
         pageContainer.querySelectorAll('.erase-box, .text-marker').forEach(el => el.remove());
@@ -418,14 +298,12 @@ FF.ready(function(){
     function makeTextDraggable(el, op, scale) {
         el.addEventListener('pointerdown', (e) => {
             e.stopPropagation();
-            if (touches.size >= 2) return;   // pinch চলছে
             el.classList.add('dragging');
             const startX = e.clientX, startY = e.clientY;
             const origLeft = parseFloat(el.style.left);
             const origTop = parseFloat(el.style.top);
 
             function onMove(ev) {
-                if (touches.size >= 2) return;
                 el.style.left = (origLeft + (ev.clientX - startX)) + 'px';
                 el.style.top = (origTop + (ev.clientY - startY)) + 'px';
             }
@@ -450,7 +328,6 @@ FF.ready(function(){
         el.addEventListener('pointerdown', (e) => {
             e.stopPropagation();   // container নতুন box আঁকা শুরু করবে না
             e.preventDefault();
-            if (touches.size >= 2) return;   // pinch চলছে
             if (e.pointerType === 'mouse' && e.button !== 0) return;
             const dir = (e.target.dataset && e.target.dataset.dir) || 'move';
             let target = el;
@@ -473,7 +350,6 @@ FF.ready(function(){
         try { el.setPointerCapture(e.pointerId); } catch (_) {}
 
         function onMove(ev) {
-            if (touches.size >= 2) return;
             const dx = ev.clientX - sx, dy = ev.clientY - sy;
             let l = x0, t = y0, r = x1, b = y1;
             if (dir === 'move') {
@@ -506,11 +382,11 @@ FF.ready(function(){
     // Drag to erase / tap to add text - both handled via pointer events
     // (not 'click') because browsers suppress the click event immediately
     // after a drag interaction, which broke add-text right after an erase.
+    // Mobile fixes:
+    //  - CSS touch-action: none  -> আঙুল drag করলে browser scroll করবে না
     //  - setPointerCapture       -> আঙুল box-এর বাইরে গেলেও events আসতে থাকবে
     //  - pointercancel handler   -> browser gesture বাতিল করলে অর্ধেক আঁকা box মুছে যাবে
-    let dragStart = null;        // container-এর ভেতরের position (erase box আঁকার জন্য)
-    let dragStartClient = null;  // screen position (tap নাকি drag তা বোঝার জন্য)
-    let panLast = null;          // Text mode-এ এক আঙুলে pan করার জন্য
+    let dragStart = null;
     let dragBox = null;
 
     function getPos(e) {
@@ -523,11 +399,8 @@ FF.ready(function(){
 
     pageContainer.addEventListener('pointerdown', (e) => {
         if (isLoading) return;
-        if (touches.size >= 2) return;   // pinch চলছে, নতুন কিছু শুরু হবে না
         if (e.pointerType === 'mouse' && e.button !== 0) return;
         dragStart = getPos(e);
-        dragStartClient = { x: e.clientX, y: e.clientY };
-        panLast = null;
         if (currentTool === 'erase') {
             try { pageContainer.setPointerCapture(e.pointerId); } catch (_) {}
             dragBox = document.createElement('div');
@@ -540,31 +413,19 @@ FF.ready(function(){
     });
 
     pageContainer.addEventListener('pointermove', (e) => {
-        if (!dragStart || touches.size >= 2) return;
-
-        if (currentTool === 'erase') {
-            if (!dragBox) return;
-            const { x, y } = getPos(e);
-            dragBox.style.left = Math.min(x, dragStart.x) + 'px';
-            dragBox.style.top = Math.min(y, dragStart.y) + 'px';
-            dragBox.style.width = Math.abs(x - dragStart.x) + 'px';
-            dragBox.style.height = Math.abs(y - dragStart.y) + 'px';
-        } else if (e.pointerType !== 'mouse') {
-            // Text mode-এ এক আঙুল টানলে page pan হবে (tap হলে text বসবে)
-            if (panLast) {
-                viewer.scrollLeft -= e.clientX - panLast.x;
-                viewer.scrollTop -= e.clientY - panLast.y;
-            }
-            panLast = { x: e.clientX, y: e.clientY };
-        }
+        if (!dragStart || currentTool !== 'erase' || !dragBox) return;
+        const { x, y } = getPos(e);
+        dragBox.style.left = Math.min(x, dragStart.x) + 'px';
+        dragBox.style.top = Math.min(y, dragStart.y) + 'px';
+        dragBox.style.width = Math.abs(x - dragStart.x) + 'px';
+        dragBox.style.height = Math.abs(y - dragStart.y) + 'px';
     });
 
     pageContainer.addEventListener('pointerup', (e) => {
         if (!dragStart) return;
         const { x, y } = getPos(e);
         const scale = pageImage.clientWidth / pageImage.naturalWidth;
-        // pan করলে content সরে যায়, তাই tap বোঝার জন্য screen distance ধরা হয়
-        const movedDistance = Math.hypot(e.clientX - dragStartClient.x, e.clientY - dragStartClient.y);
+        const movedDistance = Math.hypot(x - dragStart.x, y - dragStart.y);
 
         if (currentTool === 'erase') {
             const left = Math.min(x, dragStart.x) / scale * PDF_SCALE;
@@ -591,19 +452,15 @@ FF.ready(function(){
             }
         }
         dragStart = null;
-        dragStartClient = null;
-        panLast = null;
         dragBox = null;
         redrawOverlay();
     });
 
-    // Browser gesture বাতিল করে দিলে অর্ধেক আঁকা box মুছে ফেলা
+    // Browser gesture বাতিল করে দিলে (যেমন scroll শুরু হলে) অর্ধেক আঁকা box মুছে ফেলা
     pageContainer.addEventListener('pointercancel', () => {
         if (dragBox) dragBox.remove();
         dragBox = null;
         dragStart = null;
-        dragStartClient = null;
-        panLast = null;
     });
 
     document.getElementById('prev-page').addEventListener('click', async () => {
