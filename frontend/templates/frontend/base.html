@@ -11,7 +11,10 @@
 <link rel="icon" type="image/svg+xml" href="{% static 'frontend/favicon.svg' %}">
 {# CSS বদলালে ?v= সংখ্যাটা বাড়িয়ে দিন (cache এড়াতে) #}
 <link rel="stylesheet" href="{% static 'frontend/style.css' %}?v=3">
+{# এই দুটো marker এর মাঝখানের অংশ router প্রতিটা পেজ বদলের সময় নতুন পেজের extra_head দিয়ে বদলে দেয় #}
+<meta id="extra-head-start" name="extra-head-start" content="">
 {% block extra_head %}{% endblock %}
+<meta id="extra-head-end" name="extra-head-end" content="">
 </head>
 <body>
 
@@ -44,6 +47,23 @@
     }
     window.FFInitMainContent = initMainContent;
 
+    // প্রতিটা পেজের নিজস্ব <head> অংশ (extra_head এর CSS) নতুন পেজের সাথে বদলে দেয়।
+    // আগে এটা হতো না, তাই menu দিয়ে কোনো পেজে গেলে তার নিজস্ব CSS আসত না
+    // (refresh করলে সরাসরি পুরো পেজ লোড হতো বলে তখন ঠিক থাকত)।
+    function swapExtraHead(doc) {
+        const s = document.getElementById('extra-head-start');
+        const e = document.getElementById('extra-head-end');
+        const ns = doc.getElementById('extra-head-start');
+        const ne = doc.getElementById('extra-head-end');
+        if (!s || !e || !ns || !ne) return;
+        while (s.nextSibling && s.nextSibling !== e) s.nextSibling.remove();
+        let n = ns.nextSibling;
+        while (n && n !== ne) {
+            e.parentNode.insertBefore(document.importNode(n, true), e);
+            n = n.nextSibling;
+        }
+    }
+
     // পুরনো <script> কে নতুন করে বানিয়ে চালানো (innerHTML দিয়ে বসানো script নিজে চলে না)
     function runScripts(container) {
         container.querySelectorAll('script').forEach(oldScript => {
@@ -73,6 +93,9 @@
             const newScripts = doc.getElementById('page-scripts');
             const newTitle = doc.querySelector('title');
             if (!newMain) throw new Error('No #main-content in response');
+
+            // নতুন পেজের <head> এর CSS আগে বসাও, তারপর content
+            swapExtraHead(doc);
 
             mainEl.innerHTML = newMain.innerHTML;
             if (newTitle) document.title = newTitle.textContent;
