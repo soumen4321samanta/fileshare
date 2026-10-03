@@ -9,6 +9,45 @@ from django.http import FileResponse, HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from PIL import Image
+import html
+import re
+from pathlib import Path
+
+FONT_DIR = Path(__file__).resolve().parent / "fonts"
+BN_FONT_FILE = FONT_DIR / "NotoSansBengali-Regular.ttf"
+BENGALI_RE = re.compile(r"[\u0980-\u09FF]")
+_BN_CSS = (
+    "@font-face {font-family: bn; src: url(NotoSansBengali-Regular.ttf);}"
+    "* {font-family: bn, sans-serif; white-space: nowrap; margin: 0; padding: 0;}"
+)
+_font_archive = None
+
+
+def _get_font_archive():
+    global _font_archive
+    if _font_archive is None:
+        _font_archive = pymupdf.Archive(str(FONT_DIR))
+    return _font_archive
+
+
+def _insert_text_op(page, x, y, text, fontsize, fontname, color):
+    if BENGALI_RE.search(text) and BN_FONT_FILE.exists():
+        r, g, b = (int(round(c * 255)) for c in color)
+        safe = html.escape(text).replace("\n", "<br>")
+        extra_lines = text.count("\n")
+        rect = pymupdf.Rect(
+            x,
+            y - fontsize * 0.95,
+            max(page.rect.width - 5, x + 20),
+            y + fontsize * (1.6 + 1.3 * extra_lines),
+        )
+        body = (
+            f'<div style="font-size:{fontsize}px;line-height:1.2;'
+            f'color:rgb({r},{g},{b})">{safe}</div>'
+        )
+        page.insert_htmlbox(rect, body, css=_BN_CSS, archive=_get_font_archive(), scale_low=0)
+    else:
+        page.insert_text((x, y), text, fontsize=fontsize, fontname=fontname, color=color)
 
 MAX_UPLOAD_SIZE = 25 * 1024 * 1024  # 25 MB, matches uploader app's limit
 
@@ -879,7 +918,7 @@ def pdf_edit(request):
                 x = float(op["x"])
                 y = float(op["y"])
                 page = doc[p - 1]
-                page.insert_text((x, y), text, fontsize=fontsize, fontname=fontname, color=color)
+                _insert_text_op(page, x, y, text, fontsize, fontname, color)
     except (KeyError, ValueError, TypeError, IndexError):
         doc.close()
         return _error("Invalid edit data.")

@@ -95,12 +95,18 @@
     .text-marker:hover { outline-color: var(--teal); background: rgba(79,174,138,0.12); }
     .text-marker.selected { outline: 2px solid var(--stamp); background: rgba(207,69,32,0.08); }
 
+    /* ---- Snap guide line (সরানোর সময় কিনারা/মাঝখানের সাথে মিললে দেখা যায়) ---- */
+    .guide { position: absolute; background: rgba(79,174,138,0.95); pointer-events: none; z-index: 5; }
+    .guide-v { top: 0; bottom: 0; width: 1px; }
+    .guide-h { left: 0; right: 0; height: 1px; }
+
     .page-nav { display: flex; gap: 8px; align-items: center; margin-top: 14px; justify-content: center; flex-wrap: wrap; }
     .page-nav button {
         padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line);
         background: var(--panel-2); color: var(--text); cursor: pointer; font-size: 13px;
     }
-    .page-nav button:hover { border-color: var(--stamp); }
+    .page-nav button:hover:not(:disabled) { border-color: var(--stamp); }
+    .page-nav button:disabled { opacity: 0.4; cursor: not-allowed; }
     .page-nav span { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted); }
     .zoom-row { display: flex; gap: 8px; align-items: center; justify-content: center; margin-top: 10px; }
     .zoom-row button {
@@ -109,6 +115,7 @@
     }
     .zoom-row button:hover { border-color: var(--stamp); }
     .zoom-row span { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted); min-width: 48px; text-align: center; }
+    .shortcut-hint { margin-top: 10px; text-align: center; font-size: 11px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
 </style>
 {% endblock %}
 
@@ -117,7 +124,7 @@
     <div class="page-header">
         <div class="icon-badge"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
         <h1>PDF Editor</h1>
-        <p>Choose a PDF. Drag to erase existing content, or tap "Add Text" then tap anywhere to place new text. Tap any box or text to select it, then move or resize it, and change the font, size or color from the toolbar. Pinch with two fingers to zoom.</p>
+        <p>Choose a PDF. Drag to erase existing content, or tap "Add Text" then tap anywhere to place new text. Tap any box or text to select it, then move or resize it, and change the font, size or color from the toolbar. Double-tap a text to edit its words. Pinch with two fingers to zoom.</p>
     </div>
 
     <div class="card">
@@ -156,11 +163,19 @@
             </div>
 
             <div class="page-nav">
+                <button type="button" id="undo-btn">↶ Undo</button>
+                <button type="button" id="redo-btn">↷ Redo</button>
+                <button type="button" id="dup-btn">⧉ Duplicate</button>
+                <button type="button" id="del-btn">🗑 Delete</button>
+            </div>
+
+            <div class="page-nav">
                 <button type="button" id="prev-page">← Prev</button>
                 <span id="page-indicator">Page 1 / 1</span>
                 <button type="button" id="next-page">Next →</button>
-                <button type="button" id="undo-btn">Undo / Delete</button>
             </div>
+
+            <div class="shortcut-hint">Ctrl+Z undo · Ctrl+Y redo · Ctrl+D duplicate · Ctrl+C / Ctrl+V copy-paste · Del delete · Arrows nudge (Shift = faster) · Esc deselect</div>
 
             <button type="button" class="action-btn" id="save-btn" style="margin-top:14px;">Save PDF</button>
         </div>
@@ -199,6 +214,10 @@ FF.ready(function(){
     const fontSelect = document.getElementById('font-select');
     const fontSize = document.getElementById('font-size');
     const fontColor = document.getElementById('font-color');
+    const undoBtn = document.getElementById('undo-btn');
+    const redoBtn = document.getElementById('redo-btn');
+    const dupBtn = document.getElementById('dup-btn');
+    const delBtn = document.getElementById('del-btn');
 
     let selectedFile = null;
     let totalPages = 1;
@@ -208,12 +227,55 @@ FF.ready(function(){
     let isLoading = false;
     let selectedOp = null;              // এখন যে erase box বা text select করা আছে
     let zoom = 1;
+    let clip = null;                    // copy করা object
+    let lastTap = { op: null, t: 0 };   // text এ double-tap ধরার জন্য
     const MIN_ZOOM = 1, MAX_ZOOM = 5;
     const MIN_FONT = 6, MAX_FONT = 72;
+    const SNAP = 6;                     // px, এর কাছাকাছি এলে কিনারা/মাঝখানের সাথে লেগে যাবে
     const boxEls = new Map();           // op -> তার DOM element
     const HANDLE_DIRS = ['nw','n','ne','e','se','s','sw','w'];
     const clamp = (v, a, b) => Math.max(a, Math.min(v, b));
+    const clone = (o) => JSON.parse(JSON.stringify(o));
     const PDF_SCALE = 72 / 150; // matches the 150 dpi used by /api/pdf-page-image/
+
+    // ---- Undo / Redo ইতিহাস ----
+    // প্রতিটা বদলের পর পুরো operations এর একটা snapshot রাখা হয়
+    let hist = [{ ops: '[]', sel: -1 }];
+    let histIdx = 0;
+
+    function commit() {
+        const ops = JSON.stringify(operations);
+        const sel = operations.indexOf(selectedOp);
+        if (hist[histIdx] && hist[histIdx].ops === ops) {
+            hist[histIdx].sel = sel;   // কিছু বদলায়নি, শুধু selection
+            updateButtons();
+            return;
+        }
+        hist = hist.slice(0, histIdx + 1);
+        hist.push({ ops, sel });
+        if (hist.length > 100) hist.shift();
+        histIdx = hist.length - 1;
+        updateButtons();
+    }
+
+    function restore(i) {
+        const st = hist[i];
+        histIdx = i;
+        operations = JSON.parse(st.ops);
+        selectedOp = st.sel >= 0 ? operations[st.sel] : null;
+        if (selectedOp && selectedOp.page !== currentPage) selectedOp = null;
+        syncToolbar(selectedOp);
+        redrawOverlay();
+    }
+    function undo() { if (histIdx > 0) restore(histIdx - 1); }
+    function redo() { if (histIdx < hist.length - 1) restore(histIdx + 1); }
+
+    function updateButtons() {
+        undoBtn.disabled = histIdx <= 0;
+        redoBtn.disabled = histIdx >= hist.length - 1;
+        dupBtn.disabled = !selectedOp;
+        delBtn.disabled = !selectedOp;
+    }
 
     // যে যে আঙুল এখন screen ছুঁয়ে আছে (pinch বোঝার জন্য)
     const touches = new Map();
@@ -235,6 +297,10 @@ FF.ready(function(){
         fontColor.value = colorToHex(op.color);
     }
 
+    function getK() {   // PDF unit -> px
+        return (pageImage.clientWidth / pageImage.naturalWidth) / PDF_SCALE;
+    }
+
     dropzone.addEventListener('click', () => fileInput.click());
     ['dragenter', 'dragover'].forEach(evt => dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.add('dragover'); }));
     ['dragleave', 'drop'].forEach(evt => dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.remove('dragover'); }));
@@ -253,6 +319,7 @@ FF.ready(function(){
     }
 
     // ---- Toolbar দিয়ে selected text বদলানো ----
+    // বদল live দেখানো হয় (input event), আর history তে ওঠে বদল শেষ হলে (change event)
     function applyToolbarToSelected(kind) {
         if (!selectedOp || selectedOp.type !== 'text') return;
         const op = selectedOp;
@@ -267,9 +334,11 @@ FF.ready(function(){
         }
         redrawOverlay();
     }
-    fontSelect.addEventListener('change', () => applyToolbarToSelected('font'));
+    fontSelect.addEventListener('change', () => { applyToolbarToSelected('font'); commit(); });
     fontSize.addEventListener('input', () => applyToolbarToSelected('size'));
+    fontSize.addEventListener('change', () => commit());
     fontColor.addEventListener('input', () => applyToolbarToSelected('color'));
+    fontColor.addEventListener('change', () => commit());
 
     function showStatus(type, msg) {
         statusBox.className = 'status-box show ' + type;
@@ -288,6 +357,9 @@ FF.ready(function(){
         selectedFile = file;
         operations = [];
         selectedOp = null;
+        clip = null;
+        hist = [{ ops: '[]', sel: -1 }];
+        histIdx = 0;
         zoom = 1;
         hideStatus();
         resultTicket.classList.remove('show');
@@ -411,10 +483,9 @@ FF.ready(function(){
     viewer.addEventListener('pointercancel', endTouch, true);
 
     function redrawOverlay() {
-        pageContainer.querySelectorAll('.erase-box, .text-marker').forEach(el => el.remove());
+        pageContainer.querySelectorAll('.erase-box, .text-marker, .guide').forEach(el => el.remove());
         boxEls.clear();
-        const scale = pageImage.clientWidth / pageImage.naturalWidth;
-        const k = scale / PDF_SCALE;   // PDF unit -> px
+        const k = getK();
         const fontFamilyMap = {
             'helv': 'Helvetica, Arial, sans-serif',
             'times-roman': "'Times New Roman', serif",
@@ -462,9 +533,54 @@ FF.ready(function(){
                 pageContainer.appendChild(div);
             }
         });
+        updateButtons();
     }
 
-    // ---- Text: select, move, resize (font size) ----
+    // ---- Snap guides ----
+    // সরানোর সময় page এর কিনারা/মাঝখান আর অন্য object এর কিনারা/মাঝখানের সাথে লেগে যায়
+    function snapPosition(el, l, t) {
+        const W = pageImage.clientWidth, H = pageImage.clientHeight;
+        const w = el.offsetWidth, h = el.offsetHeight;
+        const xs = [0, W / 2, W], ys = [0, H / 2, H];
+        boxEls.forEach((other) => {
+            if (other === el) return;
+            const ol = other.offsetLeft, ot = other.offsetTop;
+            const ow = other.offsetWidth, oh = other.offsetHeight;
+            xs.push(ol, ol + ow / 2, ol + ow);
+            ys.push(ot, ot + oh / 2, ot + oh);
+        });
+        let dx = 0, dy = 0, gx = null, gy = null;
+        let bx = SNAP + 0.01, by = SNAP + 0.01;
+        [0, w / 2, w].forEach(off => xs.forEach(tx => {
+            const d = tx - (l + off);
+            if (Math.abs(d) < bx) { bx = Math.abs(d); dx = d; gx = tx; }
+        }));
+        [0, h / 2, h].forEach(off => ys.forEach(ty => {
+            const d = ty - (t + off);
+            if (Math.abs(d) < by) { by = Math.abs(d); dy = d; gy = ty; }
+        }));
+        return { l: l + dx, t: t + dy, gx, gy };
+    }
+
+    function showGuides(gx, gy) {
+        let v = pageContainer.querySelector('.guide-v');
+        let hz = pageContainer.querySelector('.guide-h');
+        if (gx === null) { if (v) v.remove(); }
+        else {
+            if (!v) { v = document.createElement('div'); v.className = 'guide guide-v'; pageContainer.appendChild(v); }
+            v.style.left = gx + 'px';
+        }
+        if (gy === null) { if (hz) hz.remove(); }
+        else {
+            if (!hz) { hz = document.createElement('div'); hz.className = 'guide guide-h'; pageContainer.appendChild(hz); }
+            hz.style.top = gy + 'px';
+        }
+    }
+    function hideGuides() {
+        pageContainer.querySelectorAll('.guide').forEach(g => g.remove());
+    }
+
+    // ---- Text: select, move, resize (font size), double-tap এ লেখা বদল ----
     function makeTextEditable(el, op) {
         el.addEventListener('pointerdown', (e) => {
             e.stopPropagation();   // container নতুন text/box শুরু করবে না
@@ -483,8 +599,17 @@ FF.ready(function(){
         });
     }
 
+    function editTextContent(op) {
+        const t = prompt('Edit text:', op.text);
+        if (t !== null && t.trim() !== '') {
+            op.text = t;
+            commit();
+            redrawOverlay();
+        }
+    }
+
     function startTextEdit(el, op, dir, e) {
-        const k = (pageImage.clientWidth / pageImage.naturalWidth) / PDF_SCALE; // PDF unit -> px
+        const k = getK();
         const W = pageImage.clientWidth, H = pageImage.clientHeight;
         const left0 = parseFloat(el.style.left), top0 = parseFloat(el.style.top);
         const fs0 = op.fontsize;
@@ -496,8 +621,10 @@ FF.ready(function(){
             if (touches.size >= 2) return;
             const dx = ev.clientX - sx, dy = ev.clientY - sy;
             if (dir === 'move') {
-                const l = clamp(left0 + dx, 0, W - 10);
-                const t = clamp(top0 + dy, 0, H - 10);
+                const s = snapPosition(el, left0 + dx, top0 + dy);
+                const l = clamp(s.l, 0, W - 10);
+                const t = clamp(s.t, 0, H - 10);
+                showGuides(s.gx, s.gy);
                 el.style.left = l + 'px';
                 el.style.top = t + 'px';
                 op.x = l / k;
@@ -512,10 +639,23 @@ FF.ready(function(){
                 fontSize.value = Math.round(fs);
             }
         }
-        function onUp() {
+        function onUp(ev) {
             el.removeEventListener('pointermove', onMove);
             el.removeEventListener('pointerup', onUp);
             el.removeEventListener('pointercancel', onUp);
+            hideGuides();
+            // নড়েনি এমন tap দুবার পরপর হলে = লেখা বদলানো
+            const moved = Math.hypot(ev.clientX - sx, ev.clientY - sy);
+            if (dir === 'move' && moved < 6) {
+                const now = Date.now();
+                if (lastTap.op === op && now - lastTap.t < 400) {
+                    lastTap = { op: null, t: 0 };
+                    setTimeout(() => editTextContent(op), 0);
+                } else {
+                    lastTap = { op, t: now };
+                }
+            }
+            commit();
         }
         el.addEventListener('pointermove', onMove);
         el.addEventListener('pointerup', onUp);
@@ -542,7 +682,7 @@ FF.ready(function(){
     }
 
     function startEdit(el, op, dir, e) {
-        const k = (pageImage.clientWidth / pageImage.naturalWidth) / PDF_SCALE; // PDF unit -> px
+        const k = getK();
         const W = pageImage.clientWidth, H = pageImage.clientHeight;
         const [x0, y0, x1, y1] = op.rect.map(v => v * k);
         const sx = e.clientX, sy = e.clientY;
@@ -555,8 +695,10 @@ FF.ready(function(){
             let l = x0, t = y0, r = x1, b = y1;
             if (dir === 'move') {
                 const w = x1 - x0, h = y1 - y0;
-                l = clamp(x0 + dx, 0, W - w);
-                t = clamp(y0 + dy, 0, H - h);
+                const s = snapPosition(el, x0 + dx, y0 + dy);
+                l = clamp(s.l, 0, W - w);
+                t = clamp(s.t, 0, H - h);
+                showGuides(s.gx, s.gy);
                 r = l + w; b = t + h;
             } else {
                 if (dir.includes('w')) l = clamp(x0 + dx, 0, x1 - MIN);
@@ -574,6 +716,8 @@ FF.ready(function(){
             el.removeEventListener('pointermove', onMove);
             el.removeEventListener('pointerup', onUp);
             el.removeEventListener('pointercancel', onUp);
+            hideGuides();
+            commit();
         }
         el.addEventListener('pointermove', onMove);
         el.addEventListener('pointerup', onUp);
@@ -652,6 +796,7 @@ FF.ready(function(){
                 const newOp = { page: currentPage, type: 'erase', rect: [left, top, right, bottom] };
                 operations.push(newOp);
                 selectedOp = newOp;   // আঁকার সাথে সাথে select, handle দেখা যাবে
+                commit();
             } else {
                 selectedOp = null;    // ফাঁকা জায়গায় tap করলে deselect
             }
@@ -668,6 +813,7 @@ FF.ready(function(){
                 };
                 operations.push(newOp);
                 selectedOp = newOp;   // বসানোর সাথে সাথে select, তাই সাথেই size/color বদলানো যাবে
+                commit();
             }
         }
         dragStart = null;
@@ -693,19 +839,103 @@ FF.ready(function(){
         if (currentPage < totalPages) { currentPage++; await loadPage(); }
     });
 
-    // Box/text selected থাকলে সেটা delete হবে, না থাকলে এই page-এর শেষ edit undo হবে
-    document.getElementById('undo-btn').addEventListener('click', () => {
+    // ---- Delete / Duplicate / Copy-Paste / Nudge ----
+    function deleteSelected() {
         const idx = selectedOp ? operations.indexOf(selectedOp) : -1;
-        if (idx !== -1) {
-            operations.splice(idx, 1);
-            selectedOp = null;
-        } else {
-            for (let i = operations.length - 1; i >= 0; i--) {
-                if (operations[i].page === currentPage) { operations.splice(i, 1); break; }
-            }
-        }
+        if (idx === -1) return;
+        operations.splice(idx, 1);
+        selectedOp = null;
+        commit();
         redrawOverlay();
-    });
+    }
+
+    // PDF unit এ সরানো, page এর বাইরে যেতে দেয় না
+    function moveOpBy(op, dx, dy) {
+        const pw = pageImage.naturalWidth * PDF_SCALE;
+        const ph = pageImage.naturalHeight * PDF_SCALE;
+        if (op.type === 'erase') {
+            const [x0, y0, x1, y1] = op.rect;
+            dx = clamp(dx, -x0, pw - x1);
+            dy = clamp(dy, -y0, ph - y1);
+            op.rect = [x0 + dx, y0 + dy, x1 + dx, y1 + dy];
+        } else {
+            op.x = clamp(op.x + dx, 0, pw - 5);
+            op.y = clamp(op.y + dy, op.fontsize, ph);
+        }
+    }
+
+    function pasteClip() {
+        if (!clip) return;
+        const copy = clone(clip);
+        copy.page = currentPage;
+        moveOpBy(copy, 10 / getK(), 10 / getK());   // একটু সরিয়ে বসায়, যাতে আলাদা বোঝা যায়
+        operations.push(copy);
+        clip = clone(copy);                          // পরপর paste করলে ধাপে ধাপে সরে যাবে
+        selectedOp = copy;
+        syncToolbar(copy);
+        commit();
+        redrawOverlay();
+    }
+
+    function duplicateSelected() {
+        if (!selectedOp) return;
+        clip = clone(selectedOp);
+        pasteClip();
+    }
+
+    undoBtn.addEventListener('click', undo);
+    redoBtn.addEventListener('click', redo);
+    dupBtn.addEventListener('click', duplicateSelected);
+    delBtn.addEventListener('click', deleteSelected);
+
+    // ---- Keyboard shortcuts ----
+    // পাতা বদলে অন্য পেজে গেলে এই listener নিজেই সরে যায়
+    const ARROWS = { arrowleft: [-1, 0], arrowright: [1, 0], arrowup: [0, -1], arrowdown: [0, 1] };
+
+    function onKey(e) {
+        if (!document.body.contains(viewer)) {
+            document.removeEventListener('keydown', onKey);
+            document.removeEventListener('keyup', onKeyUp);
+            return;
+        }
+        if (editorArea.style.display === 'none') return;
+        const tag = (e.target.tagName || '').toLowerCase();
+        if (tag === 'input' || tag === 'select' || tag === 'textarea') return;
+
+        const mod = e.ctrlKey || e.metaKey;
+        const key = e.key.toLowerCase();
+
+        if (mod && key === 'z') {
+            e.preventDefault();
+            e.shiftKey ? redo() : undo();
+        } else if (mod && key === 'y') {
+            e.preventDefault();
+            redo();
+        } else if (mod && key === 'd') {
+            e.preventDefault();
+            duplicateSelected();
+        } else if (mod && key === 'c') {
+            if (selectedOp) { e.preventDefault(); clip = clone(selectedOp); }
+        } else if (mod && key === 'v') {
+            if (clip) { e.preventDefault(); pasteClip(); }
+        } else if ((key === 'delete' || key === 'backspace') && selectedOp) {
+            e.preventDefault();
+            deleteSelected();
+        } else if (key === 'escape') {
+            selectedOp = null;
+            redrawOverlay();
+        } else if (ARROWS[key] && selectedOp) {
+            e.preventDefault();
+            const step = (e.shiftKey ? 10 : 1) / getK();
+            moveOpBy(selectedOp, ARROWS[key][0] * step, ARROWS[key][1] * step);
+            redrawOverlay();
+        }
+    }
+    function onKeyUp(e) {
+        if (ARROWS[e.key.toLowerCase()] && selectedOp) commit();   // সরানো শেষ হলে একবার history তে
+    }
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('keyup', onKeyUp);
 
     document.getElementById('save-btn').addEventListener('click', async () => {
         if (operations.length === 0) { showStatus('error', 'No edits made yet.'); return; }
@@ -737,6 +967,8 @@ FF.ready(function(){
             btn.textContent = 'Save PDF';
         }
     });
+
+    updateButtons();
 });
 </script>
 {% endblock %}
