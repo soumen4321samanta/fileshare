@@ -10,7 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="{% static 'frontend/favicon.svg' %}">
 {# CSS বদলালে ?v= সংখ্যাটা বাড়িয়ে দিন (cache এড়াতে) #}
-<link rel="stylesheet" href="{% static 'frontend/style.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'frontend/style.css' %}?v=4">
 {# এই দুটো marker এর মাঝখানের অংশ router প্রতিটা পেজ বদলের সময় নতুন পেজের extra_head দিয়ে বদলে দেয় #}
 <meta id="extra-head-start" name="extra-head-start" content="">
 {% block extra_head %}{% endblock %}
@@ -82,6 +82,10 @@
     async function loadPage(url, push = true) {
         const mainEl = document.getElementById('main-content');
         const scriptsEl = document.getElementById('page-scripts');
+        const root = document.documentElement;
+        // View Transitions API: browser এ থাকলে আর motion কমানো না থাকলে পাতা মসৃণভাবে বদলায়
+        const useVT = !!document.startViewTransition &&
+                      !matchMedia('(prefers-reduced-motion: reduce)').matches;
         try {
             mainEl.classList.add('page-loading');
             const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
@@ -94,37 +98,57 @@
             const newTitle = doc.querySelector('title');
             if (!newMain) throw new Error('No #main-content in response');
 
-            // নতুন পেজের <head> এর CSS আগে বসাও, তারপর content
-            swapExtraHead(doc);
+            // আসল DOM বদলের কাজটা এই function এ, যাতে transition এর ভেতরেও চালানো যায়
+            const swap = () => {
+                // নতুন পেজের <head> এর CSS আগে বসাও, তারপর content
+                swapExtraHead(doc);
 
-            mainEl.innerHTML = newMain.innerHTML;
-            if (newTitle) document.title = newTitle.textContent;
+                mainEl.innerHTML = newMain.innerHTML;
+                if (newTitle) document.title = newTitle.textContent;
 
-            // #main-content এর ভেতরের script চালাও
-            runScripts(mainEl);
+                // #main-content এর ভেতরের script চালাও
+                runScripts(mainEl);
 
-            // extra_scripts ব্লকের script-ও চালাও (আগে এটাই মিস হচ্ছিল —
-            // এই কারণেই ২য় পেজে upload কাজ করছিল না)
-            if (scriptsEl) {
-                scriptsEl.innerHTML = newScripts ? newScripts.innerHTML : '';
-                runScripts(scriptsEl);
+                // extra_scripts ব্লকের script-ও চালাও
+                if (scriptsEl) {
+                    scriptsEl.innerHTML = newScripts ? newScripts.innerHTML : '';
+                    runScripts(scriptsEl);
+                }
+
+                // View Transitions না থাকলে আগের মতো সাধারণ ঢোকার animation
+                if (!useVT) {
+                    mainEl.classList.remove('page-enter');
+                    void mainEl.offsetWidth; // animation restart করার জন্য reflow
+                    mainEl.classList.add('page-enter');
+                    setTimeout(() => mainEl.classList.remove('page-enter'), 600);
+                }
+
+                initMainContent();
+                updateActiveNav(url.split('?')[0]);
+
+                // mobile nav খোলা থাকলে বন্ধ করো
+                const siteNav = document.getElementById('site-nav');
+                if (siteNav) siteNav.classList.remove('open');
+
+                if (push) history.pushState({ url }, '', url);
+                window.scrollTo({ top: 0, behavior: 'instant' });
+            };
+
+            if (useVT) {
+                // পুরোনো পাতার ছবি তোলার আগে "লোড হচ্ছে" এর আবছা ভাব সরাও (transition ছাড়া)
+                mainEl.style.transition = 'none';
+                mainEl.classList.remove('page-loading');
+                void mainEl.offsetWidth;
+                mainEl.style.transition = '';
+
+                root.classList.add('vt-page');
+                const t = document.startViewTransition(swap);
+                const cleanup = () => root.classList.remove('vt-page');
+                t.finished.then(cleanup, cleanup);
+                await t.updateCallbackDone;
+            } else {
+                swap();
             }
-
-            // নতুন পেজ ঢোকার animation
-            mainEl.classList.remove('page-enter');
-            void mainEl.offsetWidth; // animation restart করার জন্য reflow
-            mainEl.classList.add('page-enter');
-            setTimeout(() => mainEl.classList.remove('page-enter'), 600);
-
-            initMainContent();
-            updateActiveNav(url.split('?')[0]);
-
-            // mobile nav খোলা থাকলে বন্ধ করো
-            const siteNav = document.getElementById('site-nav');
-            if (siteNav) siteNav.classList.remove('open');
-
-            if (push) history.pushState({ url }, '', url);
-            window.scrollTo({ top: 0, behavior: 'instant' });
         } catch (err) {
             window.location.href = url;
         } finally {

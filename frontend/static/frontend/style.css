@@ -1373,3 +1373,173 @@ button.action-btn .ripple {
     .header-cta::before, .cursor-glow { animation: none !important; display: none; }
     .js .reveal-up { opacity: 1; transform: none; }
 }
+
+
+
+
+/* ============================================================
+   13. NEW — PAGE TRANSITIONS, BENTO GRID, ROTATING BORDER, TICKET + STAMP
+   (style.css এর একদম নিচে paste করুন)
+   ============================================================ */
+
+/* ---------- 13a. পাতা বদলের মসৃণ transition (View Transitions API) ----------
+   .vt-page class টা router শুধু transition চলার সময় বসায়,
+   তাই #main-content এ সবসময় view-transition-name থাকে না। */
+.vt-page #main-content { view-transition-name: page; }
+
+/* বাকি পাতা (header ইত্যাদি) নিজে আলাদা animate হবে না */
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+::view-transition-old(page) { animation: vtOut 0.22s ease both; }
+::view-transition-new(page) { animation: vtIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+@keyframes vtOut {
+    to { opacity: 0; transform: translateY(-8px) scale(0.995); }
+}
+@keyframes vtIn {
+    from { opacity: 0; transform: translateY(16px); }
+}
+
+
+/* ---------- 13b. Bento grid (শুধু .tool-grid.bento এ কাজ করে) ---------- */
+.tool-grid.bento {
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-flow: dense;
+}
+
+/* বড় featured card: দুই কলাম × দুই সারি */
+.tool-grid.bento .tool-card.featured {
+    grid-column: span 2;
+    grid-row: span 2;
+    display: flex;
+    flex-direction: column;
+    padding: 28px 26px;
+    min-height: 250px;
+}
+.tool-grid.bento .tool-card.featured .icon {
+    width: 56px; height: 56px;
+    border-radius: 15px;
+    margin-bottom: auto;           /* আইকন উপরে, লেখা নিচে */
+}
+.tool-grid.bento .tool-card.featured .icon svg { width: 24px; height: 24px; }
+.tool-grid.bento .tool-card.featured h3 { font-size: 22px; margin-bottom: 8px; }
+.tool-grid.bento .tool-card.featured p { font-size: 14px; max-width: 30ch; }
+
+/* চওড়া card: পুরো সারি জুড়ে, আইকন বাঁয়ে আর লেখা ডানে */
+.tool-grid.bento .tool-card.wide {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 16px;
+    align-items: center;
+    padding: 18px 20px;
+}
+.tool-grid.bento .tool-card.wide .icon {
+    grid-row: 1 / span 2;
+    margin-bottom: 0;
+}
+.tool-grid.bento .tool-card.wide h3 { align-self: end; margin-bottom: 2px; }
+.tool-grid.bento .tool-card.wide p  { align-self: start; }
+
+@media (max-width: 760px) {
+    .tool-grid.bento { grid-template-columns: repeat(2, 1fr); }
+    .tool-grid.bento .tool-card.featured {
+        grid-column: 1 / -1;
+        grid-row: auto;
+        min-height: 0;
+    }
+    .tool-grid.bento .tool-card.featured .icon { margin-bottom: 18px; }
+}
+@media (max-width: 480px) {
+    .tool-grid.bento { grid-template-columns: 1fr; }
+}
+
+
+/* ---------- 13c. Featured card এর কিনারায় ঘুরন্ত আলো ---------- */
+@property --angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+}
+.tool-card.featured::after {
+    padding: 1.5px;
+    background: conic-gradient(
+        from var(--angle),
+        transparent 0deg,
+        rgba(207,69,32,0) 50deg,
+        var(--stamp) 130deg,
+        var(--teal) 210deg,
+        transparent 290deg
+    );
+    opacity: 1;
+    animation: borderSpin 6s linear infinite;
+}
+@keyframes borderSpin {
+    to { --angle: 360deg; }
+}
+
+
+/* ---------- 13d. Result ticket: ছিদ্র-ছিদ্র নকশা + "DONE" stamp ---------- */
+.result-ticket {
+    position: relative;
+    border-radius: 8px;
+}
+
+/* দুই পাশে অর্ধবৃত্তাকার খাঁজ (card এর রঙ দিয়ে "কাটা" দেখানো হয়) */
+.result-ticket::before,
+.result-ticket::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--panel);
+    transform: translateY(-50%);
+}
+.result-ticket::before { left: -8px; }
+.result-ticket::after  { right: -8px; }
+
+/* লেখা আর ডাউনলোড বাটনের মাঝে ছিদ্র করার ড্যাশ রেখা */
+.result-ticket .meta {
+    position: relative;
+    padding-right: 12px;
+    border-right: 2px dashed rgba(42, 36, 22, 0.25);
+}
+
+/* ঘুরে এসে বসা "DONE" stamp */
+.result-ticket.show .meta::after {
+    content: 'DONE';
+    position: absolute;
+    top: -30px;
+    right: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: var(--stamp);
+    background: rgba(244, 236, 216, 0.92);
+    border: 2px solid var(--stamp);
+    border-radius: 6px;
+    padding: 2px 8px;
+    pointer-events: none;
+    transform: rotate(-12deg);
+    animation: stampIn 0.5s 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
+}
+@keyframes stampIn {
+    0%   { opacity: 0; transform: rotate(-12deg) scale(2.4); }
+    60%  { opacity: 1; transform: rotate(-12deg) scale(0.92); }
+    100% { opacity: 0.95; transform: rotate(-12deg) scale(1); }
+}
+
+
+/* ---------- 13e. Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+    .tool-card.featured::after { animation: none !important; }
+    .result-ticket.show .meta::after { animation: none !important; opacity: 0.95; }
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) { animation: none !important; }
+}
