@@ -50,11 +50,22 @@
         <p>Choose a PDF, then tap "Rotate" on any page to turn it 90° at a time. Rotate again to keep turning.</p>
     </div>
 
+    <ol class="steps" id="steps" aria-label="Progress">
+        <li class="step active"><span class="step-dot">1</span><span class="step-label">Choose PDF</span></li>
+        <li class="step-line" aria-hidden="true"></li>
+        <li class="step"><span class="step-dot">2</span><span class="step-label">Rotate</span></li>
+        <li class="step-line" aria-hidden="true"></li>
+        <li class="step"><span class="step-dot">3</span><span class="step-label">Download</span></li>
+    </ol>
+
     <div class="card">
         <div class="dropzone" id="dropzone">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 16V4M12 4l-4 4M12 4l4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <p><strong>Tap to choose a PDF</strong></p>
-            <p>or drag &amp; drop here</p>
+            <div class="dz-art dz-rotate" aria-hidden="true">
+                <span class="dz-pg r"></span>
+                <span class="dz-badge">↻</span>
+            </div>
+            <p><strong id="dz-title">Tap to choose a PDF</strong></p>
+            <p id="dz-sub">or drag &amp; drop here</p>
             <input type="file" id="file-input" class="file-input-hidden" accept="application/pdf">
         </div>
 
@@ -68,7 +79,7 @@
             <div class="icon">📄</div>
             <div class="meta">
                 <div class="fname" id="result-name">rotated.pdf</div>
-                <div class="fsub">Ready to download</div>
+                <div class="fsub" id="result-sub">Ready to download</div>
             </div>
             <a class="dl" id="result-link" download title="Download">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M12 15l-4-4M12 15l4-4M4 19h16" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -87,10 +98,39 @@ FF.ready(function(){
     const submitBtn = document.getElementById('submit-btn');
     const resultTicket = document.getElementById('result-ticket');
     const resultName = document.getElementById('result-name');
+    const resultSub = document.getElementById('result-sub');
     const resultLink = document.getElementById('result-link');
+    const dzTitle = document.getElementById('dz-title');
+    const dzSub = document.getElementById('dz-sub');
+    const steps = [...document.querySelectorAll('#steps .step')];
+    const stepLines = [...document.querySelectorAll('#steps .step-line')];
 
     let selectedFile = null;
     let rotations = {};
+    let saving = false;
+
+    // n = current step (1-3), busy = pulse while working
+    function setStep(n, busy = false) {
+        steps.forEach((s, i) => {
+            const num = i + 1;
+            s.classList.toggle('done', num < n);
+            s.classList.toggle('active', num === n);
+            s.classList.toggle('busy', num === n && busy);
+            s.querySelector('.step-dot').textContent = num < n ? '✓' : String(num);
+        });
+        stepLines.forEach((l, i) => l.classList.toggle('done', i + 1 < n));
+    }
+
+    function fmtSize(bytes) {
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    function setDropzoneState(file) {
+        dropzone.classList.toggle('has-files', !!file);
+        dzTitle.textContent = file ? 'Tap to choose a different PDF' : 'Tap to choose a PDF';
+        dzSub.textContent = file ? `${file.name} · ${fmtSize(file.size)}` : 'or drag & drop here';
+    }
 
     dropzone.addEventListener('click', () => fileInput.click());
     ['dragenter', 'dragover'].forEach(evt => dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.add('dragover'); }));
@@ -109,6 +149,7 @@ FF.ready(function(){
 
         loadingBox.className = 'status-box show info';
         loadingBox.textContent = 'Loading page previews…';
+        setStep(1, true);
 
         const formData = new FormData();
         formData.append('file', file);
@@ -118,13 +159,19 @@ FF.ready(function(){
             if (!resp.ok) {
                 loadingBox.className = 'status-box show error';
                 loadingBox.textContent = data.error || 'Could not load previews.';
+                setDropzoneState(null);
+                setStep(1);
                 return;
             }
             loadingBox.className = 'status-box';
+            setDropzoneState(file);
             renderGrid(data.pages);
+            setStep(2);
         } catch (err) {
             loadingBox.className = 'status-box show error';
             loadingBox.textContent = 'Network error loading previews.';
+            setDropzoneState(null);
+            setStep(1);
         }
     }
 
@@ -149,6 +196,11 @@ FF.ready(function(){
     }
 
     function rotatePage(pageNum, container) {
+        // a new rotation makes any earlier result stale
+        resultTicket.classList.remove('show');
+        statusBox.className = 'status-box';
+        setStep(2);
+
         rotations[pageNum] = (rotations[pageNum] + 90) % 360;
         const img = container.querySelector('img');
         img.style.transform = `rotate(${rotations[pageNum]}deg)`;
@@ -159,17 +211,21 @@ FF.ready(function(){
     }
 
     function updateSubmitState() {
-        submitBtn.disabled = !Object.values(rotations).some(a => a !== 0);
+        submitBtn.disabled = saving || !Object.values(rotations).some(a => a !== 0);
     }
 
     submitBtn.addEventListener('click', async () => {
         if (!selectedFile) return;
+        const pageNumbers = Object.keys(rotations).map(Number).sort((a,b)=>a-b);
+        const anglesStr = pageNumbers.map(p => rotations[p]).join(',');
+        const rotatedCount = pageNumbers.filter(p => rotations[p] !== 0).length;
+        let ok = false;
+
+        saving = true;
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<span class="spinner"></span> Saving…';
         statusBox.className = 'status-box';
-
-        const pageNumbers = Object.keys(rotations).map(Number).sort((a,b)=>a-b);
-        const anglesStr = pageNumbers.map(p => rotations[p]).join(',');
+        setStep(2, true);
 
         const formData = new FormData();
         formData.append('file', selectedFile);
@@ -188,15 +244,19 @@ FF.ready(function(){
             resultLink.href = url;
             resultLink.download = 'rotated.pdf';
             resultName.textContent = 'rotated.pdf';
+            resultSub.textContent = `Ready · ${rotatedCount} of ${pageNumbers.length} pages rotated · ${fmtSize(blob.size)}`;
             resultTicket.classList.add('show');
             statusBox.className = 'status-box show success';
             statusBox.textContent = 'Rotated PDF ready.';
+            ok = true;
         } catch (err) {
             statusBox.className = 'status-box show error';
             statusBox.textContent = 'Network error. Please try again.';
         } finally {
-            updateSubmitState();
+            saving = false;
             submitBtn.textContent = 'Save Rotated PDF';
+            updateSubmitState();
+            setStep(ok ? 3 : 2);
         }
     });
 });

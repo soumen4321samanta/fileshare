@@ -1,0 +1,434 @@
+
+/* ============================================================
+   REORDER PAGES — dropzone এর animation
+   তিনটে নম্বর দেওয়া page [1][2][3]: প্রথমটা উপর দিয়ে ঘুরে শেষে চলে যায় → [2][3][1]
+   তারপর ✓ বসে। (৪.৫ সেকেন্ডের loop)
+   ============================================================ */
+
+/* page এর মাথায় রঙিন পট্টি, তাতে নম্বর */
+.dz-reorder .dz-pg::before {
+    left: 0; top: 0;
+    width: 100%; height: 15px;
+    border-radius: 4px 4px 0 0;
+}
+.dz-reorder .dz-pg.a::before { background: var(--stamp); }
+.dz-reorder .dz-pg.b::before { background: var(--teal); }
+.dz-reorder .dz-pg.c::before { background: #8b93a9; }
+.dz-reorder .dz-pg::after { top: 23px; }   /* লেখার লাইন পট্টির নিচে নামে */
+
+.dz-reorder .dz-pg .n {
+    position: relative;
+    z-index: 1;
+    display: block;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 15px;
+    color: #ffffff;
+}
+
+.dz-reorder .dz-pg.a { animation: dzReA 4.5s ease-in-out infinite; }
+.dz-reorder .dz-pg.b { animation: dzReB 4.5s ease-in-out infinite; }
+.dz-reorder .dz-pg.c { animation: dzReC 4.5s ease-in-out infinite; }
+
+/* ডান-উপরের কোণায় ✓ */
+.dz-reorder .dz-badge {
+    margin: -34px 0 0 46px;
+    animation: dzReBadge 4.5s ease-in-out infinite;
+}
+
+@keyframes dzReA {
+    0%, 16%   { opacity: 1; transform: translate(-40px, 0); }
+    30%       { opacity: 1; transform: translate(0, -16px); }
+    44%, 88%  { opacity: 1; transform: translate(40px, 0); }
+    94%       { opacity: 0; transform: translate(40px, 0); }
+    96%       { opacity: 0; transform: translate(-40px, 0); }
+    100%      { opacity: 1; transform: translate(-40px, 0); }
+}
+@keyframes dzReB {
+    0%, 22%   { opacity: 1; transform: translate(0, 0); }
+    40%, 88%  { opacity: 1; transform: translate(-40px, 0); }
+    94%       { opacity: 0; transform: translate(-40px, 0); }
+    96%       { opacity: 0; transform: translate(0, 0); }
+    100%      { opacity: 1; transform: translate(0, 0); }
+}
+@keyframes dzReC {
+    0%, 26%   { opacity: 1; transform: translate(40px, 0); }
+    44%, 88%  { opacity: 1; transform: translate(0, 0); }
+    94%       { opacity: 0; transform: translate(0, 0); }
+    96%       { opacity: 0; transform: translate(40px, 0); }
+    100%      { opacity: 1; transform: translate(40px, 0); }
+}
+@keyframes dzReBadge {
+    0%, 50%   { transform: scale(0); }
+    56%       { transform: scale(1.25); }
+    60%, 88%  { transform: scale(1); }
+    94%, 100% { transform: scale(0); }
+}
+
+/* motion কমানো থাকলে: সাজানো শেষের অবস্থা [2][3][1] স্থির দেখায় */
+@media (prefers-reduced-motion: reduce) {
+    .dz-reorder .dz-pg.a { display: block; opacity: 1; transform: translate(40px, 0); }
+    .dz-reorder .dz-pg.b { display: block; opacity: 1; transform: translate(-40px, 0); }
+    .dz-reorder .dz-pg.c { display: block; opacity: 1; transform: translate(0, 0); }
+    .dz-reorder .dz-badge { transform: scale(1); }
+}
+
+
+
+
+
+/* ============================================================
+   REORDER PAGES — dropzone এর animation
+   তিনটে নম্বর দেওয়া page [1][2][3]: প্রথমটা উপর দিয়ে ঘুরে শেষে চলে যায় → [2][3][1]
+   তারপর ✓ বসে। (৪.৫ সেকেন্ডের loop)
+   ============================================================ */
+
+/* page এর মাথায় রঙিন পট্টি, তাতে নম্বর */
+.dz-reorder .dz-pg::before {
+    left: 0; top: 0;
+    width: 100%; height: 15px;
+    border-radius: 4px 4px 0 0;
+}
+.dz-reorder .dz-pg.a::before { background: var(--stamp); }
+.dz-reorder .dz-pg.b::before { background: var(--teal); }
+.dz-reorder .dz-pg.c::before { background: #8b93a9; }
+.dz-reorder .dz-pg::after { top: 23px; }   /* লেখার লাইন পট্টির নিচে নামে */
+
+.dz-reorder .dz-pg .n {
+    position: relative;
+    z-index: 1;
+    display: block;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 15px;
+    color: #ffffff;
+}
+
+.dz-reorder .dz-pg.a { animation: dzReA 4.5s ease-in-out infinite; }
+.dz-reorder .dz-pg.b { animation: dzReB 4.5s ease-in-out infinite; }
+.dz-reorder .dz-pg.c { animation: dzReC 4.5s ease-in-out infinite; }
+
+/* ডান-উপরের কোণায় ✓ */
+.dz-reorder .dz-badge {
+    margin: -34px 0 0 46px;
+    animation: dzReBadge 4.5s ease-in-out infinite;
+}
+
+@keyframes dzReA {
+    0%, 16%   { opacity: 1; transform: translate(-40px, 0); }
+    30%       { opacity: 1; transform: translate(0, -16px); }
+    44%, 88%  { opacity: 1; transform: translate(40px, 0); }
+    94%       { opacity: 0; transform: translate(40px, 0); }
+    96%       { opacity: 0; transform: translate(-40px, 0); }
+    100%      { opacity: 1; transform: translate(-40px, 0); }
+}
+@keyframes dzReB {
+    0%, 22%   { opacity: 1; transform: translate(0, 0); }
+    40%, 88%  { opacity: 1; transform: translate(-40px, 0); }
+    94%       { opacity: 0; transform: translate(-40px, 0); }
+    96%       { opacity: 0; transform: translate(0, 0); }
+    100%      { opacity: 1; transform: translate(0, 0); }
+}
+@keyframes dzReC {
+    0%, 26%   { opacity: 1; transform: translate(40px, 0); }
+    44%, 88%  { opacity: 1; transform: translate(0, 0); }
+    94%       { opacity: 0; transform: translate(0, 0); }
+    96%       { opacity: 0; transform: translate(40px, 0); }
+    100%      { opacity: 1; transform: translate(40px, 0); }
+}
+@keyframes dzReBadge {
+    0%, 50%   { transform: scale(0); }
+    56%       { transform: scale(1.25); }
+    60%, 88%  { transform: scale(1); }
+    94%, 100% { transform: scale(0); }
+}
+
+/* motion কমানো থাকলে: সাজানো শেষের অবস্থা [2][3][1] স্থির দেখায় */
+@media (prefers-reduced-motion: reduce) {
+    .dz-reorder .dz-pg.a { display: block; opacity: 1; transform: translate(40px, 0); }
+    .dz-reorder .dz-pg.b { display: block; opacity: 1; transform: translate(-40px, 0); }
+    .dz-reorder .dz-pg.c { display: block; opacity: 1; transform: translate(0, 0); }
+    .dz-reorder .dz-badge { transform: scale(1); }
+}
+
+
+
+/* ============================================================
+   PDF EDITOR — dropzone এর animation
+   একটা ছোট page: erase box আঁকা হয় (লেখা ঢেকে যায়) → তার জায়গায় লাল নতুন লেখা বসে
+   (৪.৫ সেকেন্ডের loop, শেষে সব মিলিয়ে গিয়ে আসল লেখা ফিরে আসে)
+   ============================================================ */
+.dz-editor .ed-page {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 76px; height: 52px;
+    margin: -26px 0 0 -38px;
+    background: #ffffff;
+    border-radius: 5px;
+    box-shadow: 0 6px 14px -6px rgba(0, 0, 0, 0.7);
+}
+.dz-editor .ed-line {
+    position: absolute;
+    left: 8px;
+    height: 4px;
+    border-radius: 2px;
+    background: #d4d7e0;
+}
+.dz-editor .ed-l1 { top: 9px;  width: 34px; height: 5px; background: #bfc3d0; }
+.dz-editor .ed-l2 { top: 22px; width: 56px; }   /* যে লাইনটা মুছবে */
+.dz-editor .ed-l3 { top: 35px; width: 46px; }
+
+/* edit এর স্তর: শেষে একসাথে মিলিয়ে যায়, তাই loop মসৃণ */
+.dz-editor .ed-layer {
+    position: absolute;
+    inset: 0;
+    animation: dzEdLayer 4.5s infinite;
+}
+.dz-editor .ed-box {
+    position: absolute;
+    left: 5px; top: 18px;
+    width: 0; height: 12px;
+    box-sizing: border-box;
+    background: #ffffff;
+    border: 1.5px dashed var(--stamp);
+    animation: dzEdBox 4.5s cubic-bezier(0.3, 0, 0.2, 1) infinite;
+}
+.dz-editor .ed-new {
+    position: absolute;
+    left: 8px; top: 22px;
+    width: 40px; height: 4px;
+    border-radius: 2px;
+    background: var(--stamp);
+    clip-path: inset(0 100% 0 0);
+    animation: dzEdType 4.5s steps(8, end) infinite;
+}
+.dz-editor .ed-cursor {
+    position: absolute;
+    left: 0; top: 0;
+    margin: -1px 0 0 -2px;
+    opacity: 0;
+    z-index: 2;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+    animation: dzEdCursor 4.5s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+}
+
+@keyframes dzEdBox {
+    0%, 8%    { width: 0;    border-color: var(--stamp); }
+    28%, 34%  { width: 66px; border-color: var(--stamp); }
+    40%, 100% { width: 66px; border-color: transparent; }
+}
+@keyframes dzEdType {
+    0%, 42%   { clip-path: inset(0 100% 0 0); }
+    62%, 100% { clip-path: inset(0 0 0 0); }
+}
+@keyframes dzEdLayer {
+    0%, 88%   { opacity: 1; }
+    94%, 100% { opacity: 0; }
+}
+@keyframes dzEdCursor {
+    0%        { opacity: 0; transform: translate(80px, 50px); }
+    4%        { opacity: 1; transform: translate(80px, 50px); }
+    8%        { opacity: 1; transform: translate(5px, 18px); }
+    28%, 34%  { opacity: 1; transform: translate(71px, 30px); }
+    42%, 62%  { opacity: 1; transform: translate(10px, 26px); }
+    78%       { opacity: 1; transform: translate(62px, 44px); }
+    88%, 100% { opacity: 0; transform: translate(62px, 44px); }
+}
+
+/* motion কমানো থাকলে: erase আর নতুন লেখার শেষ ফলাফল স্থির দেখায় */
+@media (prefers-reduced-motion: reduce) {
+    .dz-editor .ed-box { width: 66px; border-color: transparent; }
+    .dz-editor .ed-new { clip-path: none; }
+    .dz-editor .ed-cursor { display: none; }
+}
+
+
+
+/* Per-tool dropzone animations. Needs the shared .dz-art / .dz-pg / .dz-badge / .steps rules from style.css. */
+
+/* Reorder: pages [1][2][3] -> [2][3][1] */
+.dz-reorder .dz-pg::before {
+    left: 0; top: 0;
+    width: 100%; height: 15px;
+    border-radius: 4px 4px 0 0;
+}
+.dz-reorder .dz-pg.a::before { background: var(--stamp); }
+.dz-reorder .dz-pg.b::before { background: var(--teal); }
+.dz-reorder .dz-pg.c::before { background: #8b93a9; }
+.dz-reorder .dz-pg::after { top: 23px; }
+
+.dz-reorder .dz-pg .n {
+    position: relative;
+    z-index: 1;
+    display: block;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 15px;
+    color: #ffffff;
+}
+
+.dz-reorder .dz-pg.a { animation: dzReA 4.5s ease-in-out infinite; }
+.dz-reorder .dz-pg.b { animation: dzReB 4.5s ease-in-out infinite; }
+.dz-reorder .dz-pg.c { animation: dzReC 4.5s ease-in-out infinite; }
+
+.dz-reorder .dz-badge {
+    margin: -34px 0 0 46px;
+    animation: dzReBadge 4.5s ease-in-out infinite;
+}
+
+@keyframes dzReA {
+    0%, 16%   { opacity: 1; transform: translate(-40px, 0); }
+    30%       { opacity: 1; transform: translate(0, -16px); }
+    44%, 88%  { opacity: 1; transform: translate(40px, 0); }
+    94%       { opacity: 0; transform: translate(40px, 0); }
+    96%       { opacity: 0; transform: translate(-40px, 0); }
+    100%      { opacity: 1; transform: translate(-40px, 0); }
+}
+@keyframes dzReB {
+    0%, 22%   { opacity: 1; transform: translate(0, 0); }
+    40%, 88%  { opacity: 1; transform: translate(-40px, 0); }
+    94%       { opacity: 0; transform: translate(-40px, 0); }
+    96%       { opacity: 0; transform: translate(0, 0); }
+    100%      { opacity: 1; transform: translate(0, 0); }
+}
+@keyframes dzReC {
+    0%, 26%   { opacity: 1; transform: translate(40px, 0); }
+    44%, 88%  { opacity: 1; transform: translate(0, 0); }
+    94%       { opacity: 0; transform: translate(0, 0); }
+    96%       { opacity: 0; transform: translate(40px, 0); }
+    100%      { opacity: 1; transform: translate(40px, 0); }
+}
+@keyframes dzReBadge {
+    0%, 50%   { transform: scale(0); }
+    56%       { transform: scale(1.25); }
+    60%, 88%  { transform: scale(1); }
+    94%, 100% { transform: scale(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dz-reorder .dz-pg.a { display: block; opacity: 1; transform: translate(40px, 0); }
+    .dz-reorder .dz-pg.b { display: block; opacity: 1; transform: translate(-40px, 0); }
+    .dz-reorder .dz-pg.c { display: block; opacity: 1; transform: translate(0, 0); }
+    .dz-reorder .dz-badge { transform: scale(1); }
+}
+
+/* Editor: erase box, then new text */
+.dz-editor .ed-page {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 76px; height: 52px;
+    margin: -26px 0 0 -38px;
+    background: #ffffff;
+    border-radius: 5px;
+    box-shadow: 0 6px 14px -6px rgba(0, 0, 0, 0.7);
+}
+.dz-editor .ed-line {
+    position: absolute;
+    left: 8px;
+    height: 4px;
+    border-radius: 2px;
+    background: #d4d7e0;
+}
+.dz-editor .ed-l1 { top: 9px;  width: 34px; height: 5px; background: #bfc3d0; }
+.dz-editor .ed-l2 { top: 22px; width: 56px; }
+.dz-editor .ed-l3 { top: 35px; width: 46px; }
+
+.dz-editor .ed-layer {
+    position: absolute;
+    inset: 0;
+    animation: dzEdLayer 4.5s infinite;
+}
+.dz-editor .ed-box {
+    position: absolute;
+    left: 5px; top: 18px;
+    width: 0; height: 12px;
+    box-sizing: border-box;
+    background: #ffffff;
+    border: 1.5px dashed var(--stamp);
+    animation: dzEdBox 4.5s cubic-bezier(0.3, 0, 0.2, 1) infinite;
+}
+.dz-editor .ed-new {
+    position: absolute;
+    left: 8px; top: 22px;
+    width: 40px; height: 4px;
+    border-radius: 2px;
+    background: var(--stamp);
+    clip-path: inset(0 100% 0 0);
+    animation: dzEdType 4.5s steps(8, end) infinite;
+}
+.dz-editor .ed-cursor {
+    position: absolute;
+    left: 0; top: 0;
+    margin: -1px 0 0 -2px;
+    opacity: 0;
+    z-index: 2;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+    animation: dzEdCursor 4.5s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+}
+
+@keyframes dzEdBox {
+    0%, 8%    { width: 0;    border-color: var(--stamp); }
+    28%, 34%  { width: 66px; border-color: var(--stamp); }
+    40%, 100% { width: 66px; border-color: transparent; }
+}
+@keyframes dzEdType {
+    0%, 42%   { clip-path: inset(0 100% 0 0); }
+    62%, 100% { clip-path: inset(0 0 0 0); }
+}
+@keyframes dzEdLayer {
+    0%, 88%   { opacity: 1; }
+    94%, 100% { opacity: 0; }
+}
+@keyframes dzEdCursor {
+    0%        { opacity: 0; transform: translate(80px, 50px); }
+    4%        { opacity: 1; transform: translate(80px, 50px); }
+    8%        { opacity: 1; transform: translate(5px, 18px); }
+    28%, 34%  { opacity: 1; transform: translate(71px, 30px); }
+    42%, 62%  { opacity: 1; transform: translate(10px, 26px); }
+    78%       { opacity: 1; transform: translate(62px, 44px); }
+    88%, 100% { opacity: 0; transform: translate(62px, 44px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dz-editor .ed-box { width: 66px; border-color: transparent; }
+    .dz-editor .ed-new { clip-path: none; }
+    .dz-editor .ed-cursor { display: none; }
+}
+
+/* Rotate: one page turns 90deg twice */
+.dz-rotate .dz-pg.r {
+    animation: dzRotP 4.5s ease-in-out infinite;
+}
+.dz-rotate .dz-badge {
+    margin: -34px 0 0 40px;
+    animation: dzRotBadge 4.5s ease-in-out infinite;
+}
+
+@keyframes dzRotP {
+    0%, 14%   { opacity: 1; transform: rotate(0deg); }
+    30%, 46%  { opacity: 1; transform: rotate(90deg); }
+    62%, 88%  { opacity: 1; transform: rotate(180deg); }
+    94%       { opacity: 0; transform: rotate(180deg); }
+    96%       { opacity: 0; transform: rotate(0deg); }
+    100%      { opacity: 1; transform: rotate(0deg); }
+}
+@keyframes dzRotBadge {
+    0%, 12%   { transform: scale(0); }
+    18%       { transform: scale(1.2); }
+    24%, 30%  { transform: scale(1); }
+    34%, 44%  { transform: scale(0); }
+    48%       { transform: scale(1.2); }
+    54%, 62%  { transform: scale(1); }
+    66%, 100% { transform: scale(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dz-rotate .dz-pg.r { opacity: 1; transform: rotate(90deg); }
+    .dz-rotate .dz-badge { transform: scale(1); }
+}

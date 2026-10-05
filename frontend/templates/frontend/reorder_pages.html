@@ -56,11 +56,26 @@
         <p>Choose a PDF. Drag pages on desktop, or use the ▲▼ buttons (works everywhere, including phones) to set the new order.</p>
     </div>
 
+    {# ধাপ দেখানো বার: JS এর setStep() এটা বদলায় #}
+    <ol class="steps" id="steps" aria-label="Progress">
+        <li class="step active"><span class="step-dot">1</span><span class="step-label">Choose PDF</span></li>
+        <li class="step-line" aria-hidden="true"></li>
+        <li class="step"><span class="step-dot">2</span><span class="step-label">Arrange</span></li>
+        <li class="step-line" aria-hidden="true"></li>
+        <li class="step"><span class="step-dot">3</span><span class="step-label">Download</span></li>
+    </ol>
+
     <div class="card">
         <div class="dropzone" id="dropzone">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 16V4M12 4l-4 4M12 4l4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <p><strong>Tap to choose a PDF</strong></p>
-            <p>or drag &amp; drop here</p>
+            {# নম্বর দেওয়া তিনটে page: প্রথমটা উপর দিয়ে ঘুরে শেষে যায় (PDF বাছা হলে নিজে লুকিয়ে যায়) #}
+            <div class="dz-art dz-reorder" aria-hidden="true">
+                <span class="dz-pg a"><b class="n">1</b></span>
+                <span class="dz-pg b"><b class="n">2</b></span>
+                <span class="dz-pg c"><b class="n">3</b></span>
+                <span class="dz-badge">✓</span>
+            </div>
+            <p><strong id="dz-title">Tap to choose a PDF</strong></p>
+            <p id="dz-sub">or drag &amp; drop here</p>
             <input type="file" id="file-input" class="file-input-hidden" accept="application/pdf">
         </div>
 
@@ -74,7 +89,7 @@
             <div class="icon">📄</div>
             <div class="meta">
                 <div class="fname" id="result-name">reordered.pdf</div>
-                <div class="fsub">Ready to download</div>
+                <div class="fsub" id="result-sub">Ready to download</div>
             </div>
             <a class="dl" id="result-link" download title="Download">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M12 15l-4-4M12 15l4-4M4 19h16" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -93,10 +108,40 @@ FF.ready(function(){
     const submitBtn = document.getElementById('submit-btn');
     const resultTicket = document.getElementById('result-ticket');
     const resultName = document.getElementById('result-name');
+    const resultSub = document.getElementById('result-sub');
     const resultLink = document.getElementById('result-link');
+    const dzTitle = document.getElementById('dz-title');
+    const dzSub = document.getElementById('dz-sub');
+    const steps = [...document.querySelectorAll('#steps .step')];
+    const stepLines = [...document.querySelectorAll('#steps .step-line')];
 
     let selectedFile = null;
     let draggedEl = null;
+    let saving = false;
+
+    // ---- ধাপ দেখানো বার: n = এখন যে ধাপে আছে (১, ২ বা ৩), busy = কাজ চলছে ----
+    function setStep(n, busy = false) {
+        steps.forEach((s, i) => {
+            const num = i + 1;
+            s.classList.toggle('done', num < n);
+            s.classList.toggle('active', num === n);
+            s.classList.toggle('busy', num === n && busy);
+            s.querySelector('.step-dot').textContent = num < n ? '✓' : String(num);
+        });
+        stepLines.forEach((l, i) => l.classList.toggle('done', i + 1 < n));
+    }
+
+    function fmtSize(bytes) {
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    // ফাইল বাছা থাকলে dropzone ছোট হয়ে ফাইলের নাম দেখায়, না থাকলে আগের চেহারায় ফেরে
+    function setDropzoneState(file) {
+        dropzone.classList.toggle('has-files', !!file);
+        dzTitle.textContent = file ? 'Tap to choose a different PDF' : 'Tap to choose a PDF';
+        dzSub.textContent = file ? `${file.name} · ${fmtSize(file.size)}` : 'or drag & drop here';
+    }
 
     dropzone.addEventListener('click', () => fileInput.click());
     ['dragenter', 'dragover'].forEach(evt => dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.add('dragover'); }));
@@ -114,6 +159,7 @@ FF.ready(function(){
 
         loadingBox.className = 'status-box show info';
         loadingBox.textContent = 'Loading page previews…';
+        setStep(1, true);
 
         const formData = new FormData();
         formData.append('file', file);
@@ -123,14 +169,21 @@ FF.ready(function(){
             if (!resp.ok) {
                 loadingBox.className = 'status-box show error';
                 loadingBox.textContent = data.error || 'Could not load previews.';
+                setDropzoneState(null);
+                setStep(1);
                 return;
             }
-            loadingBox.className = 'status-box';
+            setDropzoneState(file);
             renderGrid(data.pages);
-            submitBtn.disabled = false;
+            // Save বাটন চালু হবে ক্রম বদলালে; এই লেখা প্রথম বদলেই সরে যাবে
+            loadingBox.className = 'status-box show info';
+            loadingBox.textContent = 'Drag pages (or use ▲▼) to set the new order. Save turns on once the order changes.';
+            setStep(2);
         } catch (err) {
             loadingBox.className = 'status-box show error';
             loadingBox.textContent = 'Network error loading previews.';
+            setDropzoneState(null);
+            setStep(1);
         }
     }
 
@@ -153,17 +206,18 @@ FF.ready(function(){
             div.querySelector('.move-up').addEventListener('click', (e) => {
                 e.stopPropagation();
                 const prev = div.previousElementSibling;
-                if (prev) { pageGrid.insertBefore(div, prev); renumber(); }
+                if (prev) { pageGrid.insertBefore(div, prev); afterReorder(); }
             });
             div.querySelector('.move-down').addEventListener('click', (e) => {
                 e.stopPropagation();
                 const next = div.nextElementSibling;
-                if (next) { pageGrid.insertBefore(next, div); renumber(); }
+                if (next) { pageGrid.insertBefore(next, div); afterReorder(); }
             });
             attachDragHandlers(div);
             pageGrid.appendChild(div);
         });
         renumber();
+        updateSubmitState();
     }
 
     function attachDragHandlers(el) {
@@ -194,7 +248,7 @@ FF.ready(function(){
             } else {
                 el.before(draggedEl);
             }
-            renumber();
+            afterReorder();
         });
     }
 
@@ -208,16 +262,39 @@ FF.ready(function(){
         return Array.from(pageGrid.children).map(el => el.dataset.origPage);
     }
 
+    // ক্রম আসল ক্রম থেকে আলাদা হলেই Save চালু হয়
+    function orderChanged() {
+        return getCurrentOrder().some((p, i) => Number(p) !== i + 1);
+    }
+    function updateSubmitState() {
+        submitBtn.disabled = saving || !orderChanged();
+    }
+
+    // ব্যবহারকারী কোনো page সরালে: আগের ফলাফল আর বার্তা সরে যায়, ধাপ ২ এ ফেরে
+    function afterReorder() {
+        renumber();
+        resultTicket.classList.remove('show');
+        statusBox.className = 'status-box';
+        loadingBox.className = 'status-box';
+        setStep(2);
+        updateSubmitState();
+    }
+
     submitBtn.addEventListener('click', async () => {
-        if (!selectedFile) return;
+        if (!selectedFile || !orderChanged()) return;
+        const order = getCurrentOrder().map(Number);
+        const moved = order.filter((p, i) => p !== i + 1).length;
+        let ok = false;
+
+        saving = true;
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<span class="spinner"></span> Saving…';
         statusBox.className = 'status-box';
+        setStep(2, true);
 
-        const orderStr = getCurrentOrder().join(',');
         const formData = new FormData();
         formData.append('file', selectedFile);
-        formData.append('order', orderStr);
+        formData.append('order', order.join(','));
 
         try {
             const resp = await fetch('/api/pdf-reorder-pages/', { method: 'POST', body: formData });
@@ -232,15 +309,23 @@ FF.ready(function(){
             resultLink.href = url;
             resultLink.download = 'reordered.pdf';
             resultName.textContent = 'reordered.pdf';
+            // পাতা কম হলে নতুন ক্রম দেখায়, বেশি হলে কয়টা সরেছে সেটা
+            const orderPart = order.length <= 8
+                ? `order ${order.join(', ')}`
+                : `${moved} of ${order.length} pages moved`;
+            resultSub.textContent = `Ready · ${orderPart} · ${fmtSize(blob.size)}`;
             resultTicket.classList.add('show');
             statusBox.className = 'status-box show success';
             statusBox.textContent = 'New order saved.';
+            ok = true;
         } catch (err) {
             statusBox.className = 'status-box show error';
             statusBox.textContent = 'Network error. Please try again.';
         } finally {
-            submitBtn.disabled = false;
+            saving = false;
             submitBtn.textContent = 'Save New Order';
+            updateSubmitState();
+            setStep(ok ? 3 : 2);
         }
     });
 });

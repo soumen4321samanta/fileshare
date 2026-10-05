@@ -127,11 +127,32 @@
         <p>Choose a PDF. Drag to erase existing content, or tap "Add Text" then tap anywhere to place new text. Tap any box or text to select it, then move or resize it, and change the font, size or color from the toolbar. Double-tap a text to edit its words. Pinch with two fingers to zoom.</p>
     </div>
 
+    {# ধাপ দেখানো বার: JS এর setStep() এটা বদলায় #}
+    <ol class="steps" id="steps" aria-label="Progress">
+        <li class="step active"><span class="step-dot">1</span><span class="step-label">Choose PDF</span></li>
+        <li class="step-line" aria-hidden="true"></li>
+        <li class="step"><span class="step-dot">2</span><span class="step-label">Edit</span></li>
+        <li class="step-line" aria-hidden="true"></li>
+        <li class="step"><span class="step-dot">3</span><span class="step-label">Download</span></li>
+    </ol>
+
     <div class="card">
         <div class="dropzone" id="dropzone">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 16V4M12 4l-4 4M12 4l4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <p><strong>Tap to choose a PDF</strong></p>
-            <p>or drag &amp; drop here</p>
+            {# একটা page: erase box আঁকা হয়, তারপর নতুন লেখা বসে (PDF বাছা হলে নিজে লুকিয়ে যায়) #}
+            <div class="dz-art dz-editor" aria-hidden="true">
+                <div class="ed-page">
+                    <i class="ed-line ed-l1"></i>
+                    <i class="ed-line ed-l2"></i>
+                    <i class="ed-line ed-l3"></i>
+                    <div class="ed-layer">
+                        <i class="ed-box"></i>
+                        <i class="ed-new"></i>
+                    </div>
+                    <svg class="ed-cursor" width="12" height="12" viewBox="0 0 24 24"><path d="M3 2l7.5 19 2.6-7.9L21 10.5 3 2z" fill="#ffffff" stroke="#12131a" stroke-width="1.8" stroke-linejoin="round"/></svg>
+                </div>
+            </div>
+            <p><strong id="dz-title">Tap to choose a PDF</strong></p>
+            <p id="dz-sub">or drag &amp; drop here</p>
             <input type="file" id="file-input" class="file-input-hidden" accept="application/pdf">
         </div>
 
@@ -186,7 +207,7 @@
             <div class="icon">📄</div>
             <div class="meta">
                 <div class="fname" id="result-name">edited.pdf</div>
-                <div class="fsub">Ready to download</div>
+                <div class="fsub" id="result-sub">Ready to download</div>
             </div>
             <a class="dl" id="result-link" download title="Download">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M12 15l-4-4M12 15l4-4M4 19h16" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -218,8 +239,46 @@ FF.ready(function(){
     const redoBtn = document.getElementById('redo-btn');
     const dupBtn = document.getElementById('dup-btn');
     const delBtn = document.getElementById('del-btn');
+    const resultSub = document.getElementById('result-sub');
+    const dzTitle = document.getElementById('dz-title');
+    const dzSub = document.getElementById('dz-sub');
+    const steps = [...document.querySelectorAll('#steps .step')];
+    const stepLines = [...document.querySelectorAll('#steps .step-line')];
 
     let selectedFile = null;
+
+    // ---- ধাপ দেখানো বার: n = এখন যে ধাপে আছে (১, ২ বা ৩), busy = কাজ চলছে ----
+    function setStep(n, busy = false) {
+        steps.forEach((s, i) => {
+            const num = i + 1;
+            s.classList.toggle('done', num < n);
+            s.classList.toggle('active', num === n);
+            s.classList.toggle('busy', num === n && busy);
+            s.querySelector('.step-dot').textContent = num < n ? '✓' : String(num);
+        });
+        stepLines.forEach((l, i) => l.classList.toggle('done', i + 1 < n));
+    }
+
+    function fmtSize(bytes) {
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    // ফাইল বাছা থাকলে dropzone ছোট হয়ে ফাইলের নাম দেখায়, না থাকলে আগের চেহারায় ফেরে
+    function setDropzoneState(file) {
+        dropzone.classList.toggle('has-files', !!file);
+        dzTitle.textContent = file ? 'Tap to choose a different PDF' : 'Tap to choose a PDF';
+        dzSub.textContent = file ? `${file.name} · ${fmtSize(file.size)}` : 'or drag & drop here';
+    }
+
+    // Save করার পর আবার কিছু বদলালে আগের ফলাফল আর দেখানোর মানে নেই
+    function onEdited() {
+        if (resultTicket.classList.contains('show')) {
+            resultTicket.classList.remove('show');
+            hideStatus();
+            setStep(2);
+        }
+    }
     let totalPages = 1;
     let currentPage = 1;
     let currentTool = 'erase';
@@ -256,6 +315,7 @@ FF.ready(function(){
         if (hist.length > 100) hist.shift();
         histIdx = hist.length - 1;
         updateButtons();
+        onEdited();
     }
 
     function restore(i) {
@@ -266,6 +326,7 @@ FF.ready(function(){
         if (selectedOp && selectedOp.page !== currentPage) selectedOp = null;
         syncToolbar(selectedOp);
         redrawOverlay();
+        onEdited();
     }
     function undo() { if (histIdx > 0) restore(histIdx - 1); }
     function redo() { if (histIdx < hist.length - 1) restore(histIdx + 1); }
@@ -363,14 +424,28 @@ FF.ready(function(){
         zoom = 1;
         hideStatus();
         resultTicket.classList.remove('show');
+        setStep(1, true);
 
-        const countResp = await fetch('/api/pdf-page-count/', { method: 'POST', body: makeFD({file}) });
-        const countData = await countResp.json();
-        if (!countResp.ok) { showStatus('error', countData.error); return; }
-        totalPages = countData.pages;
-        currentPage = 1;
-        editorArea.style.display = 'block';
-        await loadPage();
+        try {
+            const countResp = await fetch('/api/pdf-page-count/', { method: 'POST', body: makeFD({file}) });
+            const countData = await countResp.json();
+            if (!countResp.ok) {
+                showStatus('error', countData.error);
+                setDropzoneState(null);
+                setStep(1);
+                return;
+            }
+            totalPages = countData.pages;
+            currentPage = 1;
+            setDropzoneState(file);
+            editorArea.style.display = 'block';
+            await loadPage();
+            setStep(2);
+        } catch (err) {
+            showStatus('error', 'Could not open this PDF. Please try again.');
+            setDropzoneState(null);
+            setStep(1);
+        }
     }
 
     async function loadPage() {
@@ -944,6 +1019,10 @@ FF.ready(function(){
         const btn = document.getElementById('save-btn');
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner"></span> Saving…';
+        setStep(2, true);
+        let ok = false;
+        const erased = operations.filter(o => o.type === 'erase').length;
+        const texts = operations.filter(o => o.type === 'text').length;
 
         const fd = makeFD({file: selectedFile, operations: JSON.stringify(operations)});
         try {
@@ -958,13 +1037,21 @@ FF.ready(function(){
             resultLink.href = url;
             resultLink.download = 'edited.pdf';
             resultName.textContent = 'edited.pdf';
+            // কী কী edit হয়েছে আর নতুন মাপ কত
+            const parts = [];
+            if (erased) parts.push(`${erased} erased`);
+            if (texts) parts.push(`${texts} text added`);
+            parts.push(fmtSize(blob.size));
+            resultSub.textContent = 'Ready · ' + parts.join(' · ');
             resultTicket.classList.add('show');
             showStatus('success', 'Saved successfully.');
+            ok = true;
         } catch (err) {
             showStatus('error', 'Network error. Please try again.');
         } finally {
             btn.disabled = false;
             btn.textContent = 'Save PDF';
+            setStep(ok ? 3 : 2);
         }
     });
 
