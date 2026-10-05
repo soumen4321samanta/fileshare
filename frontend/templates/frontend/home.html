@@ -62,6 +62,58 @@
         </div>
     </div>
 
+    {# ===== LIVE DEMO: নিজে নিজে চলা editor (শুধু CSS animation, কোনো আসল ফাইল লাগে না) ===== #}
+    <div class="demo-wrap" id="demo">
+        <div class="demo-window" role="img" aria-label="Animated demo: erasing an old date in a PDF and typing a new one">
+            <div class="demo-bar" aria-hidden="true">
+                <span class="demo-dots"><i></i><i></i><i></i></span>
+                <span class="demo-title">report.pdf — PDF Editor</span>
+                <span class="demo-live"><i></i> LIVE DEMO</span>
+            </div>
+
+            <div class="demo-tools" aria-hidden="true">
+                <span class="demo-pill demo-pill-erase">🧽 Erase</span>
+                <span class="demo-pill demo-pill-text">🔤 Add Text</span>
+            </div>
+
+            <div class="demo-scale" aria-hidden="true">
+                <div class="demo-stage">
+                    <div class="demo-paper">
+                        <div class="demo-doc-title">Project Report</div>
+                        <div class="demo-line" style="top:56px; width:300px;"></div>
+                        <div class="demo-line" style="top:74px; width:240px;"></div>
+                        <div class="demo-line" style="top:92px; width:270px;"></div>
+                        <div class="demo-orig">Deadline: 10 Sept</div>
+                        <div class="demo-line" style="top:166px; width:310px;"></div>
+                        <div class="demo-line" style="top:184px; width:250px;"></div>
+                        <div class="demo-line" style="top:202px; width:290px;"></div>
+                        <div class="demo-line" style="top:220px; width:180px;"></div>
+                    </div>
+
+                    <div class="demo-layer">
+                        <div class="demo-erase">
+                            <i class="demo-h-dot d1"></i><i class="demo-h-dot d2"></i>
+                            <i class="demo-h-dot d3"></i><i class="demo-h-dot d4"></i>
+                        </div>
+                        <div class="demo-typed">
+                            <span class="demo-typed-text">Deadline: 24 Oct</span>
+                            <i class="demo-h-dot"></i>
+                        </div>
+                    </div>
+
+                    <div class="demo-ripple"></div>
+                    <svg class="demo-cursor" width="18" height="18" viewBox="0 0 24 24"><path d="M3 2l7.5 19 2.6-7.9L21 10.5 3 2z" fill="#ffffff" stroke="#12131a" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                </div>
+            </div>
+        </div>
+
+        <p class="demo-caption">Erase the wrong, type the right — all in your browser.</p>
+        <a class="demo-cta" href="{% url 'editor_page' %}">
+            Try it yourself
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+    </div>
+
     {% comment %} <div class="section-label" id="section-share">Share</div>
     <div class="tool-grid">
         <a href="{% url 'send_file_page' %}" class="tool-card featured">
@@ -72,9 +124,29 @@
     </div> {% endcomment %}
 
     <div class="section-label" id="section-edit">Edit PDFs</div>
-    <div class="tool-grid">
+    <div class="tool-grid bento">
         <a href="{% url 'editor_page' %}" class="tool-card featured">
+            <div class="fx-bg" aria-hidden="true"></div>
             <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
+
+            {# ভাসমান ছোট PDF page: erase box, টাইপ হওয়া লেখা আর বাটন #}
+            <div class="fx-art" aria-hidden="true">
+                <div class="fx-page">
+                    <i class="fx-line fl1"></i>
+                    <i class="fx-line fl2"></i>
+                    <i class="fx-line fl3"></i>
+                    <span class="fx-sel">
+                        <i class="fx-dot d1"></i><i class="fx-dot d2"></i><i class="fx-dot d3"></i><i class="fx-dot d4"></i>
+                    </span>
+                    <span class="fx-typed">Edited text</span>
+                    <i class="fx-line fl4"></i>
+                    <i class="fx-line fl5"></i>
+                </div>
+                <span class="fx-chip fx-chip-erase">🧽 Erase</span>
+                <span class="fx-chip fx-chip-text">Aa Add text</span>
+                <svg class="fx-cursor" width="16" height="16" viewBox="0 0 24 24"><path d="M3 2l7.5 19 2.6-7.9L21 10.5 3 2z" fill="#ffffff" stroke="#12131a" stroke-width="1.5" stroke-linejoin="round"/></svg>
+            </div>
+
             <h3>PDF Editor</h3>
             <p>Erase existing content and add new text anywhere.</p>
         </a>
@@ -103,10 +175,25 @@
             <p>Turn individual pages 90° at a time.</p>
         </a>
 
-        <a href="{% url 'ocr_page' %}" class="tool-card">
+        <a href="{% url 'ocr_page' %}" class="tool-card wide">
             <div class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4a1 1 0 011-1h3M20 7V4a1 1 0 00-1-1h-3M4 17v3a1 1 0 001 1h3M20 17v3a1 1 0 01-1 1h-3M9 9h6M9 13h4"/></svg></div>
             <h3>OCR</h3>
             <p>Make a scanned PDF searchable and copyable.</p>
+
+            {# স্ক্যান করা কাগজ → পরিষ্কার লেখা → Copied #}
+            <div class="ocr-art" aria-hidden="true">
+                <div class="ocr-scan">
+                    <i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i><i class="b5"></i>
+                    <span class="ocr-beam"></span>
+                </div>
+                <svg class="ocr-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <div class="ocr-text">
+                    <span class="ocr-tl t1">Invoice no. 2048</span>
+                    <span class="ocr-tl t2">Total due: 1,250</span>
+                    <span class="ocr-tl t3">Pay by 24 Oct</span>
+                </div>
+                <span class="ocr-chip">✓ Copied</span>
+            </div>
         </a>
     </div>
 
@@ -207,6 +294,23 @@ FF.ready(function () {
         }, { threshold: 0.5 });
 
         statNums.forEach(el => statsObserver.observe(el));
+    }
+
+    // ---- Live demo: screen এর বাইরে গেলে animation থামিয়ে দাও (CPU/ব্যাটারি বাঁচাতে) ----
+    const demoWin = document.querySelector('.demo-window');
+    if (demoWin && 'IntersectionObserver' in window) {
+        new IntersectionObserver((entries) => {
+            demoWin.classList.toggle('is-paused', !entries[0].isIntersecting);
+        }, { threshold: 0.15 }).observe(demoWin);
+    }
+
+    // ---- PDF Editor / OCR card এর animation: screen এর বাইরে গেলে থামে ----
+    const artEls = document.querySelectorAll('.fx-art, .ocr-art');
+    if (artEls.length && 'IntersectionObserver' in window) {
+        const artObserver = new IntersectionObserver((entries) => {
+            entries.forEach(en => en.target.classList.toggle('is-paused', !en.isIntersecting));
+        }, { threshold: 0.1 });
+        artEls.forEach(el => artObserver.observe(el));
     }
 
     // ---- Floating icons: click to bounce/spin ----

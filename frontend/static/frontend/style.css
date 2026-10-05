@@ -1543,3 +1543,696 @@ button.action-btn .ripple {
     ::view-transition-old(*),
     ::view-transition-new(*) { animation: none !important; }
 }
+
+
+/* ============================================================
+   14. HOME — LIVE DEMO (হিরোর নিচে নিজে নিজে চলা editor)
+   (style.css এর একদম নিচে paste করুন)
+
+   একটা ১১ সেকেন্ডের loop:
+   erase box আঁকা → box ঠিক করা → "Add Text" এ যাওয়া → নতুন লেখা টাইপ হওয়া → আবার শুরু
+   সব animation একই --dur এ চলে, তাই নিজেদের মধ্যে মিলে থাকে।
+   ============================================================ */
+
+.demo-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0 0 6px;
+}
+
+.demo-window {
+    --dur: 11s;
+    width: fit-content;
+    max-width: 100%;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 0 14px 14px;
+    box-shadow:
+        0 24px 60px -24px rgba(0, 0, 0, 0.7),
+        0 0 0 1px rgba(255, 255, 255, 0.02),
+        0 0 80px -30px rgba(207, 69, 32, 0.25);
+    animation: fadeUp 0.7s 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ---- উপরের বার ---- */
+.demo-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 2px;
+}
+.demo-dots { display: flex; gap: 6px; }
+.demo-dots i {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: #2f3446;
+}
+.demo-title {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.demo-live {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+    color: var(--teal);
+    white-space: nowrap;
+}
+.demo-live i {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--teal);
+    box-shadow: 0 0 0 3px rgba(79, 174, 138, 0.18);
+    animation: dotPulse 1.8s ease-in-out infinite;
+}
+
+/* ---- Erase / Add Text বাটন (নিজে নিজে বদলায়) ---- */
+.demo-tools {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.demo-pill {
+    padding: 6px 11px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--panel-2);
+    color: var(--text);
+    font-size: 12px;
+    white-space: nowrap;
+}
+.demo-pill-erase { animation: demoPillErase var(--dur) infinite; }
+.demo-pill-text  { animation: demoPillText var(--dur) infinite; }
+
+/* ---- মাপ ঠিক রাখার wrapper (ছোট screen এ --s দিয়ে ছোট হয়) ---- */
+.demo-scale {
+    --s: 1;
+    position: relative;
+    width: calc(400px * var(--s));
+    height: calc(250px * var(--s));
+}
+.demo-stage {
+    position: absolute;
+    top: 0; left: 0;
+    width: 400px;
+    height: 250px;
+    transform: scale(var(--s));
+    transform-origin: top left;
+}
+
+/* ---- নকল PDF page ---- */
+.demo-paper {
+    position: absolute;
+    inset: 0;
+    background: #ffffff;
+    border-radius: 8px;
+    overflow: hidden;
+    color: #23242c;
+    font-family: Helvetica, Arial, sans-serif;
+}
+.demo-doc-title {
+    position: absolute;
+    left: 24px; top: 20px;
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: -0.01em;
+}
+.demo-line {
+    position: absolute;
+    left: 24px;
+    height: 7px;
+    border-radius: 4px;
+    background: #dfe1e8;
+}
+/* যে লাইনটা মুছে নতুন লেখা বসবে */
+.demo-orig {
+    position: absolute;
+    left: 24px; top: 117px;
+    font-size: 15px;
+    line-height: 20px;
+    white-space: nowrap;
+}
+
+/* ---- যা যা "edit" করা হয় (শেষে একসাথে মিলিয়ে যায়, তাই লুপ মসৃণ) ---- */
+.demo-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    animation: demoLayer var(--dur) infinite;
+}
+.demo-erase {
+    position: absolute;
+    left: 20px; top: 112px;
+    width: 0; height: 0;
+    background: #ffffff;
+    border: 1px dashed rgba(207, 69, 32, 0.85);
+    box-sizing: border-box;
+    animation:
+        demoDraw var(--dur) cubic-bezier(0.3, 0, 0.2, 1) infinite,
+        demoEraseBorder var(--dur) infinite;
+}
+.demo-erase .demo-h-dot {
+    position: absolute;
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: var(--stamp);
+    border: 1.5px solid #ffffff;
+    opacity: 0;
+    animation: demoHandles var(--dur) infinite;
+}
+.demo-h-dot.d1 { left: -5px;  top: -5px; }
+.demo-h-dot.d2 { right: -5px; top: -5px; }
+.demo-h-dot.d3 { left: -5px;  bottom: -5px; }
+.demo-h-dot.d4 { right: -5px; bottom: -5px; }
+
+.demo-typed {
+    position: absolute;
+    left: 24px; top: 117px;
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 15px;
+    line-height: 20px;
+    color: var(--stamp);
+    white-space: nowrap;
+    outline: 1.5px solid transparent;
+    outline-offset: 4px;
+    border-radius: 2px;
+    animation: demoSelect var(--dur) infinite;
+}
+.demo-typed-text {
+    display: block;
+    animation: demoType var(--dur) steps(16, end) infinite;
+}
+.demo-typed-text::after {
+    content: '';
+    display: inline-block;
+    width: 1.5px; height: 15px;
+    margin-left: 2px;
+    background: var(--stamp);
+    vertical-align: -2px;
+    animation: demoCaret 0.8s steps(1) infinite;
+}
+.demo-typed .demo-h-dot {
+    right: -9px; bottom: -9px;
+    position: absolute;
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: var(--stamp);
+    border: 1.5px solid #ffffff;
+    opacity: 0;
+    animation: demoSelDot var(--dur) infinite;
+}
+
+/* ---- click এর ঢেউ আর mouse cursor ---- */
+.demo-ripple {
+    position: absolute;
+    left: 30px; top: 124px;
+    width: 22px; height: 22px;
+    margin: -11px 0 0 -11px;
+    border: 2px solid var(--stamp);
+    border-radius: 50%;
+    opacity: 0;
+    pointer-events: none;
+    animation: demoRipple var(--dur) infinite;
+}
+.demo-cursor {
+    position: absolute;
+    left: 0; top: 0;
+    margin: -2px 0 0 -3px;
+    pointer-events: none;
+    z-index: 3;
+    opacity: 0;
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35));
+    animation: demoCursor var(--dur) cubic-bezier(0.45, 0, 0.2, 1) infinite;
+}
+
+/* ---- নিচের লেখা + বাটন ---- */
+.demo-caption {
+    margin: 16px 0 0;
+    font-size: 13px;
+    color: var(--muted);
+    text-align: center;
+}
+.demo-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 14px;
+    padding: 10px 20px;
+    border-radius: 100px;
+    background: var(--stamp);
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 13.5px;
+    font-weight: 600;
+    transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+.demo-cta:hover {
+    background: var(--stamp-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px -6px rgba(207, 69, 32, 0.55);
+}
+.demo-cta svg { transition: transform 0.2s ease; }
+.demo-cta:hover svg { transform: translateX(2px); }
+
+/* screen এর বাইরে গেলে animation থামে (CPU বাঁচাতে) */
+.demo-window.is-paused *,
+.demo-window.is-paused *::before,
+.demo-window.is-paused *::after {
+    animation-play-state: paused !important;
+}
+
+@media (max-width: 480px) {
+    .demo-scale { --s: 0.72; }
+}
+@media (max-width: 360px) {
+    .demo-scale { --s: 0.62; }
+}
+
+
+/* ============================================================
+   14b. DEMO KEYFRAMES  (সময়রেখা: ১০০% = ১১ সেকেন্ড)
+   ============================================================ */
+
+/* erase box আঁকা হচ্ছে: ১০% থেকে ২৪% */
+@keyframes demoDraw {
+    0%, 10%   { width: 0;     height: 0; }
+    24%, 100% { width: 142px; height: 30px; }
+}
+/* আঁকার সময় dashed বর্ডার, শেষে মিলিয়ে যায় */
+@keyframes demoEraseBorder {
+    0%, 34%   { border-color: rgba(207, 69, 32, 0.85); }
+    38%, 100% { border-color: transparent; }
+}
+@keyframes demoHandles {
+    0%, 22%   { opacity: 0; }
+    26%, 34%  { opacity: 1; }
+    38%, 100% { opacity: 0; }
+}
+
+/* নতুন লেখা বাঁ থেকে ডানে ১৬ ধাপে টাইপ হয়: ৪৩% থেকে ৫৮% */
+@keyframes demoType {
+    0%, 43%   { clip-path: inset(-4px 100% -4px 0); }
+    58%, 100% { clip-path: inset(-4px 0 -4px 0); }
+}
+/* টাইপ শেষে লেখা select হয় (outline + কোণার বিন্দু) */
+@keyframes demoSelect {
+    0%, 58%   { outline-color: transparent; }
+    61%, 74%  { outline-color: rgba(207, 69, 32, 0.9); }
+    78%, 100% { outline-color: transparent; }
+}
+@keyframes demoSelDot {
+    0%, 58%   { opacity: 0; }
+    61%, 74%  { opacity: 1; }
+    78%, 100% { opacity: 0; }
+}
+@keyframes demoCaret {
+    50% { opacity: 0; }
+}
+
+/* শেষে সব edit মিলিয়ে যায়, আসল লেখা ফিরে আসে */
+@keyframes demoLayer {
+    0%, 93%   { opacity: 1; }
+    97%, 100% { opacity: 0; }
+}
+
+/* Add Text এ click এর ঢেউ: ৪১% */
+@keyframes demoRipple {
+    0%, 40.5% { opacity: 0;   transform: scale(0.3); }
+    41%       { opacity: 0.9; transform: scale(0.3); }
+    46%       { opacity: 0;   transform: scale(1.7); }
+    100%      { opacity: 0;   transform: scale(1.7); }
+}
+
+/* mouse cursor এর যাত্রাপথ (stage এর px এ) */
+@keyframes demoCursor {
+    0%        { opacity: 0; transform: translate(340px, 230px); }
+    6%        { opacity: 1; transform: translate(340px, 230px); }
+    10%       { opacity: 1; transform: translate(20px, 112px); }
+    24%, 30%  { opacity: 1; transform: translate(162px, 142px); }
+    40%, 58%  { opacity: 1; transform: translate(30px, 124px); }
+    72%, 90%  { opacity: 1; transform: translate(210px, 176px); }
+    95%, 100% { opacity: 0; transform: translate(340px, 230px); }
+}
+
+/* Erase / Add Text বাটনের রং ৩৫% এ বদলায় */
+@keyframes demoPillErase {
+    0%, 35%   { background: var(--stamp);   border-color: var(--stamp); }
+    36%, 99%  { background: var(--panel-2); border-color: var(--line); }
+    100%      { background: var(--stamp);   border-color: var(--stamp); }
+}
+@keyframes demoPillText {
+    0%, 35%   { background: var(--panel-2); border-color: var(--line); }
+    36%, 99%  { background: var(--stamp);   border-color: var(--stamp); }
+    100%      { background: var(--panel-2); border-color: var(--line); }
+}
+
+
+/* ============================================================
+   14c. যাদের motion কমানো আছে: animation ছাড়াই "edit হয়ে যাওয়া" ফলাফল দেখায়
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+    .demo-window * { animation: none !important; }
+    .demo-erase { width: 142px; height: 30px; border-color: transparent; }
+    .demo-typed-text { clip-path: none; }
+    .demo-typed-text::after { display: none; }
+    .demo-pill-erase { background: var(--panel-2); border-color: var(--line); }
+    .demo-pill-text  { background: var(--stamp);   border-color: var(--stamp); }
+    .demo-cursor, .demo-ripple { display: none; }
+}
+
+
+
+
+/* ============================================================
+   15. HOME — "PDF Editor" বড় card আর "OCR" চওড়া card এর নতুন নকশা
+   (style.css এর একদম নিচে, demo এর CSS এর পরে paste করুন)
+
+   PDF Editor card: ফাঁকা জায়গায় ছোট একটা ভাসমান PDF page, যেখানে
+                    erase box, নতুন লেখা টাইপ হওয়া আর Erase / Add text বাটন ভাসছে।
+   OCR card:        স্ক্যান করা ঝাপসা কাগজের উপর দিয়ে আলোর রেখা যায়,
+                    তারপর পরিষ্কার লেখা বেরোয়, শেষে "Copied" দেখায়।
+   ============================================================ */
+
+
+/* ============================================================
+   15a. PDF EDITOR (featured) CARD
+   ============================================================ */
+
+/* পেছনে হালকা বিন্দুর জাল */
+.fx-bg {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.09) 1px, transparent 1.3px);
+    background-size: 16px 16px;
+    -webkit-mask-image: radial-gradient(ellipse 70% 80% at 80% 28%, #000, transparent 75%);
+    mask-image: radial-gradient(ellipse 70% 80% at 80% 28%, #000, transparent 75%);
+}
+
+.fx-art {
+    position: absolute;
+    right: 22px;
+    top: 48px;
+    width: 190px;
+    height: 150px;
+    pointer-events: none;
+}
+
+.fx-page {
+    position: absolute;
+    left: 0; top: 12px;
+    width: 160px; height: 124px;
+    background: linear-gradient(160deg, #ffffff, #eef0f5);
+    border-radius: 9px;
+    box-shadow: 0 16px 34px -10px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.5);
+    transform: rotate(-3deg);
+    transition: transform 0.4s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.tool-card:hover .fx-page { transform: rotate(-1deg) translateY(-4px); }
+
+.fx-line {
+    position: absolute;
+    left: 14px;
+    height: 6px;
+    border-radius: 3px;
+    background: #dcdee6;
+}
+.fx-line.fl1 { top: 14px;  width: 70px;  height: 8px; background: #bfc3d0; }
+.fx-line.fl2 { top: 32px;  width: 126px; }
+.fx-line.fl3 { top: 46px;  width: 100px; }
+.fx-line.fl4 { top: 98px;  width: 120px; }
+.fx-line.fl5 { top: 110px; width: 78px; }
+
+/* erase করা জায়গার box (লাল dashed + কোণার বিন্দু) */
+.fx-sel {
+    position: absolute;
+    left: 10px; top: 62px;
+    width: 112px; height: 26px;
+    border: 1.5px dashed var(--stamp);
+    border-radius: 3px;
+    background: rgba(207, 69, 32, 0.05);
+    animation: fxPulse 2.8s ease-in-out infinite;
+}
+.fx-dot {
+    position: absolute;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--stamp);
+    border: 1.5px solid #ffffff;
+}
+.fx-dot.d1 { left: -5px;  top: -5px; }
+.fx-dot.d2 { right: -5px; top: -5px; }
+.fx-dot.d3 { left: -5px;  bottom: -5px; }
+.fx-dot.d4 { right: -5px; bottom: -5px; }
+
+/* নতুন লেখা বার বার টাইপ হয় */
+.fx-typed {
+    position: absolute;
+    left: 18px; top: 67px;
+    font: 12px/16px Helvetica, Arial, sans-serif;
+    color: var(--stamp);
+    white-space: nowrap;
+    animation: fxType 6s steps(11, end) infinite;
+}
+
+/* ভাসমান বাটন */
+.fx-chip {
+    position: absolute;
+    padding: 4px 9px;
+    border-radius: 8px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    color: var(--text);
+    font-size: 10.5px;
+    white-space: nowrap;
+    box-shadow: 0 8px 18px -6px rgba(0, 0, 0, 0.6);
+    animation: fxFloat 4s ease-in-out infinite;
+}
+.fx-chip-erase { top: 0;     right: 0;  background: var(--stamp); border-color: var(--stamp); color: #fff; }
+.fx-chip-text  { top: 104px; right: -6px; animation-delay: -1.6s; }
+
+.fx-cursor {
+    position: absolute;
+    left: 118px; top: 96px;
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4));
+    animation: fxCursor 5s ease-in-out infinite;
+}
+
+@keyframes fxFloat {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-5px); }
+}
+@keyframes fxPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(207, 69, 32, 0); }
+    50%      { box-shadow: 0 0 0 5px rgba(207, 69, 32, 0.14); }
+}
+@keyframes fxType {
+    0%, 8%    { clip-path: inset(-3px 100% -3px 0); }
+    38%, 86%  { clip-path: inset(-3px 0 -3px 0); }
+    94%, 100% { clip-path: inset(-3px 100% -3px 0); }
+}
+@keyframes fxCursor {
+    0%, 100% { transform: translate(0, 0); }
+    40%      { transform: translate(-20px, -16px); }
+    70%      { transform: translate(-6px, -5px); }
+}
+
+/* মাঝারি screen: ছোট করে দেখাও যাতে লেখার সাথে না মেশে */
+@media (max-width: 1000px) and (min-width: 761px) {
+    .fx-art { transform: scale(0.78); transform-origin: top right; right: 14px; }
+    .tool-grid.bento .tool-card.featured p { max-width: 22ch; }
+}
+
+/* মোবাইল: card পুরো চওড়া, তাই art টা আইকনের নিচে স্বাভাবিকভাবে বসে */
+@media (max-width: 760px) {
+    .tool-grid.bento .tool-card.featured .fx-art {
+        position: relative;
+        right: auto; top: auto;
+        margin: 0 0 18px;
+    }
+    .tool-grid.bento .tool-card.featured .icon { margin-bottom: 14px; }
+}
+
+
+/* ============================================================
+   15b. OCR (wide) CARD
+   ============================================================ */
+.tool-grid.bento .tool-card.wide {
+    grid-template-columns: auto 1fr auto;
+    padding: 16px 22px;
+}
+
+.ocr-art {
+    --dur: 6s;
+    grid-column: 3;
+    grid-row: 1 / span 2;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: 18px;
+    pointer-events: none;
+}
+
+/* স্ক্যান করা (ঝাপসা) কাগজ */
+.ocr-scan {
+    position: relative;
+    width: 42px; height: 54px;
+    border-radius: 5px;
+    background: #e8e9ee;
+    overflow: hidden;
+    flex-shrink: 0;
+    box-shadow: 0 6px 14px -6px rgba(0, 0, 0, 0.6);
+    transition: transform 0.3s ease;
+}
+.tool-card.wide:hover .ocr-scan { transform: rotate(-4deg) scale(1.05); }
+.ocr-scan i {
+    position: absolute;
+    left: 6px;
+    height: 3px;
+    border-radius: 2px;
+    background: #9fa3b3;
+    filter: blur(0.7px);
+    opacity: 0.85;
+}
+.ocr-scan .b1 { top: 9px;  width: 28px; }
+.ocr-scan .b2 { top: 17px; width: 22px; }
+.ocr-scan .b3 { top: 25px; width: 30px; }
+.ocr-scan .b4 { top: 33px; width: 18px; }
+.ocr-scan .b5 { top: 41px; width: 26px; }
+
+/* উপর থেকে নিচে নামা সবুজ স্ক্যান রেখা */
+.ocr-beam {
+    position: absolute;
+    left: 0; right: 0;
+    top: 0;
+    height: 2px;
+    background: var(--teal);
+    box-shadow: 0 0 10px 2px rgba(79, 174, 138, 0.7), 0 -14px 14px rgba(79, 174, 138, 0.2);
+    opacity: 0;
+    animation: ocrBeam var(--dur) ease-in-out infinite;
+}
+
+.ocr-arrow {
+    color: var(--teal);
+    flex-shrink: 0;
+    opacity: 0;
+    animation: ocrArrow var(--dur) ease-in-out infinite;
+}
+
+/* পরিষ্কার লেখা বেরোয় */
+.ocr-text {
+    width: 124px;
+    padding: 7px 9px;
+    border-radius: 7px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.03);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    line-height: 1.6;
+    color: var(--text);
+    white-space: nowrap;
+    flex-shrink: 0;
+    outline: 1.5px solid transparent;
+    outline-offset: 2px;
+    animation: ocrSelect var(--dur) infinite;
+}
+.ocr-tl {
+    display: block;
+    clip-path: inset(0 100% 0 0);
+    animation-duration: var(--dur);
+    animation-timing-function: steps(14, end);
+    animation-iteration-count: infinite;
+}
+.ocr-tl.t1 { animation-name: ocrL1; }
+.ocr-tl.t2 { animation-name: ocrL2; }
+.ocr-tl.t3 { animation-name: ocrL3; }
+
+.ocr-chip {
+    padding: 3px 8px;
+    border-radius: 100px;
+    border: 1px solid rgba(79, 174, 138, 0.35);
+    background: rgba(79, 174, 138, 0.1);
+    color: var(--teal);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: 0;
+    transform: scale(0.7);
+    animation: ocrChip var(--dur) infinite;
+}
+
+@keyframes ocrBeam {
+    0%        { top: 0; opacity: 0; }
+    4%        { top: 0; opacity: 1; }
+    36%       { top: calc(100% - 2px); opacity: 1; }
+    40%, 100% { top: calc(100% - 2px); opacity: 0; }
+}
+@keyframes ocrArrow {
+    0%, 34%   { opacity: 0; transform: translateX(-4px); }
+    42%, 92%  { opacity: 1; transform: translateX(0); }
+    98%, 100% { opacity: 0; transform: translateX(0); }
+}
+@keyframes ocrL1 {
+    0%, 38%   { clip-path: inset(0 100% 0 0); }
+    50%, 94%  { clip-path: inset(0 0 0 0); }
+    98%, 100% { clip-path: inset(0 100% 0 0); }
+}
+@keyframes ocrL2 {
+    0%, 48%   { clip-path: inset(0 100% 0 0); }
+    60%, 94%  { clip-path: inset(0 0 0 0); }
+    98%, 100% { clip-path: inset(0 100% 0 0); }
+}
+@keyframes ocrL3 {
+    0%, 58%   { clip-path: inset(0 100% 0 0); }
+    70%, 94%  { clip-path: inset(0 0 0 0); }
+    98%, 100% { clip-path: inset(0 100% 0 0); }
+}
+/* লেখাটা "select" হয়, তারপর Copied দেখায় */
+@keyframes ocrSelect {
+    0%, 72%   { outline-color: transparent; }
+    76%, 90%  { outline-color: rgba(79, 174, 138, 0.8); }
+    94%, 100% { outline-color: transparent; }
+}
+@keyframes ocrChip {
+    0%, 76%   { opacity: 0; transform: scale(0.7); }
+    80%, 92%  { opacity: 1; transform: scale(1); }
+    96%, 100% { opacity: 0; transform: scale(0.9); }
+}
+
+/* ছোট screen এ জায়গা কম, তাই OCR এর animation লুকানো থাকে */
+@media (max-width: 700px) {
+    .ocr-art { display: none; }
+    .tool-grid.bento .tool-card.wide { grid-template-columns: auto 1fr; }
+}
+
+
+/* ============================================================
+   15c. screen এর বাইরে গেলে থামে, আর motion কমানো থাকলে স্থির ফলাফল দেখায়
+   ============================================================ */
+.fx-art.is-paused *,
+.ocr-art.is-paused * {
+    animation-play-state: paused !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fx-art *, .ocr-art * { animation: none !important; }
+    .ocr-tl { clip-path: none; }
+    .ocr-chip { opacity: 1; transform: none; }
+    .ocr-arrow { opacity: 1; }
+    .ocr-beam { display: none; }
+    .fx-cursor { display: none; }
+}
