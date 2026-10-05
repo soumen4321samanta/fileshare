@@ -9,12 +9,27 @@
         <p>Choose two or more PDFs. They'll be combined into one file, in the order you select them below.</p>
     </div>
 
+    {# ধাপ দেখানো বার: JS এর setStep() এটা বদলায় #}
+    <ol class="steps" id="steps" aria-label="Progress">
+        <li class="step active"><span class="step-dot">1</span><span class="step-label">Choose files</span></li>
+        <li class="step-line" aria-hidden="true"></li>
+        <li class="step"><span class="step-dot">2</span><span class="step-label">Merge</span></li>
+        <li class="step-line" aria-hidden="true"></li>
+        <li class="step"><span class="step-dot">3</span><span class="step-label">Download</span></li>
+    </ol>
+
     <div class="card">
         <form id="tool-form">
             <div class="dropzone" id="dropzone">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 16V4M12 4l-4 4M12 4l4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                <p><strong>Tap to choose PDFs</strong></p>
-                <p>or drag &amp; drop here (2 or more files)</p>
+                {# দুটো page জোড়া লাগার ছোট loop (ফাইল বাছা হলে নিজে লুকিয়ে যায়) #}
+                <div class="dz-art dz-merge" aria-hidden="true">
+                    <span class="dz-pg a"></span>
+                    <span class="dz-pg b"></span>
+                    <span class="dz-pg m"></span>
+                    <span class="dz-badge">✓</span>
+                </div>
+                <p><strong id="dz-title">Tap to choose PDFs</strong></p>
+                <p id="dz-sub">or drag &amp; drop here (2 or more files)</p>
                 <input type="file" id="file-input" class="file-input-hidden" accept="application/pdf" multiple>
             </div>
             <div class="file-list" id="file-list"></div>
@@ -31,7 +46,7 @@
             <div class="icon">📄</div>
             <div class="meta">
                 <div class="fname" id="result-name">merged.pdf</div>
-                <div class="fsub">Ready to download</div>
+                <div class="fsub" id="result-sub">Ready to download</div>
             </div>
             <a class="dl" id="result-link" download title="Download">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M12 15l-4-4M12 15l4-4M4 19h16" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -49,9 +64,31 @@ FF.ready(function(){
     const statusBox = document.getElementById('status-box');
     const resultTicket = document.getElementById('result-ticket');
     const resultName = document.getElementById('result-name');
+    const resultSub = document.getElementById('result-sub');
     const resultLink = document.getElementById('result-link');
+    const dzTitle = document.getElementById('dz-title');
+    const dzSub = document.getElementById('dz-sub');
+    const steps = [...document.querySelectorAll('#steps .step')];
+    const stepLines = [...document.querySelectorAll('#steps .step-line')];
 
     let selectedFiles = [];
+
+    // ---- ধাপ দেখানো বার: n = এখন যে ধাপে আছে (১, ২ বা ৩), busy = কাজ চলছে ----
+    function setStep(n, busy = false) {
+        steps.forEach((s, i) => {
+            const num = i + 1;
+            s.classList.toggle('done', num < n);
+            s.classList.toggle('active', num === n);
+            s.classList.toggle('busy', num === n && busy);
+            s.querySelector('.step-dot').textContent = num < n ? '✓' : String(num);
+        });
+        stepLines.forEach((l, i) => l.classList.toggle('done', i + 1 < n));
+    }
+
+    function fmtSize(bytes) {
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
 
     dropzone.addEventListener('click', () => fileInput.click());
     ['dragenter', 'dragover'].forEach(evt => dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.add('dragover'); }));
@@ -70,20 +107,45 @@ FF.ready(function(){
     }
 
     function renderFileList() {
+        // ফাইল বদলালে আগের ফলাফল আর বার্তা আর দেখানোর মানে নেই
+        hideStatus();
+        resultTicket.classList.remove('show');
+
         fileList.innerHTML = '';
         selectedFiles.forEach((f, i) => {
             const div = document.createElement('div');
-            div.innerHTML = `<span class="fname">${i + 1}. ${f.name}</span><span class="fsize">${(f.size / 1024).toFixed(1)} KB</span>`;
+
+            // ফাইলের নাম textContent দিয়ে বসানো হয়, যাতে নামে HTML থাকলেও চলে না যায়
+            const nameEl = document.createElement('span');
+            nameEl.className = 'fname';
+            nameEl.textContent = `${i + 1}. ${f.name}`;
+
+            const sizeEl = document.createElement('span');
+            sizeEl.className = 'fsize';
+            sizeEl.textContent = fmtSize(f.size);
+
             const removeBtn = document.createElement('span');
             removeBtn.textContent = ' ✕';
             removeBtn.style.cursor = 'pointer';
             removeBtn.style.marginLeft = '8px';
             removeBtn.style.color = '#ff9d80';
             removeBtn.addEventListener('click', () => removeFile(i));
+
+            div.appendChild(nameEl);
+            div.appendChild(sizeEl);
             div.appendChild(removeBtn);
             fileList.appendChild(div);
         });
+
+        const has = selectedFiles.length > 0;
+        dropzone.classList.toggle('has-files', has);
+        dzTitle.textContent = has ? 'Tap to add more PDFs' : 'Tap to choose PDFs';
+        dzSub.textContent = !has
+            ? 'or drag & drop here (2 or more files)'
+            : (selectedFiles.length < 2 ? 'Add at least one more file' : 'or drag & drop more here');
+
         submitBtn.disabled = selectedFiles.length < 2;
+        setStep(selectedFiles.length >= 2 ? 2 : 1);
     }
 
     function showStatus(type, msg) {
@@ -100,9 +162,12 @@ FF.ready(function(){
         resultTicket.classList.remove('show');
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<span class="spinner"></span> Merging…';
+        setStep(2, true);
 
         const formData = new FormData();
         selectedFiles.forEach(f => formData.append('files', f));
+        const count = selectedFiles.length;
+        let ok = false;
 
         try {
             const resp = await fetch('/api/merge-pdf/', { method: 'POST', body: formData });
@@ -116,13 +181,16 @@ FF.ready(function(){
             resultLink.href = url;
             resultLink.download = 'merged.pdf';
             resultName.textContent = 'merged.pdf';
+            resultSub.textContent = `Ready · ${count} files → 1 file · ${fmtSize(blob.size)}`;
             resultTicket.classList.add('show');
             showStatus('success', 'Merged successfully.');
+            ok = true;
         } catch (err) {
             showStatus('error', 'Network error. Please try again.');
         } finally {
             submitBtn.disabled = selectedFiles.length < 2;
             submitBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke-linecap="round" stroke-linejoin="round"/></svg> Merge PDFs';
+            setStep(ok ? 3 : 2);
         }
     });
 });

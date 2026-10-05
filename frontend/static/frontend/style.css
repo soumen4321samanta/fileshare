@@ -2236,3 +2236,271 @@ button.action-btn .ripple {
     .ocr-beam { display: none; }
     .fx-cursor { display: none; }
 }
+
+
+/* ============================================================
+   16. TOOL PAGES — ধাপ দেখানো বার + dropzone এর ছোট animation
+   (style.css এর একদম নিচে, আগের CSS গুলোর পরে paste করুন)
+
+   এগুলো সব tool পাতায় কাজে লাগবে (Merge, Compress, Rotate ...),
+   এখন শুধু Merge পাতায় বসানো হয়েছে।
+   ============================================================ */
+
+
+/* ---------- 16a. ধাপ দেখানো বার: ১ ফাইল বাছুন → ২ কাজ → ৩ ডাউনলোড ---------- */
+.steps {
+    list-style: none;
+    margin: 0 0 18px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--muted);
+    white-space: nowrap;
+    transition: color 0.25s ease;
+}
+.step-dot {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease,
+                box-shadow 0.25s ease;
+}
+/* এখন যে ধাপে আছে */
+.step.active { color: var(--text); }
+.step.active .step-dot {
+    background: rgba(207, 69, 32, 0.16);
+    border-color: var(--stamp);
+    color: var(--stamp);
+    box-shadow: 0 0 0 4px rgba(207, 69, 32, 0.10);
+}
+/* কাজ চলছে */
+.step.busy .step-dot { animation: stepPulse 1.2s ease-in-out infinite; }
+/* শেষ হয়ে গেছে */
+.step.done { color: var(--text); }
+.step.done .step-dot {
+    background: var(--teal);
+    border-color: var(--teal);
+    color: #0d1a14;
+}
+
+/* ধাপের মাঝের রেখা, শেষ হলে সবুজ হয়ে ভরে যায় */
+.step-line {
+    flex: 1;
+    min-width: 14px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--line);
+    position: relative;
+    overflow: hidden;
+}
+.step-line::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--teal);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s ease;
+}
+.step-line.done::after { transform: scaleX(1); }
+
+@keyframes stepPulse {
+    0%, 100% { box-shadow: 0 0 0 4px rgba(207, 69, 32, 0.10); }
+    50%      { box-shadow: 0 0 0 8px rgba(207, 69, 32, 0.04); }
+}
+
+/* খুব ছোট screen এ শুধু চলতি ধাপের নাম দেখায় */
+@media (max-width: 380px) {
+    .step-label { display: none; }
+    .step.active .step-label { display: inline; }
+}
+
+
+/* ---------- 16b. Dropzone এর ভেতরের ছোট animation ---------- */
+.dz-art {
+    position: relative;
+    width: 120px;
+    height: 64px;
+    margin: 0 auto 12px;
+    transition: transform 0.25s ease;
+}
+.dropzone.dragover .dz-art { transform: scale(1.08); }
+
+/* ফাইল বাছা হয়ে গেলে animation সরে যায়, dropzone ছোট হয় */
+.dropzone.has-files { padding: 16px; }
+.dropzone.has-files .dz-art { display: none; }
+
+/* ছোট ছোট page */
+.dz-pg {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 34px; height: 44px;
+    margin: -22px 0 0 -17px;
+    background: #ffffff;
+    border-radius: 4px;
+    box-shadow: 0 6px 14px -6px rgba(0, 0, 0, 0.7);
+}
+.dz-pg::before {              /* উপরের রঙিন দাগ */
+    content: '';
+    position: absolute;
+    left: 6px; top: 7px;
+    width: 14px; height: 4px;
+    border-radius: 2px;
+    background: var(--stamp);
+}
+.dz-pg::after {               /* লেখার লাইন */
+    content: '';
+    position: absolute;
+    left: 6px; top: 17px;
+    width: 22px; height: 3px;
+    border-radius: 2px;
+    background: #d4d7e0;
+    box-shadow: 0 7px 0 #d4d7e0, 0 14px 0 #d4d7e0;
+}
+.dz-pg.b::before { background: var(--teal); }
+
+/* জোড়া লাগা page */
+.dz-pg.m {
+    width: 40px; height: 52px;
+    margin: -26px 0 0 -20px;
+    opacity: 0;
+}
+.dz-pg.m::before {
+    width: 24px;
+    background: linear-gradient(90deg, var(--stamp), var(--teal));
+}
+.dz-pg.m::after { width: 28px; box-shadow: 0 7px 0 #d4d7e0, 0 14px 0 #d4d7e0, 0 21px 0 #d4d7e0; }
+
+.dz-badge {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 18px; height: 18px;
+    margin: -35px 0 0 10px;
+    border-radius: 50%;
+    background: var(--teal);
+    color: #0d1a14;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    transform: scale(0);
+}
+
+/* Merge: দুটো page দুই দিক থেকে এসে জোড়া লাগে, তারপর ✓ বসে (৪.৫ সেকেন্ডের loop) */
+.dz-merge .dz-pg.a { animation: dzA 4.5s ease-in-out infinite; }
+.dz-merge .dz-pg.b { animation: dzB 4.5s ease-in-out infinite; }
+.dz-merge .dz-pg.m { animation: dzM 4.5s ease-in-out infinite; }
+.dz-merge .dz-badge { animation: dzBadge 4.5s ease-in-out infinite; }
+
+@keyframes dzA {
+    0%, 6%    { opacity: 1; transform: translateX(-42px) rotate(-8deg); }
+    38%       { opacity: 1; transform: translateX(-4px)  rotate(0deg); }
+    44%, 92%  { opacity: 0; transform: translateX(-4px)  rotate(0deg); }
+    96%       { opacity: 0; transform: translateX(-42px) rotate(-8deg); }
+    100%      { opacity: 1; transform: translateX(-42px) rotate(-8deg); }
+}
+@keyframes dzB {
+    0%, 6%    { opacity: 1; transform: translateX(42px) rotate(8deg); }
+    38%       { opacity: 1; transform: translateX(4px)  rotate(0deg); }
+    44%, 92%  { opacity: 0; transform: translateX(4px)  rotate(0deg); }
+    96%       { opacity: 0; transform: translateX(42px) rotate(8deg); }
+    100%      { opacity: 1; transform: translateX(42px) rotate(8deg); }
+}
+@keyframes dzM {
+    0%, 40%   { opacity: 0; transform: scale(0.85); }
+    46%, 88%  { opacity: 1; transform: scale(1); }
+    94%, 100% { opacity: 0; transform: scale(0.95); }
+}
+@keyframes dzBadge {
+    0%, 48%   { transform: scale(0); }
+    54%       { transform: scale(1.25); }
+    58%, 88%  { transform: scale(1); }
+    94%, 100% { transform: scale(0); }
+}
+
+
+/* ---------- 16c. motion কমানো থাকলে animation ছাড়াই ফলাফল (জোড়া page + ✓) দেখায় ---------- */
+@media (prefers-reduced-motion: reduce) {
+    .dz-art * { animation: none !important; }
+    .dz-pg.a, .dz-pg.b { display: none; }
+    .dz-pg.m { opacity: 1; }
+    .dz-badge { transform: scale(1); }
+    .step.busy .step-dot { animation: none !important; }
+}
+
+
+
+/* ============================================================
+   17. DELETE PAGES — dropzone এর animation
+   (style.css এর একদম নিচে, 16 নম্বর অংশের (style_tools.css) পরে paste করুন)
+
+   তিনটে page পাশাপাশি থাকে → মাঝেরটায় লাল ✕ পড়ে → সেটা মিলিয়ে যায়
+   → বাকি দুটো মাঝখানে জুড়ে আসে। (৪.৫ সেকেন্ডের loop)
+   ============================================================ */
+
+/* page গুলো নিরপেক্ষ ধূসর দাগের, শুধু যেটা মুছবে সেটা লাল */
+.dz-delete .dz-pg::before { background: #9aa0b4; }
+.dz-delete .dz-pg.b::before { background: var(--stamp); }
+
+.dz-delete .dz-pg.a { animation: dzDelA 4.5s ease-in-out infinite; }
+.dz-delete .dz-pg.b { animation: dzDelB 4.5s ease-in-out infinite; }
+.dz-delete .dz-pg.c { animation: dzDelC 4.5s ease-in-out infinite; }
+
+/* লাল ✕ badge, মাঝের page এর ডান-উপরের কোণায় */
+.dz-delete .dz-badge {
+    background: var(--stamp);
+    color: #ffffff;
+    margin: -31px 0 0 8px;
+    animation: dzDelBadge 4.5s ease-in-out infinite;
+}
+
+@keyframes dzDelA {
+    0%, 40%   { opacity: 1; transform: translateX(-40px); }
+    55%, 88%  { opacity: 1; transform: translateX(-21px); }
+    94%       { opacity: 0; transform: translateX(-21px); }
+    96%       { opacity: 0; transform: translateX(-40px); }
+    100%      { opacity: 1; transform: translateX(-40px); }
+}
+@keyframes dzDelC {
+    0%, 40%   { opacity: 1; transform: translateX(40px); }
+    55%, 88%  { opacity: 1; transform: translateX(21px); }
+    94%       { opacity: 0; transform: translateX(21px); }
+    96%       { opacity: 0; transform: translateX(40px); }
+    100%      { opacity: 1; transform: translateX(40px); }
+}
+@keyframes dzDelB {
+    0%, 24%   { opacity: 1; transform: scale(1) rotate(0deg); }
+    40%, 94%  { opacity: 0; transform: scale(0.55) rotate(10deg); }
+    96%       { opacity: 0; transform: scale(1) rotate(0deg); }
+    100%      { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+@keyframes dzDelBadge {
+    0%, 12%   { transform: scale(0); }
+    17%       { transform: scale(1.25); }
+    21%, 36%  { transform: scale(1); }
+    42%, 100% { transform: scale(0); }
+}
+
+/* motion কমানো থাকলে: দুটো page, মাঝেরটা নেই (মোছার ফলাফল) */
+@media (prefers-reduced-motion: reduce) {
+    .dz-delete .dz-pg.a { display: block; transform: translateX(-21px); opacity: 1; }
+    .dz-delete .dz-pg.c { display: block; transform: translateX(21px);  opacity: 1; }
+    .dz-delete .dz-pg.b { display: none; }
+    .dz-delete .dz-badge { display: none; }
+}
+
+
+
+
+

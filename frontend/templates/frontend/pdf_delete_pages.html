@@ -47,11 +47,26 @@
         <p>Choose a PDF to see every page. Tap the ✕ on any page to mark it for deletion, then confirm below.</p>
     </div>
 
+    {# ধাপ দেখানো বার: JS এর setStep() এটা বদলায় #}
+    <ol class="steps" id="steps" aria-label="Progress">
+        <li class="step active"><span class="step-dot">1</span><span class="step-label">Choose PDF</span></li>
+        <li class="step-line" aria-hidden="true"></li>
+        <li class="step"><span class="step-dot">2</span><span class="step-label">Pick pages</span></li>
+        <li class="step-line" aria-hidden="true"></li>
+        <li class="step"><span class="step-dot">3</span><span class="step-label">Download</span></li>
+    </ol>
+
     <div class="card">
         <div class="dropzone" id="dropzone">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 16V4M12 4l-4 4M12 4l4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <p><strong>Tap to choose a PDF</strong></p>
-            <p>or drag &amp; drop here</p>
+            {# তিনটে page: মাঝেরটায় ✕ পড়ে মিলিয়ে যায়, বাকি দুটো জুড়ে আসে (PDF বাছা হলে নিজে লুকিয়ে যায়) #}
+            <div class="dz-art dz-delete" aria-hidden="true">
+                <span class="dz-pg a"></span>
+                <span class="dz-pg b"></span>
+                <span class="dz-pg c"></span>
+                <span class="dz-badge">✕</span>
+            </div>
+            <p><strong id="dz-title">Tap to choose a PDF</strong></p>
+            <p id="dz-sub">or drag &amp; drop here</p>
             <input type="file" id="file-input" class="file-input-hidden" accept="application/pdf">
         </div>
 
@@ -65,7 +80,7 @@
             <div class="icon">📄</div>
             <div class="meta">
                 <div class="fname" id="result-name">edited.pdf</div>
-                <div class="fsub">Ready to download</div>
+                <div class="fsub" id="result-sub">Ready to download</div>
             </div>
             <a class="dl" id="result-link" download title="Download">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M12 15l-4-4M12 15l4-4M4 19h16" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -84,10 +99,40 @@ FF.ready(function(){
     const submitBtn = document.getElementById('submit-btn');
     const resultTicket = document.getElementById('result-ticket');
     const resultName = document.getElementById('result-name');
+    const resultSub = document.getElementById('result-sub');
     const resultLink = document.getElementById('result-link');
+    const dzTitle = document.getElementById('dz-title');
+    const dzSub = document.getElementById('dz-sub');
+    const steps = [...document.querySelectorAll('#steps .step')];
+    const stepLines = [...document.querySelectorAll('#steps .step-line')];
 
     let selectedFile = null;
+    let totalPages = 0;
     let markedForDeletion = new Set();
+
+    // ---- ধাপ দেখানো বার: n = এখন যে ধাপে আছে (১, ২ বা ৩), busy = কাজ চলছে ----
+    function setStep(n, busy = false) {
+        steps.forEach((s, i) => {
+            const num = i + 1;
+            s.classList.toggle('done', num < n);
+            s.classList.toggle('active', num === n);
+            s.classList.toggle('busy', num === n && busy);
+            s.querySelector('.step-dot').textContent = num < n ? '✓' : String(num);
+        });
+        stepLines.forEach((l, i) => l.classList.toggle('done', i + 1 < n));
+    }
+
+    function fmtSize(bytes) {
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    // ফাইল বাছা থাকলে dropzone ছোট হয়ে ফাইলের নাম দেখায়, না থাকলে আগের চেহারায় ফেরে
+    function setDropzoneState(file) {
+        dropzone.classList.toggle('has-files', !!file);
+        dzTitle.textContent = file ? 'Tap to choose a different PDF' : 'Tap to choose a PDF';
+        dzSub.textContent = file ? `${file.name} · ${fmtSize(file.size)}` : 'or drag & drop here';
+    }
 
     dropzone.addEventListener('click', () => fileInput.click());
     ['dragenter', 'dragover'].forEach(evt => dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.add('dragover'); }));
@@ -98,13 +143,16 @@ FF.ready(function(){
     async function handleFile(file) {
         if (!file) return;
         selectedFile = file;
+        totalPages = 0;
         markedForDeletion = new Set();
         pageGrid.innerHTML = '';
         resultTicket.classList.remove('show');
         statusBox.className = 'status-box';
+        updateSubmitState();
 
         loadingBox.className = 'status-box show info';
         loadingBox.textContent = 'Loading page previews…';
+        setStep(1, true);
 
         const formData = new FormData();
         formData.append('file', file);
@@ -115,13 +163,20 @@ FF.ready(function(){
             if (!resp.ok) {
                 loadingBox.className = 'status-box show error';
                 loadingBox.textContent = data.error || 'Could not load previews.';
+                setDropzoneState(null);
+                setStep(1);
                 return;
             }
             loadingBox.className = 'status-box';
+            totalPages = data.pages.length;
+            setDropzoneState(file);
             renderGrid(data.pages);
+            setStep(2);
         } catch (err) {
             loadingBox.className = 'status-box show error';
             loadingBox.textContent = 'Network error loading previews.';
+            setDropzoneState(null);
+            setStep(1);
         }
     }
 
@@ -143,6 +198,11 @@ FF.ready(function(){
     }
 
     function toggleMark(pageNum, el) {
+        // পছন্দ বদলালে আগের ফলাফল আর দেখানোর মানে নেই
+        resultTicket.classList.remove('show');
+        statusBox.className = 'status-box';
+        setStep(2);
+
         if (markedForDeletion.has(pageNum)) {
             markedForDeletion.delete(pageNum);
             el.classList.remove('marked');
@@ -161,9 +221,14 @@ FF.ready(function(){
 
     submitBtn.addEventListener('click', async () => {
         if (!selectedFile || markedForDeletion.size === 0) return;
+        const deletedCount = markedForDeletion.size;
+        const remaining = totalPages - deletedCount;
+        let ok = false;
+
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Deleting…';
+        submitBtn.innerHTML = '<span class="spinner"></span> Deleting…';
         statusBox.className = 'status-box';
+        setStep(2, true);
 
         const pagesStr = Array.from(markedForDeletion).sort((a,b)=>a-b).join(',');
         const formData = new FormData();
@@ -183,14 +248,19 @@ FF.ready(function(){
             resultLink.href = url;
             resultLink.download = 'edited.pdf';
             resultName.textContent = 'edited.pdf';
+            resultSub.textContent = totalPages
+                ? `Ready · ${totalPages} → ${remaining} pages (${deletedCount} deleted) · ${fmtSize(blob.size)}`
+                : `Ready · ${deletedCount} page(s) deleted · ${fmtSize(blob.size)}`;
             resultTicket.classList.add('show');
             statusBox.className = 'status-box show success';
             statusBox.textContent = 'Pages deleted successfully.';
+            ok = true;
         } catch (err) {
             statusBox.className = 'status-box show error';
             statusBox.textContent = 'Network error. Please try again.';
         } finally {
             updateSubmitState();
+            setStep(ok ? 3 : 2);
         }
     });
 });
