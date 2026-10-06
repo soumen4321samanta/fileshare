@@ -9,15 +9,27 @@
         <p>Choose an image and set a target size. We'll get as close to it as possible without you having to guess a quality percentage.</p>
     </div>
 
+    <ol class="steps" id="steps" aria-label="Progress">
+        <li class="step active"><span class="step-dot">1</span><span class="step-label">Choose image</span></li>
+        <li class="step-line" aria-hidden="true"></li>
+        <li class="step"><span class="step-dot">2</span><span class="step-label">Compress</span></li>
+        <li class="step-line" aria-hidden="true"></li>
+        <li class="step"><span class="step-dot">3</span><span class="step-label">Download</span></li>
+    </ol>
+
     <div class="card">
         <form id="tool-form">
             <div class="dropzone" id="dropzone">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 16V4M12 4l-4 4M12 4l4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                <p><strong>Tap to choose an image</strong></p>
-                <p>or drag &amp; drop here</p>
+                <div class="dz-art dz-compress dz-cjpg" aria-hidden="true">
+                    <span class="jp-img c"></span>
+                    <span class="ar l">›</span>
+                    <span class="ar r">‹</span>
+                    <span class="dz-badge">SMALLER</span>
+                </div>
+                <p><strong id="dz-title">Tap to choose an image</strong></p>
+                <p id="dz-sub">or drag &amp; drop here</p>
                 <input type="file" id="file-input" class="file-input-hidden" accept="image/*">
             </div>
-            <div class="file-list" id="file-list"></div>
 
             <div class="field-row">
                 <label for="target-kb">Target size (KB)</label>
@@ -37,6 +49,7 @@
             <div class="meta">
                 <div class="fname" id="result-name">compressed.jpg</div>
                 <div class="fsub" id="result-sub">Ready to download</div>
+                <div class="size-bar" id="size-bar"><i id="size-fill"></i></div>
             </div>
             <a class="dl" id="result-link" download title="Download">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M12 15l-4-4M12 15l4-4M4 19h16" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -49,30 +62,65 @@
 FF.ready(function(){
     const dropzone = document.getElementById('dropzone');
     const fileInput = document.getElementById('file-input');
-    const fileList = document.getElementById('file-list');
     const submitBtn = document.getElementById('submit-btn');
     const statusBox = document.getElementById('status-box');
     const resultTicket = document.getElementById('result-ticket');
     const resultName = document.getElementById('result-name');
     const resultSub = document.getElementById('result-sub');
     const resultLink = document.getElementById('result-link');
+    const sizeBar = document.getElementById('size-bar');
+    const sizeFill = document.getElementById('size-fill');
     const targetInput = document.getElementById('target-kb');
+    const dzTitle = document.getElementById('dz-title');
+    const dzSub = document.getElementById('dz-sub');
+    const steps = [...document.querySelectorAll('#steps .step')];
+    const stepLines = [...document.querySelectorAll('#steps .step-line')];
+
+    // n = current step (1-3), busy = pulse while working
+    function setStep(n, busy = false) {
+        steps.forEach((s, i) => {
+            const num = i + 1;
+            s.classList.toggle('done', num < n);
+            s.classList.toggle('active', num === n);
+            s.classList.toggle('busy', num === n && busy);
+            s.querySelector('.step-dot').textContent = num < n ? '✓' : String(num);
+        });
+        stepLines.forEach((l, i) => l.classList.toggle('done', i + 1 < n));
+    }
+
+    function fmtSize(bytes) {
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
 
     dropzone.addEventListener('click', () => fileInput.click());
     ['dragenter', 'dragover'].forEach(evt => dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.add('dragover'); }));
     ['dragleave', 'drop'].forEach(evt => dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.remove('dragover'); }));
-    dropzone.addEventListener('drop', e => { fileInput.files = e.dataTransfer.files; renderFileList(); });
-    fileInput.addEventListener('change', renderFileList);
 
-    function renderFileList() {
-        fileList.innerHTML = '';
-        const files = Array.from(fileInput.files);
-        files.forEach(f => {
-            const div = document.createElement('div');
-            div.innerHTML = `<span class="fname">${f.name}</span><span class="fsize">${(f.size / 1024).toFixed(1)} KB</span>`;
-            fileList.appendChild(div);
-        });
-        submitBtn.disabled = files.length === 0;
+    dropzone.addEventListener('drop', e => {
+        // take the first image only; the file picker filters, dragging does not
+        const img = Array.from(e.dataTransfer.files).find(f => f.type.startsWith('image/'));
+        if (!img) {
+            showStatus('error', 'Please drop an image file.');
+            return;
+        }
+        const dt = new DataTransfer();
+        dt.items.add(img);
+        fileInput.files = dt.files;
+        onFileChosen();
+    });
+    fileInput.addEventListener('change', onFileChosen);
+
+    function onFileChosen() {
+        hideStatus();
+        resultTicket.classList.remove('show');
+
+        const file = fileInput.files[0];
+        dropzone.classList.toggle('has-files', !!file);
+        dzTitle.textContent = file ? 'Tap to choose a different image' : 'Tap to choose an image';
+        dzSub.textContent = file ? `${file.name} · ${fmtSize(file.size)}` : 'or drag & drop here';
+        submitBtn.disabled = !file;
+        setStep(file ? 2 : 1);
     }
 
     function showStatus(type, msg) {
@@ -91,11 +139,13 @@ FF.ready(function(){
             showStatus('error', 'Enter a target size of at least 5 KB.');
             return;
         }
+        let ok = false;
 
         hideStatus();
         resultTicket.classList.remove('show');
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<span class="spinner"></span> Compressing…';
+        setStep(2, true);
 
         const formData = new FormData();
         formData.append('file', file);
@@ -110,19 +160,40 @@ FF.ready(function(){
             }
             const blob = await resp.blob();
             const url = URL.createObjectURL(blob);
+            const before = file.size, after = blob.size;
             resultLink.href = url;
             resultLink.download = 'compressed.jpg';
             resultName.textContent = 'compressed.jpg';
-            resultSub.textContent = (blob.size / 1024).toFixed(1) + ' KB';
-            resultTicket.classList.add('show');
-            showStatus('success', 'Compressed successfully.');
+
+            if (after < before) {
+                const pct = Math.round((1 - after / before) * 100);
+                resultSub.textContent = `${fmtSize(before)} → ${fmtSize(after)} (−${pct}%)`;
+                // bar starts full, then shrinks to the new size
+                sizeBar.style.display = 'block';
+                sizeFill.style.width = '100%';
+                resultTicket.classList.add('show');
+                void sizeFill.offsetWidth;
+                requestAnimationFrame(() => { sizeFill.style.width = Math.max(2, (after / before) * 100) + '%'; });
+            } else {
+                resultSub.textContent = `${fmtSize(after)} · not smaller than the original`;
+                sizeBar.style.display = 'none';
+                resultTicket.classList.add('show');
+            }
+
+            if (after <= targetKb * 1024) {
+                showStatus('success', 'Compressed — under your target size.');
+            } else {
+                showStatus('info', 'Closest possible result — the exact target size could not be reached.');
+            }
+            ok = true;
         } catch (err) {
             showStatus('error', 'Network error. Please try again.');
         } finally {
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg> Compress';
+            setStep(ok ? 3 : 2);
         }
-    });    
+    });
 });
 </script>
 {% endblock %}
