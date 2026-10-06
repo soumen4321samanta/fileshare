@@ -432,3 +432,1425 @@
     .dz-rotate .dz-pg.r { opacity: 1; transform: rotate(90deg); }
     .dz-rotate .dz-badge { transform: scale(1); }
 }
+
+
+
+
+/* Per-tool dropzone animations. Needs the shared .dz-art / .dz-pg / .dz-badge / .steps rules from style.css. */
+
+/* Reorder: pages [1][2][3] -> [2][3][1] */
+.dz-reorder .dz-pg::before {
+    left: 0; top: 0;
+    width: 100%; height: 15px;
+    border-radius: 4px 4px 0 0;
+}
+.dz-reorder .dz-pg.a::before { background: var(--stamp); }
+.dz-reorder .dz-pg.b::before { background: var(--teal); }
+.dz-reorder .dz-pg.c::before { background: #8b93a9; }
+.dz-reorder .dz-pg::after { top: 23px; }
+
+.dz-reorder .dz-pg .n {
+    position: relative;
+    z-index: 1;
+    display: block;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 15px;
+    color: #ffffff;
+}
+
+.dz-reorder .dz-pg.a { animation: dzReA 4.5s ease-in-out infinite; }
+.dz-reorder .dz-pg.b { animation: dzReB 4.5s ease-in-out infinite; }
+.dz-reorder .dz-pg.c { animation: dzReC 4.5s ease-in-out infinite; }
+
+.dz-reorder .dz-badge {
+    margin: -34px 0 0 46px;
+    animation: dzReBadge 4.5s ease-in-out infinite;
+}
+
+@keyframes dzReA {
+    0%, 16%   { opacity: 1; transform: translate(-40px, 0); }
+    30%       { opacity: 1; transform: translate(0, -16px); }
+    44%, 88%  { opacity: 1; transform: translate(40px, 0); }
+    94%       { opacity: 0; transform: translate(40px, 0); }
+    96%       { opacity: 0; transform: translate(-40px, 0); }
+    100%      { opacity: 1; transform: translate(-40px, 0); }
+}
+@keyframes dzReB {
+    0%, 22%   { opacity: 1; transform: translate(0, 0); }
+    40%, 88%  { opacity: 1; transform: translate(-40px, 0); }
+    94%       { opacity: 0; transform: translate(-40px, 0); }
+    96%       { opacity: 0; transform: translate(0, 0); }
+    100%      { opacity: 1; transform: translate(0, 0); }
+}
+@keyframes dzReC {
+    0%, 26%   { opacity: 1; transform: translate(40px, 0); }
+    44%, 88%  { opacity: 1; transform: translate(0, 0); }
+    94%       { opacity: 0; transform: translate(0, 0); }
+    96%       { opacity: 0; transform: translate(40px, 0); }
+    100%      { opacity: 1; transform: translate(40px, 0); }
+}
+@keyframes dzReBadge {
+    0%, 50%   { transform: scale(0); }
+    56%       { transform: scale(1.25); }
+    60%, 88%  { transform: scale(1); }
+    94%, 100% { transform: scale(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dz-reorder .dz-pg.a { display: block; opacity: 1; transform: translate(40px, 0); }
+    .dz-reorder .dz-pg.b { display: block; opacity: 1; transform: translate(-40px, 0); }
+    .dz-reorder .dz-pg.c { display: block; opacity: 1; transform: translate(0, 0); }
+    .dz-reorder .dz-badge { transform: scale(1); }
+}
+
+/* Editor: erase box, then new text */
+.dz-editor .ed-page {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 76px; height: 52px;
+    margin: -26px 0 0 -38px;
+    background: #ffffff;
+    border-radius: 5px;
+    box-shadow: 0 6px 14px -6px rgba(0, 0, 0, 0.7);
+}
+.dz-editor .ed-line {
+    position: absolute;
+    left: 8px;
+    height: 4px;
+    border-radius: 2px;
+    background: #d4d7e0;
+}
+.dz-editor .ed-l1 { top: 9px;  width: 34px; height: 5px; background: #bfc3d0; }
+.dz-editor .ed-l2 { top: 22px; width: 56px; }
+.dz-editor .ed-l3 { top: 35px; width: 46px; }
+
+.dz-editor .ed-layer {
+    position: absolute;
+    inset: 0;
+    animation: dzEdLayer 4.5s infinite;
+}
+.dz-editor .ed-box {
+    position: absolute;
+    left: 5px; top: 18px;
+    width: 0; height: 12px;
+    box-sizing: border-box;
+    background: #ffffff;
+    border: 1.5px dashed var(--stamp);
+    animation: dzEdBox 4.5s cubic-bezier(0.3, 0, 0.2, 1) infinite;
+}
+.dz-editor .ed-new {
+    position: absolute;
+    left: 8px; top: 22px;
+    width: 40px; height: 4px;
+    border-radius: 2px;
+    background: var(--stamp);
+    clip-path: inset(0 100% 0 0);
+    animation: dzEdType 4.5s steps(8, end) infinite;
+}
+.dz-editor .ed-cursor {
+    position: absolute;
+    left: 0; top: 0;
+    margin: -1px 0 0 -2px;
+    opacity: 0;
+    z-index: 2;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+    animation: dzEdCursor 4.5s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+}
+
+@keyframes dzEdBox {
+    0%, 8%    { width: 0;    border-color: var(--stamp); }
+    28%, 34%  { width: 66px; border-color: var(--stamp); }
+    40%, 100% { width: 66px; border-color: transparent; }
+}
+@keyframes dzEdType {
+    0%, 42%   { clip-path: inset(0 100% 0 0); }
+    62%, 100% { clip-path: inset(0 0 0 0); }
+}
+@keyframes dzEdLayer {
+    0%, 88%   { opacity: 1; }
+    94%, 100% { opacity: 0; }
+}
+@keyframes dzEdCursor {
+    0%        { opacity: 0; transform: translate(80px, 50px); }
+    4%        { opacity: 1; transform: translate(80px, 50px); }
+    8%        { opacity: 1; transform: translate(5px, 18px); }
+    28%, 34%  { opacity: 1; transform: translate(71px, 30px); }
+    42%, 62%  { opacity: 1; transform: translate(10px, 26px); }
+    78%       { opacity: 1; transform: translate(62px, 44px); }
+    88%, 100% { opacity: 0; transform: translate(62px, 44px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dz-editor .ed-box { width: 66px; border-color: transparent; }
+    .dz-editor .ed-new { clip-path: none; }
+    .dz-editor .ed-cursor { display: none; }
+}
+
+/* Rotate: one page turns 90deg twice */
+.dz-rotate .dz-pg.r {
+    animation: dzRotP 4.5s ease-in-out infinite;
+}
+.dz-rotate .dz-badge {
+    margin: -34px 0 0 40px;
+    animation: dzRotBadge 4.5s ease-in-out infinite;
+}
+
+@keyframes dzRotP {
+    0%, 14%   { opacity: 1; transform: rotate(0deg); }
+    30%, 46%  { opacity: 1; transform: rotate(90deg); }
+    62%, 88%  { opacity: 1; transform: rotate(180deg); }
+    94%       { opacity: 0; transform: rotate(180deg); }
+    96%       { opacity: 0; transform: rotate(0deg); }
+    100%      { opacity: 1; transform: rotate(0deg); }
+}
+@keyframes dzRotBadge {
+    0%, 12%   { transform: scale(0); }
+    18%       { transform: scale(1.2); }
+    24%, 30%  { transform: scale(1); }
+    34%, 44%  { transform: scale(0); }
+    48%       { transform: scale(1.2); }
+    54%, 62%  { transform: scale(1); }
+    66%, 100% { transform: scale(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dz-rotate .dz-pg.r { opacity: 1; transform: rotate(90deg); }
+    .dz-rotate .dz-badge { transform: scale(1); }
+}
+
+/* JPG to PDF: photo tile turns into a PDF page */
+.dz-jpg .jp-img {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 46px; height: 36px;
+    margin: -18px 0 0 -23px;
+    border-radius: 4px;
+    background: linear-gradient(160deg, #6c8fd8, #8fcfc0);
+    box-shadow: 0 6px 14px -6px rgba(0, 0, 0, 0.7);
+    overflow: hidden;
+    animation: dzJpgImg 4.5s ease-in-out infinite;
+}
+.dz-jpg .jp-img::before {
+    content: '';
+    position: absolute;
+    right: 8px; top: 6px;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #ffe9a8;
+}
+.dz-jpg .jp-img::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 55%;
+    background: rgba(20, 40, 70, 0.35);
+    clip-path: polygon(0 100%, 28% 35%, 48% 70%, 70% 20%, 100% 100%);
+}
+.dz-jpg .dz-pg.p {
+    opacity: 0;
+    animation: dzJpgPage 4.5s ease-in-out infinite;
+}
+.dz-jpg .dz-badge {
+    width: auto; height: 14px;
+    padding: 0 5px;
+    border-radius: 4px;
+    font-size: 8px;
+    letter-spacing: 0.06em;
+    margin: 8px 0 0 4px;
+    animation: dzJpgBadge 4.5s ease-in-out infinite;
+}
+
+@keyframes dzJpgImg {
+    0%, 22%   { opacity: 1; transform: scale(1) rotate(0deg); }
+    34%, 96%  { opacity: 0; transform: scale(0.7) rotate(-8deg); }
+    100%      { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+@keyframes dzJpgPage {
+    0%, 26%   { opacity: 0; transform: scale(0.7) rotate(8deg); }
+    40%, 88%  { opacity: 1; transform: scale(1) rotate(0deg); }
+    94%, 100% { opacity: 0; transform: scale(1) rotate(0deg); }
+}
+@keyframes dzJpgBadge {
+    0%, 46%   { transform: scale(0); }
+    52%       { transform: scale(1.2); }
+    56%, 88%  { transform: scale(1); }
+    94%, 100% { transform: scale(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dz-jpg .jp-img { display: none; }
+    .dz-jpg .dz-pg.p { opacity: 1; transform: none; }
+    .dz-jpg .dz-badge { transform: scale(1); }
+}
+
+
+
+
+
+
+
+
+/* Per-tool dropzone animations. Needs the shared .dz-art / .dz-pg / .dz-badge / .steps rules from style.css. */
+
+/* Reorder: pages [1][2][3] -> [2][3][1] */
+.dz-reorder .dz-pg::before {
+    left: 0; top: 0;
+    width: 100%; height: 15px;
+    border-radius: 4px 4px 0 0;
+}
+.dz-reorder .dz-pg.a::before { background: var(--stamp); }
+.dz-reorder .dz-pg.b::before { background: var(--teal); }
+.dz-reorder .dz-pg.c::before { background: #8b93a9; }
+.dz-reorder .dz-pg::after { top: 23px; }
+
+.dz-reorder .dz-pg .n {
+    position: relative;
+    z-index: 1;
+    display: block;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 15px;
+    color: #ffffff;
+}
+
+.dz-reorder .dz-pg.a { animation: dzReA 4.5s ease-in-out infinite; }
+.dz-reorder .dz-pg.b { animation: dzReB 4.5s ease-in-out infinite; }
+.dz-reorder .dz-pg.c { animation: dzReC 4.5s ease-in-out infinite; }
+
+.dz-reorder .dz-badge {
+    margin: -34px 0 0 46px;
+    animation: dzReBadge 4.5s ease-in-out infinite;
+}
+
+@keyframes dzReA {
+    0%, 16%   { opacity: 1; transform: translate(-40px, 0); }
+    30%       { opacity: 1; transform: translate(0, -16px); }
+    44%, 88%  { opacity: 1; transform: translate(40px, 0); }
+    94%       { opacity: 0; transform: translate(40px, 0); }
+    96%       { opacity: 0; transform: translate(-40px, 0); }
+    100%      { opacity: 1; transform: translate(-40px, 0); }
+}
+@keyframes dzReB {
+    0%, 22%   { opacity: 1; transform: translate(0, 0); }
+    40%, 88%  { opacity: 1; transform: translate(-40px, 0); }
+    94%       { opacity: 0; transform: translate(-40px, 0); }
+    96%       { opacity: 0; transform: translate(0, 0); }
+    100%      { opacity: 1; transform: translate(0, 0); }
+}
+@keyframes dzReC {
+    0%, 26%   { opacity: 1; transform: translate(40px, 0); }
+    44%, 88%  { opacity: 1; transform: translate(0, 0); }
+    94%       { opacity: 0; transform: translate(0, 0); }
+    96%       { opacity: 0; transform: translate(40px, 0); }
+    100%      { opacity: 1; transform: translate(40px, 0); }
+}
+@keyframes dzReBadge {
+    0%, 50%   { transform: scale(0); }
+    56%       { transform: scale(1.25); }
+    60%, 88%  { transform: scale(1); }
+    94%, 100% { transform: scale(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dz-reorder .dz-pg.a { display: block; opacity: 1; transform: translate(40px, 0); }
+    .dz-reorder .dz-pg.b { display: block; opacity: 1; transform: translate(-40px, 0); }
+    .dz-reorder .dz-pg.c { display: block; opacity: 1; transform: translate(0, 0); }
+    .dz-reorder .dz-badge { transform: scale(1); }
+}
+
+/* Editor: erase box, then new text */
+.dz-editor .ed-page {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 76px; height: 52px;
+    margin: -26px 0 0 -38px;
+    background: #ffffff;
+    border-radius: 5px;
+    box-shadow: 0 6px 14px -6px rgba(0, 0, 0, 0.7);
+}
+.dz-editor .ed-line {
+    position: absolute;
+    left: 8px;
+    height: 4px;
+    border-radius: 2px;
+    background: #d4d7e0;
+}
+.dz-editor .ed-l1 { top: 9px;  width: 34px; height: 5px; background: #bfc3d0; }
+.dz-editor .ed-l2 { top: 22px; width: 56px; }
+.dz-editor .ed-l3 { top: 35px; width: 46px; }
+
+.dz-editor .ed-layer {
+    position: absolute;
+    inset: 0;
+    animation: dzEdLayer 4.5s infinite;
+}
+.dz-editor .ed-box {
+    position: absolute;
+    left: 5px; top: 18px;
+    width: 0; height: 12px;
+    box-sizing: border-box;
+    background: #ffffff;
+    border: 1.5px dashed var(--stamp);
+    animation: dzEdBox 4.5s cubic-bezier(0.3, 0, 0.2, 1) infinite;
+}
+.dz-editor .ed-new {
+    position: absolute;
+    left: 8px; top: 22px;
+    width: 40px; height: 4px;
+    border-radius: 2px;
+    background: var(--stamp);
+    clip-path: inset(0 100% 0 0);
+    animation: dzEdType 4.5s steps(8, end) infinite;
+}
+.dz-editor .ed-cursor {
+    position: absolute;
+    left: 0; top: 0;
+    margin: -1px 0 0 -2px;
+    opacity: 0;
+    z-index: 2;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+    animation: dzEdCursor 4.5s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+}
+
+@keyframes dzEdBox {
+    0%, 8%    { width: 0;    border-color: var(--stamp); }
+    28%, 34%  { width: 66px; border-color: var(--stamp); }
+    40%, 100% { width: 66px; border-color: transparent; }
+}
+@keyframes dzEdType {
+    0%, 42%   { clip-path: inset(0 100% 0 0); }
+    62%, 100% { clip-path: inset(0 0 0 0); }
+}
+@keyframes dzEdLayer {
+    0%, 88%   { opacity: 1; }
+    94%, 100% { opacity: 0; }
+}
+@keyframes dzEdCursor {
+    0%        { opacity: 0; transform: translate(80px, 50px); }
+    4%        { opacity: 1; transform: translate(80px, 50px); }
+    8%        { opacity: 1; transform: translate(5px, 18px); }
+    28%, 34%  { opacity: 1; transform: translate(71px, 30px); }
+    42%, 62%  { opacity: 1; transform: translate(10px, 26px); }
+    78%       { opacity: 1; transform: translate(62px, 44px); }
+    88%, 100% { opacity: 0; transform: translate(62px, 44px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dz-editor .ed-box { width: 66px; border-color: transparent; }
+    .dz-editor .ed-new { clip-path: none; }
+    .dz-editor .ed-cursor { display: none; }
+}
+
+/* Rotate: one page turns 90deg twice */
+.dz-rotate .dz-pg.r {
+    animation: dzRotP 4.5s ease-in-out infinite;
+}
+.dz-rotate .dz-badge {
+    margin: -34px 0 0 40px;
+    animation: dzRotBadge 4.5s ease-in-out infinite;
+}
+
+@keyframes dzRotP {
+    0%, 14%   { opacity: 1; transform: rotate(0deg); }
+    30%, 46%  { opacity: 1; transform: rotate(90deg); }
+    62%, 88%  { opacity: 1; transform: rotate(180deg); }
+    94%       { opacity: 0; transform: rotate(180deg); }
+    96%       { opacity: 0; transform: rotate(0deg); }
+    100%      { opacity: 1; transform: rotate(0deg); }
+}
+@keyframes dzRotBadge {
+    0%, 12%   { transform: scale(0); }
+    18%       { transform: scale(1.2); }
+    24%, 30%  { transform: scale(1); }
+    34%, 44%  { transform: scale(0); }
+    48%       { transform: scale(1.2); }
+    54%, 62%  { transform: scale(1); }
+    66%, 100% { transform: scale(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dz-rotate .dz-pg.r { opacity: 1; transform: rotate(90deg); }
+    .dz-rotate .dz-badge { transform: scale(1); }
+}
+
+/* JPG to PDF: photo tile turns into a PDF page */
+.dz-jpg .jp-img {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 46px; height: 36px;
+    margin: -18px 0 0 -23px;
+    border-radius: 4px;
+    background: linear-gradient(160deg, #6c8fd8, #8fcfc0);
+    box-shadow: 0 6px 14px -6px rgba(0, 0, 0, 0.7);
+    overflow: hidden;
+    animation: dzJpgImg 4.5s ease-in-out infinite;
+}
+.dz-jpg .jp-img::before {
+    content: '';
+    position: absolute;
+    right: 8px; top: 6px;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #ffe9a8;
+}
+.dz-jpg .jp-img::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 55%;
+    background: rgba(20, 40, 70, 0.35);
+    clip-path: polygon(0 100%, 28% 35%, 48% 70%, 70% 20%, 100% 100%);
+}
+.dz-jpg .dz-pg.p {
+    opacity: 0;
+    animation: dzJpgPage 4.5s ease-in-out infinite;
+}
+.dz-jpg .dz-badge {
+    width: auto; height: 14px;
+    padding: 0 5px;
+    border-radius: 4px;
+    font-size: 8px;
+    letter-spacing: 0.06em;
+    margin: 8px 0 0 4px;
+    animation: dzJpgBadge 4.5s ease-in-out infinite;
+}
+
+@keyframes dzJpgImg {
+    0%, 22%   { opacity: 1; transform: scale(1) rotate(0deg); }
+    34%, 96%  { opacity: 0; transform: scale(0.7) rotate(-8deg); }
+    100%      { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+@keyframes dzJpgPage {
+    0%, 26%   { opacity: 0; transform: scale(0.7) rotate(8deg); }
+    40%, 88%  { opacity: 1; transform: scale(1) rotate(0deg); }
+    94%, 100% { opacity: 0; transform: scale(1) rotate(0deg); }
+}
+@keyframes dzJpgBadge {
+    0%, 46%   { transform: scale(0); }
+    52%       { transform: scale(1.2); }
+    56%, 88%  { transform: scale(1); }
+    94%, 100% { transform: scale(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dz-jpg .jp-img { display: none; }
+    .dz-jpg .dz-pg.p { opacity: 1; transform: none; }
+    .dz-jpg .dz-badge { transform: scale(1); }
+}
+
+/* PDF to JPG: one page splits into two photo tiles */
+.dz-p2j .dz-pg.p {
+    animation: dzP2jPage 4.5s ease-in-out infinite;
+}
+.dz-p2j .jp-img {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 40px; height: 30px;
+    margin: -15px 0 0 -20px;
+    border-radius: 4px;
+    background: linear-gradient(160deg, #6c8fd8, #8fcfc0);
+    box-shadow: 0 6px 14px -6px rgba(0, 0, 0, 0.7);
+    overflow: hidden;
+    opacity: 0;
+}
+.dz-p2j .jp-img::before {
+    content: '';
+    position: absolute;
+    right: 6px; top: 5px;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #ffe9a8;
+}
+.dz-p2j .jp-img::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 55%;
+    background: rgba(20, 40, 70, 0.35);
+    clip-path: polygon(0 100%, 28% 35%, 48% 70%, 70% 20%, 100% 100%);
+}
+.dz-p2j .jp-img.l { animation: dzP2jL 4.5s ease-in-out infinite; }
+.dz-p2j .jp-img.r { animation: dzP2jR 4.5s ease-in-out infinite; }
+.dz-p2j .dz-badge {
+    width: auto; height: 14px;
+    padding: 0 5px;
+    border-radius: 4px;
+    font-size: 8px;
+    letter-spacing: 0.06em;
+    margin: 17px 0 0 -13px;
+    animation: dzP2jBadge 4.5s ease-in-out infinite;
+}
+
+@keyframes dzP2jPage {
+    0%, 18%   { opacity: 1; transform: scale(1); }
+    32%, 96%  { opacity: 0; transform: scale(0.8); }
+    100%      { opacity: 1; transform: scale(1); }
+}
+@keyframes dzP2jL {
+    0%, 22%   { opacity: 0; transform: translateX(0) scale(0.6); }
+    40%, 88%  { opacity: 1; transform: translateX(-30px) scale(1); }
+    94%, 100% { opacity: 0; transform: translateX(-30px) scale(1); }
+}
+@keyframes dzP2jR {
+    0%, 22%   { opacity: 0; transform: translateX(0) scale(0.6); }
+    40%, 88%  { opacity: 1; transform: translateX(30px) scale(1); }
+    94%, 100% { opacity: 0; transform: translateX(30px) scale(1); }
+}
+@keyframes dzP2jBadge {
+    0%, 46%   { transform: scale(0); }
+    52%       { transform: scale(1.2); }
+    56%, 88%  { transform: scale(1); }
+    94%, 100% { transform: scale(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dz-p2j .dz-pg.p { opacity: 0; }
+    .dz-p2j .jp-img.l { opacity: 1; transform: translateX(-30px); }
+    .dz-p2j .jp-img.r { opacity: 1; transform: translateX(30px); }
+    .dz-p2j .dz-badge { transform: scale(1); }
+}
+
+
+
+
+/* Per-tool dropzone animations. Needs the shared .dz-art / .dz-pg / .dz-badge / .steps rules from style.css. */
+
+/* Reorder: pages [1][2][3] -> [2][3][1] */
+.dz-reorder .dz-pg::before {
+    left: 0; top: 0;
+    width: 100%; height: 15px;
+    border-radius: 4px 4px 0 0;
+}
+.dz-reorder .dz-pg.a::before { background: var(--stamp); }
+.dz-reorder .dz-pg.b::before { background: var(--teal); }
+.dz-reorder .dz-pg.c::before { background: #8b93a9; }
+.dz-reorder .dz-pg::after { top: 23px; }
+
+.dz-reorder .dz-pg .n {
+    position: relative;
+    z-index: 1;
+    display: block;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 15px;
+    color: #ffffff;
+}
+
+.dz-reorder .dz-pg.a { animation: dzReA 4.5s ease-in-out infinite; }
+.dz-reorder .dz-pg.b { animation: dzReB 4.5s ease-in-out infinite; }
+.dz-reorder .dz-pg.c { animation: dzReC 4.5s ease-in-out infinite; }
+
+.dz-reorder .dz-badge {
+    margin: -34px 0 0 46px;
+    animation: dzReBadge 4.5s ease-in-out infinite;
+}
+
+@keyframes dzReA {
+    0%, 16%   { opacity: 1; transform: translate(-40px, 0); }
+    30%       { opacity: 1; transform: translate(0, -16px); }
+    44%, 88%  { opacity: 1; transform: translate(40px, 0); }
+    94%       { opacity: 0; transform: translate(40px, 0); }
+    96%       { opacity: 0; transform: translate(-40px, 0); }
+    100%      { opacity: 1; transform: translate(-40px, 0); }
+}
+@keyframes dzReB {
+    0%, 22%   { opacity: 1; transform: translate(0, 0); }
+    40%, 88%  { opacity: 1; transform: translate(-40px, 0); }
+    94%       { opacity: 0; transform: translate(-40px, 0); }
+    96%       { opacity: 0; transform: translate(0, 0); }
+    100%      { opacity: 1; transform: translate(0, 0); }
+}
+@keyframes dzReC {
+    0%, 26%   { opacity: 1; transform: translate(40px, 0); }
+    44%, 88%  { opacity: 1; transform: translate(0, 0); }
+    94%       { opacity: 0; transform: translate(0, 0); }
+    96%       { opacity: 0; transform: translate(40px, 0); }
+    100%      { opacity: 1; transform: translate(40px, 0); }
+}
+@keyframes dzReBadge {
+    0%, 50%   { transform: scale(0); }
+    56%       { transform: scale(1.25); }
+    60%, 88%  { transform: scale(1); }
+    94%, 100% { transform: scale(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dz-reorder .dz-pg.a { display: block; opacity: 1; transform: translate(40px, 0); }
+    .dz-reorder .dz-pg.b { display: block; opacity: 1; transform: translate(-40px, 0); }
+    .dz-reorder .dz-pg.c { display: block; opacity: 1; transform: translate(0, 0); }
+    .dz-reorder .dz-badge { transform: scale(1); }
+}
+
+/* Editor: erase box, then new text */
+.dz-editor .ed-page {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 76px; height: 52px;
+    margin: -26px 0 0 -38px;
+    background: #ffffff;
+    border-radius: 5px;
+    box-shadow: 0 6px 14px -6px rgba(0, 0, 0, 0.7);
+}
+.dz-editor .ed-line {
+    position: absolute;
+    left: 8px;
+    height: 4px;
+    border-radius: 2px;
+    background: #d4d7e0;
+}
+.dz-editor .ed-l1 { top: 9px;  width: 34px; height: 5px; background: #bfc3d0; }
+.dz-editor .ed-l2 { top: 22px; width: 56px; }
+.dz-editor .ed-l3 { top: 35px; width: 46px; }
+
+.dz-editor .ed-layer {
+    position: absolute;
+    inset: 0;
+    animation: dzEdLayer 4.5s infinite;
+}
+.dz-editor .ed-box {
+    position: absolute;
+    left: 5px; top: 18px;
+    width: 0; height: 12px;
+    box-sizing: border-box;
+    background: #ffffff;
+    border: 1.5px dashed var(--stamp);
+    animation: dzEdBox 4.5s cubic-bezier(0.3, 0, 0.2, 1) infinite;
+}
+.dz-editor .ed-new {
+    position: absolute;
+    left: 8px; top: 22px;
+    width: 40px; height: 4px;
+    border-radius: 2px;
+    background: var(--stamp);
+    clip-path: inset(0 100% 0 0);
+    animation: dzEdType 4.5s steps(8, end) infinite;
+}
+.dz-editor .ed-cursor {
+    position: absolute;
+    left: 0; top: 0;
+    margin: -1px 0 0 -2px;
+    opacity: 0;
+    z-index: 2;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+    animation: dzEdCursor 4.5s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+}
+
+@keyframes dzEdBox {
+    0%, 8%    { width: 0;    border-color: var(--stamp); }
+    28%, 34%  { width: 66px; border-color: var(--stamp); }
+    40%, 100% { width: 66px; border-color: transparent; }
+}
+@keyframes dzEdType {
+    0%, 42%   { clip-path: inset(0 100% 0 0); }
+    62%, 100% { clip-path: inset(0 0 0 0); }
+}
+@keyframes dzEdLayer {
+    0%, 88%   { opacity: 1; }
+    94%, 100% { opacity: 0; }
+}
+@keyframes dzEdCursor {
+    0%        { opacity: 0; transform: translate(80px, 50px); }
+    4%        { opacity: 1; transform: translate(80px, 50px); }
+    8%        { opacity: 1; transform: translate(5px, 18px); }
+    28%, 34%  { opacity: 1; transform: translate(71px, 30px); }
+    42%, 62%  { opacity: 1; transform: translate(10px, 26px); }
+    78%       { opacity: 1; transform: translate(62px, 44px); }
+    88%, 100% { opacity: 0; transform: translate(62px, 44px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dz-editor .ed-box { width: 66px; border-color: transparent; }
+    .dz-editor .ed-new { clip-path: none; }
+    .dz-editor .ed-cursor { display: none; }
+}
+
+/* Rotate: one page turns 90deg twice */
+.dz-rotate .dz-pg.r {
+    animation: dzRotP 4.5s ease-in-out infinite;
+}
+.dz-rotate .dz-badge {
+    margin: -34px 0 0 40px;
+    animation: dzRotBadge 4.5s ease-in-out infinite;
+}
+
+@keyframes dzRotP {
+    0%, 14%   { opacity: 1; transform: rotate(0deg); }
+    30%, 46%  { opacity: 1; transform: rotate(90deg); }
+    62%, 88%  { opacity: 1; transform: rotate(180deg); }
+    94%       { opacity: 0; transform: rotate(180deg); }
+    96%       { opacity: 0; transform: rotate(0deg); }
+    100%      { opacity: 1; transform: rotate(0deg); }
+}
+@keyframes dzRotBadge {
+    0%, 12%   { transform: scale(0); }
+    18%       { transform: scale(1.2); }
+    24%, 30%  { transform: scale(1); }
+    34%, 44%  { transform: scale(0); }
+    48%       { transform: scale(1.2); }
+    54%, 62%  { transform: scale(1); }
+    66%, 100% { transform: scale(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dz-rotate .dz-pg.r { opacity: 1; transform: rotate(90deg); }
+    .dz-rotate .dz-badge { transform: scale(1); }
+}
+
+/* JPG to PDF: photo tile turns into a PDF page */
+.dz-jpg .jp-img {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 46px; height: 36px;
+    margin: -18px 0 0 -23px;
+    border-radius: 4px;
+    background: linear-gradient(160deg, #6c8fd8, #8fcfc0);
+    box-shadow: 0 6px 14px -6px rgba(0, 0, 0, 0.7);
+    overflow: hidden;
+    animation: dzJpgImg 4.5s ease-in-out infinite;
+}
+.dz-jpg .jp-img::before {
+    content: '';
+    position: absolute;
+    right: 8px; top: 6px;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #ffe9a8;
+}
+.dz-jpg .jp-img::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 55%;
+    background: rgba(20, 40, 70, 0.35);
+    clip-path: polygon(0 100%, 28% 35%, 48% 70%, 70% 20%, 100% 100%);
+}
+.dz-jpg .dz-pg.p {
+    opacity: 0;
+    animation: dzJpgPage 4.5s ease-in-out infinite;
+}
+.dz-jpg .dz-badge {
+    width: auto; height: 14px;
+    padding: 0 5px;
+    border-radius: 4px;
+    font-size: 8px;
+    letter-spacing: 0.06em;
+    margin: 8px 0 0 4px;
+    animation: dzJpgBadge 4.5s ease-in-out infinite;
+}
+
+@keyframes dzJpgImg {
+    0%, 22%   { opacity: 1; transform: scale(1) rotate(0deg); }
+    34%, 96%  { opacity: 0; transform: scale(0.7) rotate(-8deg); }
+    100%      { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+@keyframes dzJpgPage {
+    0%, 26%   { opacity: 0; transform: scale(0.7) rotate(8deg); }
+    40%, 88%  { opacity: 1; transform: scale(1) rotate(0deg); }
+    94%, 100% { opacity: 0; transform: scale(1) rotate(0deg); }
+}
+@keyframes dzJpgBadge {
+    0%, 46%   { transform: scale(0); }
+    52%       { transform: scale(1.2); }
+    56%, 88%  { transform: scale(1); }
+    94%, 100% { transform: scale(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dz-jpg .jp-img { display: none; }
+    .dz-jpg .dz-pg.p { opacity: 1; transform: none; }
+    .dz-jpg .dz-badge { transform: scale(1); }
+}
+
+/* PDF to JPG: one page splits into two photo tiles */
+.dz-p2j .dz-pg.p {
+    animation: dzP2jPage 4.5s ease-in-out infinite;
+}
+.dz-p2j .jp-img {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 40px; height: 30px;
+    margin: -15px 0 0 -20px;
+    border-radius: 4px;
+    background: linear-gradient(160deg, #6c8fd8, #8fcfc0);
+    box-shadow: 0 6px 14px -6px rgba(0, 0, 0, 0.7);
+    overflow: hidden;
+    opacity: 0;
+}
+.dz-p2j .jp-img::before {
+    content: '';
+    position: absolute;
+    right: 6px; top: 5px;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #ffe9a8;
+}
+.dz-p2j .jp-img::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 55%;
+    background: rgba(20, 40, 70, 0.35);
+    clip-path: polygon(0 100%, 28% 35%, 48% 70%, 70% 20%, 100% 100%);
+}
+.dz-p2j .jp-img.l { animation: dzP2jL 4.5s ease-in-out infinite; }
+.dz-p2j .jp-img.r { animation: dzP2jR 4.5s ease-in-out infinite; }
+.dz-p2j .dz-badge {
+    width: auto; height: 14px;
+    padding: 0 5px;
+    border-radius: 4px;
+    font-size: 8px;
+    letter-spacing: 0.06em;
+    margin: 17px 0 0 -13px;
+    animation: dzP2jBadge 4.5s ease-in-out infinite;
+}
+
+@keyframes dzP2jPage {
+    0%, 18%   { opacity: 1; transform: scale(1); }
+    32%, 96%  { opacity: 0; transform: scale(0.8); }
+    100%      { opacity: 1; transform: scale(1); }
+}
+@keyframes dzP2jL {
+    0%, 22%   { opacity: 0; transform: translateX(0) scale(0.6); }
+    40%, 88%  { opacity: 1; transform: translateX(-30px) scale(1); }
+    94%, 100% { opacity: 0; transform: translateX(-30px) scale(1); }
+}
+@keyframes dzP2jR {
+    0%, 22%   { opacity: 0; transform: translateX(0) scale(0.6); }
+    40%, 88%  { opacity: 1; transform: translateX(30px) scale(1); }
+    94%, 100% { opacity: 0; transform: translateX(30px) scale(1); }
+}
+@keyframes dzP2jBadge {
+    0%, 46%   { transform: scale(0); }
+    52%       { transform: scale(1.2); }
+    56%, 88%  { transform: scale(1); }
+    94%, 100% { transform: scale(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dz-p2j .dz-pg.p { opacity: 0; }
+    .dz-p2j .jp-img.l { opacity: 1; transform: translateX(-30px); }
+    .dz-p2j .jp-img.r { opacity: 1; transform: translateX(30px); }
+    .dz-p2j .dz-badge { transform: scale(1); }
+}
+
+/* PDF to Word: PDF page flips into an editable Word page */
+.dz-p2w .dz-pg.p { animation: dzP2wPdf 4.5s ease-in-out infinite; }
+.dz-p2w .dz-pg.w {
+    opacity: 0;
+    animation: dzP2wDoc 4.5s ease-in-out infinite;
+}
+.dz-p2w .dz-pg.w::before { background: #4a7bd8; }
+.dz-p2w .dz-pg.w .caret {
+    position: absolute;
+    left: 30px; top: 14px;
+    width: 1.5px; height: 9px;
+    background: #4a7bd8;
+    animation: dzCaret 0.8s steps(1) infinite;
+}
+.dz-p2w .dz-badge {
+    width: auto; height: 14px;
+    padding: 0 5px;
+    border-radius: 4px;
+    font-size: 8px;
+    letter-spacing: 0.06em;
+    background: #4a7bd8;
+    color: #ffffff;
+    margin: 14px 0 0 2px;
+    animation: dzP2wBadge 4.5s ease-in-out infinite;
+}
+
+@keyframes dzP2wPdf {
+    0%, 20%   { opacity: 1; transform: perspective(240px) rotateY(0deg); }
+    34%, 96%  { opacity: 0; transform: perspective(240px) rotateY(90deg); }
+    100%      { opacity: 1; transform: perspective(240px) rotateY(0deg); }
+}
+@keyframes dzP2wDoc {
+    0%, 28%   { opacity: 0; transform: perspective(240px) rotateY(-90deg); }
+    42%, 88%  { opacity: 1; transform: perspective(240px) rotateY(0deg); }
+    94%, 100% { opacity: 0; transform: perspective(240px) rotateY(0deg); }
+}
+@keyframes dzP2wBadge {
+    0%, 46%   { transform: scale(0); }
+    52%       { transform: scale(1.2); }
+    56%, 88%  { transform: scale(1); }
+    94%, 100% { transform: scale(0); }
+}
+@keyframes dzCaret {
+    50% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dz-p2w .dz-pg.p { opacity: 0; }
+    .dz-p2w .dz-pg.w { opacity: 1; transform: none; }
+    .dz-p2w .dz-pg.w .caret { display: none; }
+    .dz-p2w .dz-badge { transform: scale(1); }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/* Per-tool dropzone animations. Needs the shared .dz-art / .dz-pg / .dz-badge / .steps rules from style.css. */
+
+/* Reorder: pages [1][2][3] -> [2][3][1] */
+.dz-reorder .dz-pg::before {
+    left: 0; top: 0;
+    width: 100%; height: 15px;
+    border-radius: 4px 4px 0 0;
+}
+.dz-reorder .dz-pg.a::before { background: var(--stamp); }
+.dz-reorder .dz-pg.b::before { background: var(--teal); }
+.dz-reorder .dz-pg.c::before { background: #8b93a9; }
+.dz-reorder .dz-pg::after { top: 23px; }
+
+.dz-reorder .dz-pg .n {
+    position: relative;
+    z-index: 1;
+    display: block;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 15px;
+    color: #ffffff;
+}
+
+.dz-reorder .dz-pg.a { animation: dzReA 4.5s ease-in-out infinite; }
+.dz-reorder .dz-pg.b { animation: dzReB 4.5s ease-in-out infinite; }
+.dz-reorder .dz-pg.c { animation: dzReC 4.5s ease-in-out infinite; }
+
+.dz-reorder .dz-badge {
+    margin: -34px 0 0 46px;
+    animation: dzReBadge 4.5s ease-in-out infinite;
+}
+
+@keyframes dzReA {
+    0%, 16%   { opacity: 1; transform: translate(-40px, 0); }
+    30%       { opacity: 1; transform: translate(0, -16px); }
+    44%, 88%  { opacity: 1; transform: translate(40px, 0); }
+    94%       { opacity: 0; transform: translate(40px, 0); }
+    96%       { opacity: 0; transform: translate(-40px, 0); }
+    100%      { opacity: 1; transform: translate(-40px, 0); }
+}
+@keyframes dzReB {
+    0%, 22%   { opacity: 1; transform: translate(0, 0); }
+    40%, 88%  { opacity: 1; transform: translate(-40px, 0); }
+    94%       { opacity: 0; transform: translate(-40px, 0); }
+    96%       { opacity: 0; transform: translate(0, 0); }
+    100%      { opacity: 1; transform: translate(0, 0); }
+}
+@keyframes dzReC {
+    0%, 26%   { opacity: 1; transform: translate(40px, 0); }
+    44%, 88%  { opacity: 1; transform: translate(0, 0); }
+    94%       { opacity: 0; transform: translate(0, 0); }
+    96%       { opacity: 0; transform: translate(40px, 0); }
+    100%      { opacity: 1; transform: translate(40px, 0); }
+}
+@keyframes dzReBadge {
+    0%, 50%   { transform: scale(0); }
+    56%       { transform: scale(1.25); }
+    60%, 88%  { transform: scale(1); }
+    94%, 100% { transform: scale(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dz-reorder .dz-pg.a { display: block; opacity: 1; transform: translate(40px, 0); }
+    .dz-reorder .dz-pg.b { display: block; opacity: 1; transform: translate(-40px, 0); }
+    .dz-reorder .dz-pg.c { display: block; opacity: 1; transform: translate(0, 0); }
+    .dz-reorder .dz-badge { transform: scale(1); }
+}
+
+/* Editor: erase box, then new text */
+.dz-editor .ed-page {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 76px; height: 52px;
+    margin: -26px 0 0 -38px;
+    background: #ffffff;
+    border-radius: 5px;
+    box-shadow: 0 6px 14px -6px rgba(0, 0, 0, 0.7);
+}
+.dz-editor .ed-line {
+    position: absolute;
+    left: 8px;
+    height: 4px;
+    border-radius: 2px;
+    background: #d4d7e0;
+}
+.dz-editor .ed-l1 { top: 9px;  width: 34px; height: 5px; background: #bfc3d0; }
+.dz-editor .ed-l2 { top: 22px; width: 56px; }
+.dz-editor .ed-l3 { top: 35px; width: 46px; }
+
+.dz-editor .ed-layer {
+    position: absolute;
+    inset: 0;
+    animation: dzEdLayer 4.5s infinite;
+}
+.dz-editor .ed-box {
+    position: absolute;
+    left: 5px; top: 18px;
+    width: 0; height: 12px;
+    box-sizing: border-box;
+    background: #ffffff;
+    border: 1.5px dashed var(--stamp);
+    animation: dzEdBox 4.5s cubic-bezier(0.3, 0, 0.2, 1) infinite;
+}
+.dz-editor .ed-new {
+    position: absolute;
+    left: 8px; top: 22px;
+    width: 40px; height: 4px;
+    border-radius: 2px;
+    background: var(--stamp);
+    clip-path: inset(0 100% 0 0);
+    animation: dzEdType 4.5s steps(8, end) infinite;
+}
+.dz-editor .ed-cursor {
+    position: absolute;
+    left: 0; top: 0;
+    margin: -1px 0 0 -2px;
+    opacity: 0;
+    z-index: 2;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+    animation: dzEdCursor 4.5s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+}
+
+@keyframes dzEdBox {
+    0%, 8%    { width: 0;    border-color: var(--stamp); }
+    28%, 34%  { width: 66px; border-color: var(--stamp); }
+    40%, 100% { width: 66px; border-color: transparent; }
+}
+@keyframes dzEdType {
+    0%, 42%   { clip-path: inset(0 100% 0 0); }
+    62%, 100% { clip-path: inset(0 0 0 0); }
+}
+@keyframes dzEdLayer {
+    0%, 88%   { opacity: 1; }
+    94%, 100% { opacity: 0; }
+}
+@keyframes dzEdCursor {
+    0%        { opacity: 0; transform: translate(80px, 50px); }
+    4%        { opacity: 1; transform: translate(80px, 50px); }
+    8%        { opacity: 1; transform: translate(5px, 18px); }
+    28%, 34%  { opacity: 1; transform: translate(71px, 30px); }
+    42%, 62%  { opacity: 1; transform: translate(10px, 26px); }
+    78%       { opacity: 1; transform: translate(62px, 44px); }
+    88%, 100% { opacity: 0; transform: translate(62px, 44px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dz-editor .ed-box { width: 66px; border-color: transparent; }
+    .dz-editor .ed-new { clip-path: none; }
+    .dz-editor .ed-cursor { display: none; }
+}
+
+/* Rotate: one page turns 90deg twice */
+.dz-rotate .dz-pg.r {
+    animation: dzRotP 4.5s ease-in-out infinite;
+}
+.dz-rotate .dz-badge {
+    margin: -34px 0 0 40px;
+    animation: dzRotBadge 4.5s ease-in-out infinite;
+}
+
+@keyframes dzRotP {
+    0%, 14%   { opacity: 1; transform: rotate(0deg); }
+    30%, 46%  { opacity: 1; transform: rotate(90deg); }
+    62%, 88%  { opacity: 1; transform: rotate(180deg); }
+    94%       { opacity: 0; transform: rotate(180deg); }
+    96%       { opacity: 0; transform: rotate(0deg); }
+    100%      { opacity: 1; transform: rotate(0deg); }
+}
+@keyframes dzRotBadge {
+    0%, 12%   { transform: scale(0); }
+    18%       { transform: scale(1.2); }
+    24%, 30%  { transform: scale(1); }
+    34%, 44%  { transform: scale(0); }
+    48%       { transform: scale(1.2); }
+    54%, 62%  { transform: scale(1); }
+    66%, 100% { transform: scale(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dz-rotate .dz-pg.r { opacity: 1; transform: rotate(90deg); }
+    .dz-rotate .dz-badge { transform: scale(1); }
+}
+
+/* JPG to PDF: photo tile turns into a PDF page */
+.dz-jpg .jp-img {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 46px; height: 36px;
+    margin: -18px 0 0 -23px;
+    border-radius: 4px;
+    background: linear-gradient(160deg, #6c8fd8, #8fcfc0);
+    box-shadow: 0 6px 14px -6px rgba(0, 0, 0, 0.7);
+    overflow: hidden;
+    animation: dzJpgImg 4.5s ease-in-out infinite;
+}
+.dz-jpg .jp-img::before {
+    content: '';
+    position: absolute;
+    right: 8px; top: 6px;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #ffe9a8;
+}
+.dz-jpg .jp-img::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 55%;
+    background: rgba(20, 40, 70, 0.35);
+    clip-path: polygon(0 100%, 28% 35%, 48% 70%, 70% 20%, 100% 100%);
+}
+.dz-jpg .dz-pg.p {
+    opacity: 0;
+    animation: dzJpgPage 4.5s ease-in-out infinite;
+}
+.dz-jpg .dz-badge {
+    width: auto; height: 14px;
+    padding: 0 5px;
+    border-radius: 4px;
+    font-size: 8px;
+    letter-spacing: 0.06em;
+    margin: 8px 0 0 4px;
+    animation: dzJpgBadge 4.5s ease-in-out infinite;
+}
+
+@keyframes dzJpgImg {
+    0%, 22%   { opacity: 1; transform: scale(1) rotate(0deg); }
+    34%, 96%  { opacity: 0; transform: scale(0.7) rotate(-8deg); }
+    100%      { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+@keyframes dzJpgPage {
+    0%, 26%   { opacity: 0; transform: scale(0.7) rotate(8deg); }
+    40%, 88%  { opacity: 1; transform: scale(1) rotate(0deg); }
+    94%, 100% { opacity: 0; transform: scale(1) rotate(0deg); }
+}
+@keyframes dzJpgBadge {
+    0%, 46%   { transform: scale(0); }
+    52%       { transform: scale(1.2); }
+    56%, 88%  { transform: scale(1); }
+    94%, 100% { transform: scale(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dz-jpg .jp-img { display: none; }
+    .dz-jpg .dz-pg.p { opacity: 1; transform: none; }
+    .dz-jpg .dz-badge { transform: scale(1); }
+}
+
+/* PDF to JPG: one page splits into two photo tiles */
+.dz-p2j .dz-pg.p {
+    animation: dzP2jPage 4.5s ease-in-out infinite;
+}
+.dz-p2j .jp-img {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 40px; height: 30px;
+    margin: -15px 0 0 -20px;
+    border-radius: 4px;
+    background: linear-gradient(160deg, #6c8fd8, #8fcfc0);
+    box-shadow: 0 6px 14px -6px rgba(0, 0, 0, 0.7);
+    overflow: hidden;
+    opacity: 0;
+}
+.dz-p2j .jp-img::before {
+    content: '';
+    position: absolute;
+    right: 6px; top: 5px;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #ffe9a8;
+}
+.dz-p2j .jp-img::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 55%;
+    background: rgba(20, 40, 70, 0.35);
+    clip-path: polygon(0 100%, 28% 35%, 48% 70%, 70% 20%, 100% 100%);
+}
+.dz-p2j .jp-img.l { animation: dzP2jL 4.5s ease-in-out infinite; }
+.dz-p2j .jp-img.r { animation: dzP2jR 4.5s ease-in-out infinite; }
+.dz-p2j .dz-badge {
+    width: auto; height: 14px;
+    padding: 0 5px;
+    border-radius: 4px;
+    font-size: 8px;
+    letter-spacing: 0.06em;
+    margin: 17px 0 0 -13px;
+    animation: dzP2jBadge 4.5s ease-in-out infinite;
+}
+
+@keyframes dzP2jPage {
+    0%, 18%   { opacity: 1; transform: scale(1); }
+    32%, 96%  { opacity: 0; transform: scale(0.8); }
+    100%      { opacity: 1; transform: scale(1); }
+}
+@keyframes dzP2jL {
+    0%, 22%   { opacity: 0; transform: translateX(0) scale(0.6); }
+    40%, 88%  { opacity: 1; transform: translateX(-30px) scale(1); }
+    94%, 100% { opacity: 0; transform: translateX(-30px) scale(1); }
+}
+@keyframes dzP2jR {
+    0%, 22%   { opacity: 0; transform: translateX(0) scale(0.6); }
+    40%, 88%  { opacity: 1; transform: translateX(30px) scale(1); }
+    94%, 100% { opacity: 0; transform: translateX(30px) scale(1); }
+}
+@keyframes dzP2jBadge {
+    0%, 46%   { transform: scale(0); }
+    52%       { transform: scale(1.2); }
+    56%, 88%  { transform: scale(1); }
+    94%, 100% { transform: scale(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dz-p2j .dz-pg.p { opacity: 0; }
+    .dz-p2j .jp-img.l { opacity: 1; transform: translateX(-30px); }
+    .dz-p2j .jp-img.r { opacity: 1; transform: translateX(30px); }
+    .dz-p2j .dz-badge { transform: scale(1); }
+}
+
+/* PDF to Word: PDF page flips into an editable Word page */
+.dz-p2w .dz-pg.p { animation: dzP2wPdf 4.5s ease-in-out infinite; }
+.dz-p2w .dz-pg.w {
+    opacity: 0;
+    animation: dzP2wDoc 4.5s ease-in-out infinite;
+}
+.dz-p2w .dz-pg.w::before { background: #4a7bd8; }
+.dz-p2w .dz-pg.w .caret {
+    position: absolute;
+    left: 30px; top: 14px;
+    width: 1.5px; height: 9px;
+    background: #4a7bd8;
+    animation: dzCaret 0.8s steps(1) infinite;
+}
+.dz-p2w .dz-badge {
+    width: auto; height: 14px;
+    padding: 0 5px;
+    border-radius: 4px;
+    font-size: 8px;
+    letter-spacing: 0.06em;
+    background: #4a7bd8;
+    color: #ffffff;
+    margin: 14px 0 0 2px;
+    animation: dzP2wBadge 4.5s ease-in-out infinite;
+}
+
+@keyframes dzP2wPdf {
+    0%, 20%   { opacity: 1; transform: perspective(240px) rotateY(0deg); }
+    34%, 96%  { opacity: 0; transform: perspective(240px) rotateY(90deg); }
+    100%      { opacity: 1; transform: perspective(240px) rotateY(0deg); }
+}
+@keyframes dzP2wDoc {
+    0%, 28%   { opacity: 0; transform: perspective(240px) rotateY(-90deg); }
+    42%, 88%  { opacity: 1; transform: perspective(240px) rotateY(0deg); }
+    94%, 100% { opacity: 0; transform: perspective(240px) rotateY(0deg); }
+}
+@keyframes dzP2wBadge {
+    0%, 46%   { transform: scale(0); }
+    52%       { transform: scale(1.2); }
+    56%, 88%  { transform: scale(1); }
+    94%, 100% { transform: scale(0); }
+}
+@keyframes dzCaret {
+    50% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dz-p2w .dz-pg.p { opacity: 0; }
+    .dz-p2w .dz-pg.w { opacity: 1; transform: none; }
+    .dz-p2w .dz-pg.w .caret { display: none; }
+    .dz-p2w .dz-badge { transform: scale(1); }
+}
+
+/* Compress PDF: a page is squeezed from both sides */
+.dz-compress .dz-pg.c { animation: dzCmpPg 4.5s ease-in-out infinite; }
+.dz-compress .ar {
+    position: absolute;
+    left: 50%; top: 50%;
+    margin: -12px 0 0 -4px;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--teal);
+    opacity: 0;
+}
+.dz-compress .ar.l { animation: dzCmpArL 4.5s ease-in-out infinite; }
+.dz-compress .ar.r { animation: dzCmpArR 4.5s ease-in-out infinite; }
+.dz-compress .dz-badge {
+    width: auto; height: 14px;
+    padding: 0 5px;
+    border-radius: 4px;
+    font-size: 8px;
+    letter-spacing: 0.04em;
+    margin: -30px 0 0 8px;
+    animation: dzCmpBadge 4.5s ease-in-out infinite;
+}
+
+@keyframes dzCmpPg {
+    0%, 12%   { opacity: 1; transform: scale(1.12); }
+    34%, 88%  { opacity: 1; transform: scale(0.72); }
+    94%       { opacity: 0; transform: scale(0.72); }
+    96%       { opacity: 0; transform: scale(1.12); }
+    100%      { opacity: 1; transform: scale(1.12); }
+}
+@keyframes dzCmpArL {
+    0%, 10%   { opacity: 0; transform: translateX(-46px); }
+    16%       { opacity: 1; transform: translateX(-42px); }
+    34%, 88%  { opacity: 1; transform: translateX(-26px); }
+    94%, 100% { opacity: 0; transform: translateX(-26px); }
+}
+@keyframes dzCmpArR {
+    0%, 10%   { opacity: 0; transform: translateX(46px); }
+    16%       { opacity: 1; transform: translateX(42px); }
+    34%, 88%  { opacity: 1; transform: translateX(26px); }
+    94%, 100% { opacity: 0; transform: translateX(26px); }
+}
+@keyframes dzCmpBadge {
+    0%, 38%   { transform: scale(0); }
+    44%       { transform: scale(1.2); }
+    48%, 88%  { transform: scale(1); }
+    94%, 100% { transform: scale(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dz-compress .dz-pg.c { transform: scale(0.72); }
+    .dz-compress .ar { opacity: 1; }
+    .dz-compress .ar.l { transform: translateX(-26px); }
+    .dz-compress .ar.r { transform: translateX(26px); }
+    .dz-compress .dz-badge { transform: scale(1); }
+}
+
+/* Result ticket: bar showing new size relative to the original */
+.size-bar {
+    display: none;
+    height: 4px;
+    margin-top: 7px;
+    border-radius: 3px;
+    background: rgba(42, 36, 22, 0.15);
+    overflow: hidden;
+}
+.size-bar i {
+    display: block;
+    height: 100%;
+    width: 100%;
+    border-radius: 3px;
+    background: var(--teal);
+    transition: width 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}

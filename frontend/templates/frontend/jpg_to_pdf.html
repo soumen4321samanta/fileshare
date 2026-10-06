@@ -9,12 +9,24 @@
         <p>Choose one or more images. They'll be combined into a single PDF, in the order you select them.</p>
     </div>
 
+    <ol class="steps" id="steps" aria-label="Progress">
+        <li class="step active"><span class="step-dot">1</span><span class="step-label">Choose images</span></li>
+        <li class="step-line" aria-hidden="true"></li>
+        <li class="step"><span class="step-dot">2</span><span class="step-label">Convert</span></li>
+        <li class="step-line" aria-hidden="true"></li>
+        <li class="step"><span class="step-dot">3</span><span class="step-label">Download</span></li>
+    </ol>
+
     <div class="card">
         <form id="tool-form">
             <div class="dropzone" id="dropzone">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 16V4M12 4l-4 4M12 4l4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                <p><strong>Tap to choose images</strong></p>
-                <p>or drag &amp; drop here (JPG, PNG)</p>
+                <div class="dz-art dz-jpg" aria-hidden="true">
+                    <span class="jp-img"></span>
+                    <span class="dz-pg p"></span>
+                    <span class="dz-badge">PDF</span>
+                </div>
+                <p><strong id="dz-title">Tap to choose images</strong></p>
+                <p id="dz-sub">or drag &amp; drop here (JPG, PNG)</p>
                 <input type="file" id="file-input" class="file-input-hidden" accept="image/*" multiple>
             </div>
             <div class="file-list" id="file-list"></div>
@@ -31,7 +43,7 @@
             <div class="icon">📄</div>
             <div class="meta">
                 <div class="fname" id="result-name">converted.pdf</div>
-                <div class="fsub">Ready to download</div>
+                <div class="fsub" id="result-sub">Ready to download</div>
             </div>
             <a class="dl" id="result-link" download title="Download">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M12 15l-4-4M12 15l4-4M4 19h16" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -49,23 +61,77 @@ FF.ready(function(){
     const statusBox = document.getElementById('status-box');
     const resultTicket = document.getElementById('result-ticket');
     const resultName = document.getElementById('result-name');
+    const resultSub = document.getElementById('result-sub');
     const resultLink = document.getElementById('result-link');
+    const dzTitle = document.getElementById('dz-title');
+    const dzSub = document.getElementById('dz-sub');
+    const steps = [...document.querySelectorAll('#steps .step')];
+    const stepLines = [...document.querySelectorAll('#steps .step-line')];
+
+    // n = current step (1-3), busy = pulse while working
+    function setStep(n, busy = false) {
+        steps.forEach((s, i) => {
+            const num = i + 1;
+            s.classList.toggle('done', num < n);
+            s.classList.toggle('active', num === n);
+            s.classList.toggle('busy', num === n && busy);
+            s.querySelector('.step-dot').textContent = num < n ? '✓' : String(num);
+        });
+        stepLines.forEach((l, i) => l.classList.toggle('done', i + 1 < n));
+    }
+
+    function fmtSize(bytes) {
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
 
     dropzone.addEventListener('click', () => fileInput.click());
     ['dragenter', 'dragover'].forEach(evt => dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.add('dragover'); }));
     ['dragleave', 'drop'].forEach(evt => dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.remove('dragover'); }));
-    dropzone.addEventListener('drop', e => { fileInput.files = e.dataTransfer.files; renderFileList(); });
+
+    dropzone.addEventListener('drop', e => {
+        // keep images only; the file picker already filters, dragging does not
+        const dt = new DataTransfer();
+        Array.from(e.dataTransfer.files)
+            .filter(f => f.type.startsWith('image/'))
+            .forEach(f => dt.items.add(f));
+        if (dt.files.length === 0) {
+            showStatus('error', 'Please drop image files (JPG or PNG).');
+            return;
+        }
+        fileInput.files = dt.files;
+        renderFileList();
+    });
     fileInput.addEventListener('change', renderFileList);
 
     function renderFileList() {
-        fileList.innerHTML = '';
+        hideStatus();
+        resultTicket.classList.remove('show');
+
         const files = Array.from(fileInput.files);
-        files.forEach(f => {
+        fileList.innerHTML = '';
+        files.forEach((f, i) => {
             const div = document.createElement('div');
-            div.innerHTML = `<span class="fname">${f.name}</span><span class="fsize">${(f.size / 1024).toFixed(1)} KB</span>`;
+            const name = document.createElement('span');
+            name.className = 'fname';
+            name.textContent = `${i + 1}. ${f.name}`;
+            const size = document.createElement('span');
+            size.className = 'fsize';
+            size.textContent = fmtSize(f.size);
+            div.append(name, size);
             fileList.appendChild(div);
         });
-        submitBtn.disabled = files.length === 0;
+
+        const has = files.length > 0;
+        const total = files.reduce((sum, f) => sum + f.size, 0);
+        dropzone.classList.toggle('has-files', has);
+        dzTitle.textContent = has ? 'Tap to choose different images' : 'Tap to choose images';
+        dzSub.textContent = has
+            ? `${files.length} image${files.length > 1 ? 's' : ''} · ${fmtSize(total)}`
+            : 'or drag & drop here (JPG, PNG)';
+
+        submitBtn.disabled = !has;
+        setStep(has ? 2 : 1);
     }
 
     function showStatus(type, msg) {
@@ -80,11 +146,13 @@ FF.ready(function(){
         e.preventDefault();
         const files = Array.from(fileInput.files);
         if (files.length === 0) return;
+        let ok = false;
 
         hideStatus();
         resultTicket.classList.remove('show');
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<span class="spinner"></span> Converting…';
+        setStep(2, true);
 
         const formData = new FormData();
         files.forEach(f => formData.append('files', f));
@@ -101,13 +169,16 @@ FF.ready(function(){
             resultLink.href = url;
             resultLink.download = 'converted.pdf';
             resultName.textContent = 'converted.pdf';
+            resultSub.textContent = `Ready · ${files.length} image${files.length > 1 ? 's' : ''} → 1 PDF · ${fmtSize(blob.size)}`;
             resultTicket.classList.add('show');
             showStatus('success', 'Converted successfully.');
+            ok = true;
         } catch (err) {
             showStatus('error', 'Network error. Please try again.');
         } finally {
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke-linecap="round" stroke-linejoin="round"/></svg> Convert to PDF';
+            setStep(ok ? 3 : 2);
         }
     });
 });
