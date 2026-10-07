@@ -880,7 +880,7 @@ def pdf_edit(request):
 
     total_pages = doc.page_count
 
-    ALLOWED_FONTS = {"helv", "times-roman", "cour", "helv-bold", "times-bold"}
+    # ALLOWED_FONTS = {"helv", "times-roman", "cour", "helv-bold", "times-bold"}
 
     try:
         erase_by_page = {}
@@ -936,3 +936,86 @@ def pdf_edit(request):
         filename="edited.pdf",
         content_type="application/pdf",
     )
+
+
+
+
+# ---- add near the top of your views file (skip imports you already have) ----
+from django.http import JsonResponse
+
+ALLOWED_FONTS = {
+    "helv", "hebo", "heit", "hebi",
+    "times-roman", "tibo", "tiit", "tibi",
+    "cour", "cobo", "coit", "cobi",
+}
+
+
+def _map_font(span):
+    """Closest standard PDF font for a text span (the original font may not be embeddable)."""
+    name = (span.get("font") or "").lower()
+    flags = span.get("flags", 0)
+    mono = bool(flags & 8) or any(k in name for k in ("cour", "mono", "consol"))
+    serif = bool(flags & 4) or any(
+        k in name for k in ("times", "serif", "georgia", "garamond", "cambria", "minion", "palat", "book")
+    )
+    bold = bool(flags & 16) or any(k in name for k in ("bold", "black", "heavy"))
+    ital = bool(flags & 2) or any(k in name for k in ("italic", "oblique"))
+    i = (int(bold), int(ital))
+    if mono:
+        return {(0, 0): "cour", (1, 0): "cobo", (0, 1): "coit", (1, 1): "cobi"}[i]
+    if serif:
+        return {(0, 0): "times-roman", (1, 0): "tibo", (0, 1): "tiit", (1, 1): "tibi"}[i]
+    return {(0, 0): "helv", (1, 0): "hebo", (0, 1): "heit", (1, 1): "hebi"}[i]
+
+
+# ---- the new endpoint ----
+@csrf_exempt
+@require_POST
+def pdf_text_style(request):
+    """Font, size, color and baseline of the text inside a rectangle (PDF points)."""
+    f = request.FILES.get("file")
+    if not f:
+        return _error("Please attach a PDF file.")
+    if f.size > MAX_UPLOAD_SIZE:
+        return _error("File is over the 25MB limit.")
+    try:
+        page_no = int(request.POST.get("page", "1"))
+        rect = [float(v) for v in request.POST.get("rect", "").split(",")]
+        if len(rect) != 4:
+            raise ValueError
+    except (TypeError, ValueError):
+        return _error("Invalid area.")
+
+    try:
+        doc = pymupdf.open(stream=f.read(), filetype="pdf")
+    except Exception:
+        return _error("Could not open this file as a PDF.")
+
+    try:
+        if page_no < 1 or page_no > doc.page_count:
+            return _error("Page out of range.")
+        data = doc[page_no - 1].get_text("dict", clip=pymupdf.Rect(*rect))
+        lines = []
+        for block in data.get("blocks", []):
+            if block.get("type") != 0:
+                continue
+            for line in block.get("lines", []):
+                spans = [s for s in line["spans"] if s["text"].strip()]
+                if not spans:
+                    continue
+                dom = max(spans, key=lambda s: len(s["text"]))
+                c = dom["color"]
+                lines.append({
+                    "text": "".join(s["text"] for s in line["spans"]).strip()[:300],
+                    "x": spans[0]["origin"][0],
+                    "y": spans[0]["origin"][1],
+                    "size": round(dom["size"], 1),
+                    "font": _map_font(dom),
+                    "color": [((c >> 16) & 255) / 255, ((c >> 8) & 255) / 255, (c & 255) / 255],
+                })
+    except Exception:
+        return _error("Could not read text from this page.", 500)
+    finally:
+        doc.close()
+
+    return JsonResponse({"lines": lines[:12]})

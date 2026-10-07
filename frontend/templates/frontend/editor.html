@@ -107,6 +107,20 @@
     }
     .page-nav button:hover:not(:disabled) { border-color: var(--stamp); }
     .page-nav button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .match-toggle {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 12px; color: var(--muted); cursor: pointer; white-space: nowrap;
+    }
+    .match-toggle input { accent-color: var(--stamp); }
+    .style-hint {
+        margin: -4px 0 12px; font-size: 12px; color: var(--teal);
+        font-family: 'JetBrains Mono', monospace; line-height: 1.5;
+    }
+    .style-hint:empty { display: none; }
+    .style-swatch {
+        display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+        border: 1px solid rgba(255,255,255,0.4); vertical-align: -1px; margin-right: 4px;
+    }
     .page-nav span { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted); }
     .zoom-row { display: flex; gap: 8px; align-items: center; justify-content: center; margin-top: 10px; }
     .zoom-row button {
@@ -163,12 +177,25 @@
                 <div class="spacer"></div>
                 <select id="font-select">
                     <option value="helv">Helvetica</option>
+                    <option value="hebo">Helvetica Bold</option>
+                    <option value="heit">Helvetica Italic</option>
+                    <option value="hebi">Helvetica Bold Italic</option>
                     <option value="times-roman">Times</option>
+                    <option value="tibo">Times Bold</option>
+                    <option value="tiit">Times Italic</option>
+                    <option value="tibi">Times Bold Italic</option>
                     <option value="cour">Courier</option>
+                    <option value="cobo">Courier Bold</option>
+                    <option value="coit">Courier Italic</option>
+                    <option value="cobi">Courier Bold Italic</option>
                 </select>
                 <input type="number" id="font-size" value="16" min="6" max="72" style="width:60px">
                 <input type="color" id="font-color" value="#cf4520">
+                <label class="match-toggle" title="Detect the font, size and color of the text under an erase box">
+                    <input type="checkbox" id="auto-match" checked> ✨ Match style
+                </label>
             </div>
+            <div class="style-hint" id="style-hint"></div>
 
             <div class="viewer" id="viewer">
                 <div class="page-container" id="page-container">
@@ -233,6 +260,8 @@ FF.ready(function(){
     const toolErase = document.getElementById('tool-erase');
     const toolText = document.getElementById('tool-text');
     const fontSelect = document.getElementById('font-select');
+    const autoMatch = document.getElementById('auto-match');
+    const styleHint = document.getElementById('style-hint');
     const fontSize = document.getElementById('font-size');
     const fontColor = document.getElementById('font-color');
     const undoBtn = document.getElementById('undo-btn');
@@ -318,6 +347,83 @@ FF.ready(function(){
         onEdited();
     }
 
+    // base-14 font code -> [css family, weight, style, label]
+    const SANS = 'Helvetica, Arial, sans-serif', SERIF = "'Times New Roman', serif", MONO = "'Courier New', monospace";
+    const FONT_CSS = {
+        'helv': [SANS, '400', 'normal', 'Helvetica'], 'hebo': [SANS, '700', 'normal', 'Helvetica Bold'],
+        'heit': [SANS, '400', 'italic', 'Helvetica Italic'], 'hebi': [SANS, '700', 'italic', 'Helvetica Bold Italic'],
+        'times-roman': [SERIF, '400', 'normal', 'Times'], 'times-bold': [SERIF, '700', 'normal', 'Times Bold'],
+        'tibo': [SERIF, '700', 'normal', 'Times Bold'], 'tiit': [SERIF, '400', 'italic', 'Times Italic'],
+        'tibi': [SERIF, '700', 'italic', 'Times Bold Italic'],
+        'cour': [MONO, '400', 'normal', 'Courier'], 'cobo': [MONO, '700', 'normal', 'Courier Bold'],
+        'coit': [MONO, '400', 'italic', 'Courier Italic'], 'cobi': [MONO, '700', 'italic', 'Courier Bold Italic'],
+    };
+    function applyFont(el, code) {
+        const f = FONT_CSS[code] || FONT_CSS.helv;
+        el.style.fontFamily = f[0];
+        el.style.fontWeight = f[1];
+        el.style.fontStyle = f[2];
+    }
+
+    // ---- Match style: ask the server what text sits under an erase box ----
+    const detectTokens = new WeakMap();   // op -> latest request id (ignores stale replies)
+    let detectSeq = 0;
+
+    async function detectStyle(op) {
+        if (!autoMatch.checked || !selectedFile || !op || op.type !== 'erase') return;
+        const mine = ++detectSeq;
+        detectTokens.set(op, mine);
+        try {
+            const resp = await fetch('/api/pdf-text-style/', {
+                method: 'POST',
+                body: makeFD({ file: selectedFile, page: op.page, rect: op.rect.join(',') }),
+            });
+            if (!resp.ok) return;
+            const data = await resp.json();
+            if (detectTokens.get(op) !== mine || !operations.includes(op)) return;
+            op.lines = data.lines || [];
+            // store inside the current history step without creating a new one
+            if (hist[histIdx]) hist[histIdx].ops = JSON.stringify(operations);
+            updateStyleHint();   // no redraw here, so an ongoing drag is not interrupted
+        } catch (_) { /* detection is optional; ignore network errors */ }
+    }
+
+    // nearest detected line to a tap, among erase boxes on this page
+    function findMatchedLine(tx, ty) {
+        const PAD = 4;
+        let best = null, bestD = Infinity;
+        operations.forEach(op => {
+            if (op.type !== 'erase' || op.page !== currentPage || !op.lines || !op.lines.length) return;
+            const [x0, y0, x1, y1] = op.rect;
+            if (tx < x0 - PAD || tx > x1 + PAD || ty < y0 - PAD || ty > y1 + PAD) return;
+            op.lines.forEach(l => {
+                const d = Math.abs(ty - l.y);
+                if (d < bestD) { bestD = d; best = l; }
+            });
+        });
+        return best;
+    }
+
+    function updateStyleHint() {
+        styleHint.textContent = '';
+        if (!autoMatch.checked || !selectedOp || selectedOp.type !== 'erase' || !selectedOp.lines) return;
+        if (selectedOp.lines.length === 0) {
+            styleHint.textContent = 'No text found under this box (scanned image?). New text will use the toolbar style.';
+            return;
+        }
+        const l = selectedOp.lines[0];
+        const sw = document.createElement('i');
+        sw.className = 'style-swatch';
+        sw.style.background = colorToHex(l.color);
+        const label = (FONT_CSS[l.font] || [])[3] || l.font;
+        styleHint.append(sw, `Detected: ${label} · ${Math.round(l.size)} pt. Tap inside the box in Add Text mode to type in the same style.`);
+    }
+
+    autoMatch.addEventListener('change', () => {
+        if (autoMatch.checked) operations.forEach(o => { if (o.type === 'erase' && !o.lines) detectStyle(o); });
+        updateStyleHint();
+    });
+
     function restore(i) {
         const st = hist[i];
         histIdx = i;
@@ -327,6 +433,7 @@ FF.ready(function(){
         syncToolbar(selectedOp);
         redrawOverlay();
         onEdited();
+        operations.forEach(o => { if (o.type === 'erase' && !o.lines) detectStyle(o); });
     }
     function undo() { if (histIdx > 0) restore(histIdx - 1); }
     function redo() { if (histIdx < hist.length - 1) restore(histIdx + 1); }
@@ -561,11 +668,6 @@ FF.ready(function(){
         pageContainer.querySelectorAll('.erase-box, .text-marker, .guide').forEach(el => el.remove());
         boxEls.clear();
         const k = getK();
-        const fontFamilyMap = {
-            'helv': 'Helvetica, Arial, sans-serif',
-            'times-roman': "'Times New Roman', serif",
-            'cour': "'Courier New', monospace",
-        };
         operations.filter(op => op.page === currentPage).forEach(op => {
             if (op.type === 'erase') {
                 const div = document.createElement('div');
@@ -590,7 +692,7 @@ FF.ready(function(){
                 const div = document.createElement('div');
                 div.className = 'text-marker' + (op === selectedOp ? ' selected' : '');
                 div.textContent = op.text;
-                div.style.fontFamily = fontFamilyMap[op.fontname] || 'sans-serif';
+                applyFont(div, op.fontname);
                 div.style.fontSize = (op.fontsize * k) + 'px';
                 const [r,g,b] = op.color;
                 div.style.color = `rgb(${Math.round(r*255)}, ${Math.round(g*255)}, ${Math.round(b*255)})`;
@@ -609,6 +711,7 @@ FF.ready(function(){
             }
         });
         updateButtons();
+        updateStyleHint();
     }
 
     // ---- Snap guides ----
@@ -762,6 +865,7 @@ FF.ready(function(){
         const [x0, y0, x1, y1] = op.rect.map(v => v * k);
         const sx = e.clientX, sy = e.clientY;
         const MIN = 10;
+        const rectBefore = op.rect.join(',');
         try { el.setPointerCapture(e.pointerId); } catch (_) {}
 
         function onMove(ev) {
@@ -793,6 +897,7 @@ FF.ready(function(){
             el.removeEventListener('pointercancel', onUp);
             hideGuides();
             commit();
+            if (op.rect.join(',') !== rectBefore) { delete op.lines; detectStyle(op); }
         }
         el.addEventListener('pointermove', onMove);
         el.addEventListener('pointerup', onUp);
@@ -872,22 +977,33 @@ FF.ready(function(){
                 operations.push(newOp);
                 selectedOp = newOp;   // আঁকার সাথে সাথে select, handle দেখা যাবে
                 commit();
+                detectStyle(newOp);
             } else {
                 selectedOp = null;    // ফাঁকা জায়গায় tap করলে deselect
             }
         } else if (currentTool === 'text' && movedDistance < 8) {
             selectedOp = null;
-            const text = prompt('Enter text:');
+            const tapX = x / scale * PDF_SCALE, tapY = y / scale * PDF_SCALE;
+            const m = autoMatch.checked ? findMatchedLine(tapX, tapY) : null;
+            const text = prompt('Enter text:', m ? m.text : '');
             if (text) {
-                const fsize = clamp(parseFloat(fontSize.value) || 16, MIN_FONT, MAX_FONT);
-                const pdfX = x / scale * PDF_SCALE;
-                const pdfY = (y / scale * PDF_SCALE) + fsize;
+                let fsize, pdfX, pdfY, fname, color;
+                if (m) {
+                    // same font, size, color and baseline as the text that was erased
+                    fsize = clamp(m.size, MIN_FONT, MAX_FONT);
+                    pdfX = m.x; pdfY = m.y; fname = m.font; color = m.color;
+                } else {
+                    fsize = clamp(parseFloat(fontSize.value) || 16, MIN_FONT, MAX_FONT);
+                    pdfX = tapX; pdfY = tapY + fsize;
+                    fname = fontSelect.value; color = hexToColor(fontColor.value);
+                }
                 const newOp = {
                     page: currentPage, type: 'text', x: pdfX, y: pdfY, text,
-                    fontsize: fsize, fontname: fontSelect.value, color: hexToColor(fontColor.value)
+                    fontsize: fsize, fontname: fname, color: color
                 };
                 operations.push(newOp);
                 selectedOp = newOp;   // বসানোর সাথে সাথে select, তাই সাথেই size/color বদলানো যাবে
+                if (m) syncToolbar(newOp);
                 commit();
             }
         }
@@ -1024,7 +1140,7 @@ FF.ready(function(){
         const erased = operations.filter(o => o.type === 'erase').length;
         const texts = operations.filter(o => o.type === 'text').length;
 
-        const fd = makeFD({file: selectedFile, operations: JSON.stringify(operations)});
+        const fd = makeFD({file: selectedFile, operations: JSON.stringify(operations, (k, v) => k === 'lines' ? undefined : v)});
         try {
             const resp = await fetch('/api/pdf-edit/', { method: 'POST', body: fd });
             if (!resp.ok) {

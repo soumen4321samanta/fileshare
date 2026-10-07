@@ -17,4 +17,5 @@ urlpatterns = [
     path("pdf-ocr/",views.pdf_ocr,name="api_pdf_ocr"),
     path("pdf-page-image/", views.pdf_page_image, name="api_pdf_page_image"),
     path("pdf-edit/", views.pdf_edit, name="api_pdf_edit"),
+    path("pdf-text-style/", views.pdf_text_style, name="api_pdf_text_style"),
 ]
