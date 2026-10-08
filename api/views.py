@@ -880,7 +880,6 @@ def pdf_edit(request):
 
     total_pages = doc.page_count
 
-    # ALLOWED_FONTS = {"helv", "times-roman", "cour", "helv-bold", "times-bold"}
 
     try:
         erase_by_page = {}
