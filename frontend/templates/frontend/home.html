@@ -5,65 +5,151 @@
 
 {% block content %}
 <div class="home-wrap">
-    <div class="home-hero" id="hero">
-        <div class="hero-glow"></div>
-        <div class="hero-floaters" id="hero-floaters">
-            <svg class="floater f1" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <svg class="floater f2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
-            <svg class="floater f3" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="18" rx="1"/><rect x="13" y="3" width="8" height="18" rx="1"/><path d="M11 12h2"/></svg>
-            <svg class="floater f4" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4a1 1 0 011-1h3M20 7V4a1 1 0 00-1-1h-3M4 17v3a1 1 0 001 1h3M20 17v3a1 1 0 01-1 1h-3"/></svg>
-            <span class="floater f5 dot-shape"></span>
-            <span class="floater f6 ring-shape"></span>
+    <section class="hero2" id="hero">
+        <div class="hero2-copy">
+            <div class="eyebrow"><span class="dot"></span> No signup, no watermarks</div>
+            <h1 class="reveal-heading">
+                <span class="line">Every file tool,</span>
+                <span class="line">in <span class="accent">one place</span>.</span>
+            </h1>
+            <p>Send files, convert between formats, compress to an exact size, and edit PDFs right in your browser. All free.</p>
+            <div class="hero2-actions">
+                <a class="demo-cta" href="{% url 'editor_page' %}">
+                    Try the PDF editor
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </a>
+                <a class="hero2-ghost" href="#section-edit">Browse all tools</a>
+            </div>
         </div>
 
-        <div class="eyebrow"><span class="dot"></span> No signup · No watermarks</div>
-        <h1 class="reveal-heading">
-            <span class="line">Every file tool,</span>
-            <span class="line">in <span class="accent">one place</span>.</span>
-        </h1>
-        <p>Send files, convert between formats, compress to an exact size, and edit PDFs right in your browser — all free.</p>
+        <div class="hs" id="hs" role="region" aria-roledescription="carousel" aria-label="Featured tools">
+            <div class="hs-stage">
 
+                <!-- 1. PDF Editor -->
+                <article class="hs-slide" style="--accent:#cf4520;--on:#fff" aria-label="PDF Editor">
+                    <div class="hs-glow"></div>
+                    <div class="hs-word" aria-hidden="true">edit</div>
+                    <div class="hs-art">
+                        <div class="hs-float">
+                            <div class="sv-paper">
+                                <div class="sv-sel"><span class="sv-typed">Deadline: 24 Oct</span></div>
+                            </div>
+                            <span class="sv-chip hot c1">🧽 Erase</span>
+                            <span class="sv-chip c2">Aa Add text</span>
+                        </div>
+                        <div class="hs-ground"></div>
+                    </div>
+                    <div class="hs-cap">
+                        <h3>PDF Editor</h3>
+                        <p>Erase old text and type new text anywhere on the page.</p>
+                        <a class="hs-open" href="{% url 'editor_page' %}">Open PDF Editor</a>
+                    </div>
+                </article>
+
+                <!-- 2. Merge -->
+                <article class="hs-slide" style="--accent:#4fae8a;--on:#0d1117" aria-label="Merge PDF">
+                    <div class="hs-glow"></div>
+                    <div class="hs-word" aria-hidden="true">merge</div>
+                    <div class="hs-art">
+                        <div class="hs-float sv-merge">
+                            <div class="sv-paper mp1" style="--accent:#8890a3"></div>
+                            <div class="sv-paper mp2"></div>
+                            <span class="sv-join">2→1</span>
+                            <span class="sv-chip hot c1">2 files → 1</span>
+                            <span class="sv-chip c2">Drag to reorder</span>
+                        </div>
+                        <div class="hs-ground"></div>
+                    </div>
+                    <div class="hs-cap">
+                        <h3>Merge PDF</h3>
+                        <p>Combine several PDFs into one, in the order you want.</p>
+                        <a class="hs-open" href="{% url 'merge_pdf' %}">Open Merge PDF</a>
+                    </div>
+                </article>
+
+                <!-- 3. Compress -->
+                <article class="hs-slide" style="--accent:#e0a43a;--on:#0d1117" aria-label="Compress PDF">
+                    <div class="hs-glow"></div>
+                    <div class="hs-word" aria-hidden="true">shrink</div>
+                    <div class="hs-art">
+                        <div class="hs-float sv-compress">
+                            <div class="sv-paper">
+                                <div class="sv-meter">
+                                    <span>8.4 MB → 1.2 MB</span>
+                                    <div class="track"><i class="fillbar"></i></div>
+                                </div>
+                            </div>
+                            <span class="sv-chip hot c1">−86%</span>
+                            <span class="sv-chip c2">Target: 1 MB</span>
+                        </div>
+                        <div class="hs-ground"></div>
+                    </div>
+                    <div class="hs-cap">
+                        <h3>Compress PDF</h3>
+                        <p>Shrink a PDF to the exact size you need.</p>
+                        <a class="hs-open" href="{% url 'pdf_compress' %}">Open Compress PDF</a>
+                    </div>
+                </article>
+
+                <!-- 4. OCR -->
+                <article class="hs-slide" style="--accent:#5b8def;--on:#0d1117" aria-label="OCR">
+                    <div class="hs-glow"></div>
+                    <div class="hs-word" aria-hidden="true">scan</div>
+                    <div class="hs-art">
+                        <div class="hs-float sv-ocr">
+                            <div class="sv-paper"><span class="sv-beam"></span></div>
+                            <span class="sv-chip c1">Searchable</span>
+                            <span class="sv-chip hot c2">✓ Copied</span>
+                        </div>
+                        <div class="hs-ground"></div>
+                    </div>
+                    <div class="hs-cap">
+                        <h3>OCR</h3>
+                        <p>Turn scanned pages into searchable, copyable text.</p>
+                        <a class="hs-open" href="{% url 'ocr_page' %}">Open OCR</a>
+                    </div>
+                </article>
+
+                <!-- 5. JPG to PDF -->
+                <article class="hs-slide" style="--accent:#9b7bf0;--on:#0d1117" aria-label="JPG to PDF">
+                    <div class="hs-glow"></div>
+                    <div class="hs-word" aria-hidden="true">images</div>
+                    <div class="hs-art">
+                        <div class="hs-float sv-jpg">
+                            <div class="sv-paper"></div>
+                            <i class="sv-img i1"></i><i class="sv-img i2"></i><i class="sv-img i3"></i>
+                            <span class="sv-chip hot c1">3 images → PDF</span>
+                            <span class="sv-chip c2">Any order</span>
+                        </div>
+                        <div class="hs-ground"></div>
+                    </div>
+                    <div class="hs-cap">
+                        <h3>JPG to PDF</h3>
+                        <p>Turn photos and scans into a single PDF.</p>
+                        <a class="hs-open" href="{% url 'jpg_to_pdf' %}">Open JPG to PDF</a>
+                    </div>
+                </article>
+            </div>
+
+            <div class="hs-dots">
+                <button class="hs-dot" type="button" aria-label="PDF Editor"><span class="bar"><i class="fill"></i></span><span class="lbl">Editor</span></button>
+                <button class="hs-dot" type="button" aria-label="Merge PDF"><span class="bar"><i class="fill"></i></span><span class="lbl">Merge</span></button>
+                <button class="hs-dot" type="button" aria-label="Compress PDF"><span class="bar"><i class="fill"></i></span><span class="lbl">Compress</span></button>
+                <button class="hs-dot" type="button" aria-label="OCR"><span class="bar"><i class="fill"></i></span><span class="lbl">OCR</span></button>
+                <button class="hs-dot" type="button" aria-label="JPG to PDF"><span class="bar"><i class="fill"></i></span><span class="lbl">Images</span></button>
+            </div>
+        </div>
 
         <div class="hero-filters" id="hero-filters">
-            <a href="#section-share" class="filter-btn">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                Share
-            </a>
-            <a href="#section-edit" class="filter-btn">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                Edit PDFs
-            </a>
-            <a href="#section-convert" class="filter-btn">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
-                Convert
-            </a>
-            <a href="#section-compress" class="filter-btn">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>
-                Compress
-            </a>
+            <a href="#section-share" class="filter-btn">Share</a>
+            <a href="#section-edit" class="filter-btn">Edit PDFs</a>
+            <a href="#section-convert" class="filter-btn">Convert</a>
+            <a href="#section-compress" class="filter-btn">Compress</a>
         </div>
-
-       
-        <div class="hero-stats" id="hero-stats">
-            <div class="stat">
-                <span class="stat-num" data-target="12000" data-suffix="+">0</span>
-                <span class="stat-label">Files processed</span>
-            </div>
-            <div class="stat-sep"></div>
-            <div class="stat">
-                <span class="stat-num" data-target="9" data-suffix="">0</span>
-                <span class="stat-label">Tools available</span>
-            </div>
-            <div class="stat-sep"></div>
-            <div class="stat">
-                <span class="stat-num" data-target="0" data-suffix="">0</span>
-                <span class="stat-label">Signups required</span>
-            </div>
-        </div>
-    </div>
+    </section>
 
     {# ===== LIVE DEMO: নিজে নিজে চলা editor (শুধু CSS animation, কোনো আসল ফাইল লাগে না) ===== #}
-    <div class="demo-wrap" id="demo">
+    {% comment %} <div class="demo-wrap" id="demo">
         <div class="demo-window" role="img" aria-label="Animated demo: erasing an old date in a PDF and typing a new one">
             <div class="demo-bar" aria-hidden="true">
                 <span class="demo-dots"><i></i><i></i><i></i></span>
@@ -112,7 +198,7 @@
             Try it yourself
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </a>
-    </div>
+    </div> {% endcomment %}
 
     {% comment %} <div class="section-label" id="section-share">Share</div>
     <div class="tool-grid">
@@ -243,6 +329,74 @@
 
 <script>
 FF.ready(function () {
+        // ---- Hero showcase (rotating tools) ----
+    const hs = document.getElementById('hs');
+    if (hs) {
+        const slides = [...hs.querySelectorAll('.hs-slide')];
+        const dots = [...hs.querySelectorAll('.hs-dot')];
+        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        let cur = -1;
+
+        if (reduce) hs.classList.add('hs-static');   // autoplay off
+        slides.forEach(s => { s.inert = true; });
+
+        function show(n) {
+            n = (n + slides.length) % slides.length;
+            if (n === cur) return;
+
+            if (cur > -1) {
+                const old = slides[cur];
+                old.classList.remove('is-active');
+                old.classList.add('is-leaving');
+                old.inert = true;
+                clearTimeout(old._t);
+                old._t = setTimeout(() => old.classList.remove('is-leaving'), 900);
+                dots[cur].classList.remove('active');
+                dots[cur].removeAttribute('aria-current');
+            }
+
+            const nxt = slides[n];
+            clearTimeout(nxt._t);
+            nxt.classList.remove('is-leaving');
+            nxt.classList.add('is-active');
+            nxt.inert = false;
+            dots[n].classList.add('active');
+            dots[n].setAttribute('aria-current', 'true');
+            cur = n;
+        }
+
+        // progress bar shesh hole next slide (CSS animation-ই timer)
+        hs.addEventListener('animationend', (e) => {
+            if (e.animationName === 'hsFill' && !reduce) show(cur + 1);
+        });
+
+        dots.forEach((d, i) => d.addEventListener('click', () => show(i)));
+
+        // swipe (mobile) + arrow keys
+        const stage = hs.querySelector('.hs-stage');
+        let sx = null;
+        stage.addEventListener('pointerdown', e => { sx = e.clientX; });
+        stage.addEventListener('pointercancel', () => { sx = null; });
+        stage.addEventListener('pointerup', e => {
+            if (sx === null) return;
+            const dx = e.clientX - sx; sx = null;
+            if (Math.abs(dx) > 45) show(cur + (dx < 0 ? 1 : -1));
+        });
+        hs.addEventListener('keydown', e => {
+            if (e.key === 'ArrowRight') show(cur + 1);
+            if (e.key === 'ArrowLeft') show(cur - 1);
+        });
+
+        // screen er bahire gele / tab hidden hole timer thame
+        if ('IntersectionObserver' in window) {
+            new IntersectionObserver(en => hs.classList.toggle('is-paused', !en[0].isIntersecting),
+                { threshold: 0.2 }).observe(hs);
+        }
+        document.addEventListener('visibilitychange', () => hs.classList.toggle('is-paused', document.hidden));
+
+        // heading reveal sesh hole prothom slide ashe
+        setTimeout(() => show(0), 450);
+    }
     const hero = document.getElementById('hero');
     const floaters = document.querySelectorAll('#hero-floaters .floater');
     if (hero && window.matchMedia('(pointer: fine)').matches) {
@@ -296,23 +450,7 @@ FF.ready(function () {
         statNums.forEach(el => statsObserver.observe(el));
     }
 
-    // ---- Live demo: screen এর বাইরে গেলে animation থামিয়ে দাও (CPU/ব্যাটারি বাঁচাতে) ----
-    const demoWin = document.querySelector('.demo-window');
-    if (demoWin && 'IntersectionObserver' in window) {
-        new IntersectionObserver((entries) => {
-            demoWin.classList.toggle('is-paused', !entries[0].isIntersecting);
-        }, { threshold: 0.15 }).observe(demoWin);
-    }
-
-    // ---- PDF Editor / OCR card এর animation: screen এর বাইরে গেলে থামে ----
-    const artEls = document.querySelectorAll('.fx-art, .ocr-art');
-    if (artEls.length && 'IntersectionObserver' in window) {
-        const artObserver = new IntersectionObserver((entries) => {
-            entries.forEach(en => en.target.classList.toggle('is-paused', !en.isIntersecting));
-        }, { threshold: 0.1 });
-        artEls.forEach(el => artObserver.observe(el));
-    }
-
+    
     // ---- Floating icons: click to bounce/spin ----
     floaters.forEach(el => {
         el.style.pointerEvents = 'auto';
