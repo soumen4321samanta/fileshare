@@ -10,7 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="{% static 'frontend/favicon.svg' %}">
 {# CSS বদলালে ?v= সংখ্যাটা বাড়িয়ে দিন (cache এড়াতে) #}
-<link rel="stylesheet" href="{% static 'frontend/style.css' %}?v=8">
+<link rel="stylesheet" href="{% static 'frontend/style.css' %}?v=9">
 <link rel="stylesheet" href="{% static 'frontend/tools-art.css' %}?v=8">
 {# এই দুটো marker এর মাঝখানের অংশ router প্রতিটা পেজ বদলের সময় নতুন পেজের extra_head দিয়ে বদলে দেয় #}
 <meta id="extra-head-start" name="extra-head-start" content="">
@@ -158,10 +158,10 @@
     }
 
     function updateActiveNav(url) {
-        document.querySelectorAll('.site-nav > a, .nav-dropdown a, .nav-group-btn').forEach(a => {
+        document.querySelectorAll('.site-nav > a, .mega-item, .nav-group-btn').forEach(a => {
             a.classList.remove('active');
         });
-        document.querySelectorAll('.site-nav > a, .nav-dropdown a').forEach(a => {
+        document.querySelectorAll('.site-nav > a, .mega-item').forEach(a => {
             if (a.getAttribute('href') === url) {
                 a.classList.add('active');
                 const group = a.closest('.nav-group');
@@ -221,7 +221,6 @@
 </script>
 
 <header class="site-header">
-    <div class="header-progress" id="header-progress"></div>
     <div class="site-header-inner">
         <a href="{% url 'home' %}" class="site-logo">
             <span class="mark">
@@ -230,87 +229,107 @@
             {{ site.site_name }}
         </a>
 
-        <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round"/></svg>
-        </button>
-
         <nav class="site-nav" id="site-nav">
+            <span class="nav-indicator" id="nav-indicator" aria-hidden="true"></span>
+
             <a href="{% url 'home' %}" class="{% if active == 'home' %}active{% endif %}">Home</a>
             <a href="{% url 'send_file_page' %}" class="{% if active == 'send' %}active{% endif %}">Send a file</a>
 
             <div class="nav-group">
-                <button type="button" class="nav-group-btn {% if active == 'merge_pdf' or active == 'pdf_delete_pages' or active == 'reorder_pages' or active == 'rotate_pages' or active == 'pdf_compress' or active == 'editor' or active == 'ocr' %}active{% endif %}">
+                <button type="button" aria-haspopup="true" class="nav-group-btn {% if active == 'merge_pdf' or active == 'pdf_delete_pages' or active == 'reorder_pages' or active == 'rotate_pages' or active == 'pdf_compress' or active == 'editor' or active == 'ocr' %}active{% endif %}">
                     PDF Tools
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </button>
-                <div class="nav-dropdown">
-                    <a href="{% url 'merge_pdf' %}" class="{% if active == 'merge_pdf' %}active{% endif %}">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="18" rx="1"/><rect x="13" y="3" width="8" height="18" rx="1"/><path d="M11 12h2"/></svg>
-                        <span><strong>Merge PDF</strong><em>Combine several into one</em></span>
-                    </a>
-                    <a href="{% url 'pdf_delete_pages_page' %}" class="{% if active == 'pdf_delete_pages' %}active{% endif %}">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 9l6 6M15 9l-6 6"/></svg>
-                        <span><strong>Delete Pages</strong><em>Remove pages you don't need</em></span>
-                    </a>
-                    <a href="{% url 'reorder_pages_page' %}" class="{% if active == 'reorder_pages' %}active{% endif %}">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
-                        <span><strong>Reorder Pages</strong><em>Rearrange page order</em></span>
-                    </a>
-                    <a href="{% url 'rotate_pages_page' %}" class="{% if active == 'rotate_pages' %}active{% endif %}">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0118-6M22 12.5a10 10 0 01-18 6"/></svg>
-                        <span><strong>Rotate Pages</strong><em>Turn pages 90° at a time</em></span>
-                    </a>
-                    <a href="{% url 'pdf_compress' %}" class="{% if active == 'pdf_compress' %}active{% endif %}">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>
-                        <span><strong>Compress PDF</strong><em>Shrink to a target size</em></span>
-                    </a>
-                    <div class="nav-dropdown-sep"></div>
-                    <a href="{% url 'editor_page' %}" class="{% if active == 'editor' %}active{% endif %}">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                        <span><strong>PDF Editor</strong><em>Erase and add text</em></span>
-                    </a>
-                    <a href="{% url 'ocr_page' %}" class="{% if active == 'ocr' %}active{% endif %}">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4a1 1 0 011-1h3M20 7V4a1 1 0 00-1-1h-3M4 17v3a1 1 0 001 1h3M20 17v3a1 1 0 01-1 1h-3M9 9h6M9 13h4"/></svg>
-                        <span><strong>OCR</strong><em>Make scans searchable</em></span>
-                    </a>
+                <div class="mega">
+                    <div class="mega-grid">
+                        <a href="{% url 'merge_pdf' %}" class="mega-item {% if active == 'merge_pdf' %}active{% endif %}">
+                            <span class="mi-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="18" rx="1"/><rect x="13" y="3" width="8" height="18" rx="1"/><path d="M11 12h2"/></svg></span>
+                            <span class="mi-tx"><strong>Merge PDF</strong><em>Combine several into one</em></span>
+                        </a>
+                        <a href="{% url 'pdf_delete_pages_page' %}" class="mega-item {% if active == 'pdf_delete_pages' %}active{% endif %}">
+                            <span class="mi-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 9l6 6M15 9l-6 6"/></svg></span>
+                            <span class="mi-tx"><strong>Delete Pages</strong><em>Remove pages you don't need</em></span>
+                        </a>
+                        <a href="{% url 'reorder_pages_page' %}" class="mega-item {% if active == 'reorder_pages' %}active{% endif %}">
+                            <span class="mi-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></span>
+                            <span class="mi-tx"><strong>Reorder Pages</strong><em>Rearrange page order</em></span>
+                        </a>
+                        <a href="{% url 'rotate_pages_page' %}" class="mega-item {% if active == 'rotate_pages' %}active{% endif %}">
+                            <span class="mi-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0118-6M22 12.5a10 10 0 01-18 6"/></svg></span>
+                            <span class="mi-tx"><strong>Rotate Pages</strong><em>Turn pages 90° at a time</em></span>
+                        </a>
+                        <a href="{% url 'pdf_compress' %}" class="mega-item {% if active == 'pdf_compress' %}active{% endif %}">
+                            <span class="mi-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg></span>
+                            <span class="mi-tx"><strong>Compress PDF</strong><em>Shrink to a target size</em></span>
+                        </a>
+                        <a href="{% url 'editor_page' %}" class="mega-item {% if active == 'editor' %}active{% endif %}">
+                            <span class="mi-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></span>
+                            <span class="mi-tx"><strong>PDF Editor</strong><em>Erase and add text</em></span>
+                        </a>
+                        <a href="{% url 'ocr_page' %}" class="mega-item {% if active == 'ocr' %}active{% endif %}">
+                            <span class="mi-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4a1 1 0 011-1h3M20 7V4a1 1 0 00-1-1h-3M4 17v3a1 1 0 001 1h3M20 17v3a1 1 0 01-1 1h-3M9 9h6M9 13h4"/></svg></span>
+                            <span class="mi-tx"><strong>OCR</strong><em>Make scans searchable</em></span>
+                        </a>
+                    </div>
+                    <div class="mega-foot">
+                        <span>7 PDF tools</span>
+                        <button type="button" class="mega-hint" data-open-cmdk>Search all tools <span class="k-wrap"><span class="k k-mod">Ctrl</span><span class="k">K</span></span></button>
+                    </div>
                 </div>
             </div>
 
             <div class="nav-group">
-                <button type="button" class="nav-group-btn {% if active == 'jpg_to_pdf' or active == 'pdf_to_jpg' or active == 'jpg_compress' or active == 'pdf_to_word' %}active{% endif %}">
+                <button type="button" aria-haspopup="true" class="nav-group-btn {% if active == 'jpg_to_pdf' or active == 'pdf_to_jpg' or active == 'jpg_compress' or active == 'pdf_to_word' %}active{% endif %}">
                     Convert
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </button>
-                <div class="nav-dropdown">
-                    <a href="{% url 'jpg_to_pdf' %}" class="{% if active == 'jpg_to_pdf' %}active{% endif %}">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
-                        <span><strong>JPG → PDF</strong><em>Images into one PDF</em></span>
-                    </a>
-                    <a href="{% url 'pdf_to_jpg' %}" class="{% if active == 'pdf_to_jpg' %}active{% endif %}">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-                        <span><strong>PDF → JPG</strong><em>Each page as an image</em></span>
-                    </a>
-                    <a href="{% url 'pdf_to_word' %}" class="{% if active == 'pdf_to_word' %}active{% endif %}">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h5"/></svg>
-                        <span><strong>PDF → Word</strong><em>Editable .docx file</em></span>
-                    </a>
-                    <a href="{% url 'jpg_compress' %}" class="{% if active == 'jpg_compress' %}active{% endif %}">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>
-                        <span><strong>Compress JPG</strong><em>Shrink to a target size</em></span>
-                    </a>
-                    <div class="nav-dropdown-sep"></div>
-                    <span class="nav-dropdown-soon">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
-                        <span><strong>Word → PDF</strong><em>Coming soon</em></span>
-                    </span>
+                <div class="mega is-teal">
+                    <div class="mega-grid">
+                        <a href="{% url 'jpg_to_pdf' %}" class="mega-item {% if active == 'jpg_to_pdf' %}active{% endif %}">
+                            <span class="mi-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span>
+                            <span class="mi-tx"><strong>JPG → PDF</strong><em>Images into one PDF</em></span>
+                        </a>
+                        <a href="{% url 'pdf_to_jpg' %}" class="mega-item {% if active == 'pdf_to_jpg' %}active{% endif %}">
+                            <span class="mi-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></span>
+                            <span class="mi-tx"><strong>PDF → JPG</strong><em>Each page as an image</em></span>
+                        </a>
+                        <a href="{% url 'pdf_to_word' %}" class="mega-item {% if active == 'pdf_to_word' %}active{% endif %}">
+                            <span class="mi-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h5"/></svg></span>
+                            <span class="mi-tx"><strong>PDF → Word</strong><em>Editable .docx file</em></span>
+                        </a>
+                        <a href="{% url 'jpg_compress' %}" class="mega-item {% if active == 'jpg_compress' %}active{% endif %}">
+                            <span class="mi-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg></span>
+                            <span class="mi-tx"><strong>Compress JPG</strong><em>Shrink to a target size</em></span>
+                        </a>
+                        <div class="mega-item is-soon">
+                            <span class="mi-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span>
+                            <span class="mi-tx"><strong>Word → PDF</strong><em>Coming soon</em></span>
+                        </div>
+                    </div>
+                    <div class="mega-foot">
+                        <span>4 converters</span>
+                        <button type="button" class="mega-hint" data-open-cmdk>Search all tools <span class="k-wrap"><span class="k k-mod">Ctrl</span><span class="k">K</span></span></button>
+                    </div>
                 </div>
             </div>
         </nav>
 
-        <a href="{% url 'send_file_page' %}" class="header-cta">
-            Get Started
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </a>
+        <div class="header-actions">
+            <button type="button" class="hdr-search" id="open-palette" data-open-cmdk aria-label="Search tools">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5" stroke-linecap="round"/></svg>
+                <span>Search tools</span>
+                <span class="k-wrap"><span class="k k-mod">Ctrl</span><span class="k">K</span></span>
+            </button>
+            <a href="{% url 'send_file_page' %}" class="header-cta">
+                Get Started
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+            <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round"/></svg>
+            </button>
+        </div>
+
+        <div class="header-progress-track"><div class="header-progress" id="header-progress"></div></div>
     </div>
 </header>
 
@@ -320,67 +339,87 @@
 
 <footer class="site-footer">
     <div class="footer-glow"></div>
-    <div class="footer-inner">
-        <div class="footer-brand">
-            <a href="{% url 'home' %}" class="site-logo">
-                <span class="mark">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </span>
-                {{ site.site_name }}
-            </a>
-            <p>{{ site.tagline }}</p>
+    <div class="footer-wrap">
 
-            <div class="trust-badges">
-                <span class="trust-badge">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-                    Files not stored
-                </span>
-                <span class="trust-badge">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    Instant processing
-                </span>
-            </div>
-
-            <div class="footer-newsletter">
-                <input type="email" placeholder="you@example.com" class="newsletter-input" autocomplete="off" aria-label="Email address">
-                <button type="button" class="newsletter-btn" aria-label="Subscribe">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </button>
-            </div>
-
-            {# href গুলোতে আপনার আসল লিংক বসান। লিংক না থাকলে পুরো .footer-social div টা মুছে দিন #}
-            <div class="footer-social">
-                <a href="https://twitter.com/" target="_blank" rel="noopener noreferrer" aria-label="Twitter"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M22 5.9c-.7.3-1.5.6-2.3.7.8-.5 1.5-1.3 1.8-2.3-.8.5-1.7.8-2.6 1a4.1 4.1 0 00-7 3.7A11.6 11.6 0 013 4.9a4.1 4.1 0 001.3 5.5c-.7 0-1.3-.2-1.9-.5v.1c0 2 1.4 3.6 3.3 4a4.1 4.1 0 01-1.9.1c.5 1.7 2.1 2.9 4 2.9A8.2 8.2 0 012 18.6a11.6 11.6 0 006.3 1.8c7.5 0 11.7-6.3 11.7-11.7v-.5c.8-.6 1.5-1.3 2-2.1z"/></svg></a>
-                <a href="https://github.com/" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 00-3.2 19.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.3 1.1 2.9.8.1-.7.4-1.1.6-1.4-2.3-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.5-1.3.1-2.7 0 0 .8-.3 2.7 1a9.4 9.4 0 015 0c1.9-1.3 2.7-1 2.7-1 .6 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.9-2.3 4.7-4.6 5 .4.3.7.9.7 1.9v2.8c0 .3.2.6.7.5A10 10 0 0012 2z"/></svg></a>
-                <a href="https://www.linkedin.com/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M6.9 8.4H3.3V21h3.6V8.4zM5.1 3a2.1 2.1 0 100 4.2 2.1 2.1 0 000-4.2zM21 21v-6.9c0-3.7-2-5.4-4.6-5.4a4 4 0 00-3.6 2h-.1v-1.7H9.3V21h3.6v-6.3c0-1.7.3-3.3 2.4-3.3 2 0 2 1.9 2 3.4V21H21z"/></svg></a>
+        <div class="fcta-wrap">
+            <div class="fcta" id="fcta">
+                <div class="fcta-glare"></div>
+                <div class="fcta-copy">
+                    <span class="fcta-eyebrow">Free forever · No signup</span>
+                    <h2>Got a file to fix?<br>Start in seconds.</h2>
+                    <p>Merge, compress, edit and convert right in your browser.</p>
+                    <div class="fcta-actions">
+                        <a class="fcta-btn" href="{% url 'editor_page' %}">
+                            Open PDF editor
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </a>
+                        <a class="fcta-ghost" href="{% url 'send_file_page' %}">Send a file</a>
+                    </div>
+                </div>
+                <div class="fcta-art" aria-hidden="true">
+                    <i class="fs s1"></i><i class="fs s2"></i><i class="fs s3"></i>
+                    <span class="fs-badge">✓</span>
+                </div>
             </div>
         </div>
 
-        <div class="footer-col">
-            <h4>PDF Tools</h4>
-            <a href="{% url 'merge_pdf' %}">Merge PDF</a>
-            <a href="{% url 'pdf_delete_pages_page' %}">Delete Pages</a>
-            <a href="{% url 'editor_page' %}">PDF Editor</a>
-            <a href="{% url 'ocr_page' %}">OCR</a>
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <a href="{% url 'home' %}" class="site-logo">
+                    <span class="mark">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </span>
+                    {{ site.site_name }}
+                </a>
+                <p>{{ site.tagline }}</p>
+
+                <div class="trust-badges">
+                    <span class="trust-badge">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                        Files not stored
+                    </span>
+                    <span class="trust-badge">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        Instant processing
+                    </span>
+                </div>
+
+                {# href gulo te asol link boshao. Link na thakle puro .footer-social div muche dao #}
+                <div class="footer-social">
+                    <a href="https://twitter.com/" target="_blank" rel="noopener noreferrer" aria-label="Twitter"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M22 5.9c-.7.3-1.5.6-2.3.7.8-.5 1.5-1.3 1.8-2.3-.8.5-1.7.8-2.6 1a4.1 4.1 0 00-7 3.7A11.6 11.6 0 013 4.9a4.1 4.1 0 001.3 5.5c-.7 0-1.3-.2-1.9-.5v.1c0 2 1.4 3.6 3.3 4a4.1 4.1 0 01-1.9.1c.5 1.7 2.1 2.9 4 2.9A8.2 8.2 0 012 18.6a11.6 11.6 0 006.3 1.8c7.5 0 11.7-6.3 11.7-11.7v-.5c.8-.6 1.5-1.3 2-2.1z"/></svg></a>
+                    <a href="https://github.com/" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 00-3.2 19.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.3 1.1 2.9.8.1-.7.4-1.1.6-1.4-2.3-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.5-1.3.1-2.7 0 0 .8-.3 2.7 1a9.4 9.4 0 015 0c1.9-1.3 2.7-1 2.7-1 .6 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.9-2.3 4.7-4.6 5 .4.3.7.9.7 1.9v2.8c0 .3.2.6.7.5A10 10 0 0012 2z"/></svg></a>
+                    <a href="https://www.linkedin.com/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M6.9 8.4H3.3V21h3.6V8.4zM5.1 3a2.1 2.1 0 100 4.2 2.1 2.1 0 000-4.2zM21 21v-6.9c0-3.7-2-5.4-4.6-5.4a4 4 0 00-3.6 2h-.1v-1.7H9.3V21h3.6v-6.3c0-1.7.3-3.3 2.4-3.3 2 0 2 1.9 2 3.4V21H21z"/></svg></a>
+                </div>
+            </div>
+
+            <div class="footer-col">
+                <h4>PDF Tools</h4>
+                <a href="{% url 'merge_pdf' %}">Merge PDF</a>
+                <a href="{% url 'pdf_delete_pages_page' %}">Delete Pages</a>
+                <a href="{% url 'editor_page' %}">PDF Editor</a>
+                <a href="{% url 'ocr_page' %}">OCR</a>
+            </div>
+
+            <div class="footer-col">
+                <h4>Convert</h4>
+                <a href="{% url 'jpg_to_pdf' %}">JPG to PDF</a>
+                <a href="{% url 'pdf_to_jpg' %}">PDF to JPG</a>
+                <a href="{% url 'pdf_to_word' %}">PDF to Word</a>
+            </div>
+
+            <div class="footer-col">
+                <h4>Compress</h4>
+                <a href="{% url 'pdf_compress' %}">Compress PDF</a>
+                <a href="{% url 'jpg_compress' %}">Compress JPG</a>
+            </div>
         </div>
 
-        <div class="footer-col">
-            <h4>Convert</h4>
-            <a href="{% url 'jpg_to_pdf' %}">JPG to PDF</a>
-            <a href="{% url 'pdf_to_jpg' %}">PDF to JPG</a>
-            <a href="{% url 'pdf_to_word' %}">PDF to Word</a>
+        <div class="footer-bottom">
+            <span>© {% now "Y" %} {{ site.site_name }} — {{ site.tagline }}</span>
+            <span class="footer-status"><span class="status-dot"></span> All systems normal</span>
         </div>
 
-        <div class="footer-col">
-            <h4>Compress</h4>
-            <a href="{% url 'pdf_compress' %}">Compress PDF</a>
-            <a href="{% url 'jpg_compress' %}">Compress JPG</a>
-        </div>
-    </div>
-
-    <div class="footer-bottom">
-        <span>© {% now "Y" %} {{ site.site_name }} — {{ site.tagline }}</span>
-        <span class="footer-status"><span class="status-dot"></span> All systems normal</span>
+        <div class="footer-mark" data-text="{{ site.site_name }}" aria-hidden="true">{{ site.site_name }}</div>
     </div>
 </footer>
 
@@ -388,6 +427,62 @@
     <svg class="btt-ring" viewBox="0 0 44 44" aria-hidden="true"><circle class="btt-track" cx="22" cy="22" r="20.5"/><circle class="btt-bar" cx="22" cy="22" r="20.5"/></svg>
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 19V5M5 12l7-7 7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
 </button>
+
+
+<div class="cmdk" id="cmdk" aria-hidden="true">
+    <div class="cmdk-backdrop" data-close></div>
+    <div class="cmdk-panel" role="dialog" aria-modal="true" aria-label="Search tools">
+        <div class="cmdk-input-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5" stroke-linecap="round"/></svg>
+            <input id="cmdk-input" type="text" placeholder="Search tools: merge, compress, OCR…" autocomplete="off" spellcheck="false" aria-controls="cmdk-list">
+            <span class="k">Esc</span>
+        </div>
+        <ul class="cmdk-list" id="cmdk-list" role="listbox">
+            <li><a class="cmdk-item" role="option" href="{% url 'merge_pdf' %}" data-k="join combine">
+                <span class="mi-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="18" rx="1"/><rect x="13" y="3" width="8" height="18" rx="1"/><path d="M11 12h2"/></svg></span>
+                <span class="mi-tx"><strong>Merge PDF</strong><em>Combine several into one</em></span><span class="cmdk-tag">PDF</span></a></li>
+            <li><a class="cmdk-item" role="option" href="{% url 'pdf_delete_pages_page' %}" data-k="remove pages">
+                <span class="mi-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 9l6 6M15 9l-6 6"/></svg></span>
+                <span class="mi-tx"><strong>Delete Pages</strong><em>Remove pages you don't need</em></span><span class="cmdk-tag">PDF</span></a></li>
+            <li><a class="cmdk-item" role="option" href="{% url 'reorder_pages_page' %}" data-k="rearrange sort order">
+                <span class="mi-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></span>
+                <span class="mi-tx"><strong>Reorder Pages</strong><em>Rearrange page order</em></span><span class="cmdk-tag">PDF</span></a></li>
+            <li><a class="cmdk-item" role="option" href="{% url 'rotate_pages_page' %}" data-k="turn flip rotate">
+                <span class="mi-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0118-6M22 12.5a10 10 0 01-18 6"/></svg></span>
+                <span class="mi-tx"><strong>Rotate Pages</strong><em>Turn pages 90° at a time</em></span><span class="cmdk-tag">PDF</span></a></li>
+            <li><a class="cmdk-item" role="option" href="{% url 'pdf_compress' %}" data-k="shrink reduce size smaller">
+                <span class="mi-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg></span>
+                <span class="mi-tx"><strong>Compress PDF</strong><em>Shrink to a target size</em></span><span class="cmdk-tag">PDF</span></a></li>
+            <li><a class="cmdk-item" role="option" href="{% url 'editor_page' %}" data-k="edit erase text write">
+                <span class="mi-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></span>
+                <span class="mi-tx"><strong>PDF Editor</strong><em>Erase and add text</em></span><span class="cmdk-tag">PDF</span></a></li>
+            <li><a class="cmdk-item" role="option" href="{% url 'ocr_page' %}" data-k="scan searchable copy text recognize">
+                <span class="mi-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4a1 1 0 011-1h3M20 7V4a1 1 0 00-1-1h-3M4 17v3a1 1 0 001 1h3M20 17v3a1 1 0 01-1 1h-3M9 9h6M9 13h4"/></svg></span>
+                <span class="mi-tx"><strong>OCR</strong><em>Make scans searchable</em></span><span class="cmdk-tag">PDF</span></a></li>
+            <li><a class="cmdk-item" role="option" href="{% url 'jpg_to_pdf' %}" data-k="image photo picture convert">
+                <span class="mi-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span>
+                <span class="mi-tx"><strong>JPG → PDF</strong><em>Images into one PDF</em></span><span class="cmdk-tag">Convert</span></a></li>
+            <li><a class="cmdk-item" role="option" href="{% url 'pdf_to_jpg' %}" data-k="image export convert">
+                <span class="mi-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></span>
+                <span class="mi-tx"><strong>PDF → JPG</strong><em>Each page as an image</em></span><span class="cmdk-tag">Convert</span></a></li>
+            <li><a class="cmdk-item" role="option" href="{% url 'pdf_to_word' %}" data-k="docx word document convert">
+                <span class="mi-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h5"/></svg></span>
+                <span class="mi-tx"><strong>PDF → Word</strong><em>Editable .docx file</em></span><span class="cmdk-tag">Convert</span></a></li>
+            <li><a class="cmdk-item" role="option" href="{% url 'jpg_compress' %}" data-k="image photo shrink reduce size">
+                <span class="mi-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg></span>
+                <span class="mi-tx"><strong>Compress JPG</strong><em>Shrink to a target size</em></span><span class="cmdk-tag">Convert</span></a></li>
+            <li><a class="cmdk-item" role="option" href="{% url 'send_file_page' %}" data-k="share upload ticket link">
+                <span class="mi-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                <span class="mi-tx"><strong>Send a file</strong><em>Get a shareable ticket</em></span><span class="cmdk-tag">Share</span></a></li>
+        </ul>
+        <div class="cmdk-empty" id="cmdk-empty" hidden>No tool matches that. Try "merge" or "compress".</div>
+        <div class="cmdk-foot">
+            <span><span class="k">↑</span><span class="k">↓</span> move</span>
+            <span><span class="k">↵</span> open</span>
+            <span><span class="k">Esc</span> close</span>
+        </div>
+    </div>
+</div>
 
 <script>
     const navToggle = document.getElementById('nav-toggle');
@@ -478,7 +573,7 @@
         }
 
         // 4) Footer: scroll করে নামলে একটার পর একটা ভেসে উঠবে
-        const footerParts = document.querySelectorAll('.footer-brand, .footer-col, .footer-bottom');
+        const footerParts = document.querySelectorAll('.fcta-wrap, .footer-brand, .footer-col, .footer-bottom, .footer-mark');
         footerParts.forEach((el, i) => {
             el.classList.add('reveal-up');
             el.style.setProperty('--d', i);
@@ -500,6 +595,164 @@
         // পেজ লোডের সময়েই header এর অবস্থা ঠিক করো
         window.dispatchEvent(new Event('scroll'));
     })();
+
+
+
+        /* ================= HEADER + FOOTER v2 ================= */
+    (function () {
+        const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const fine = matchMedia('(pointer: fine)').matches;
+
+        // Ctrl / ⌘ label
+        const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+        document.querySelectorAll('.k-mod').forEach(k => { k.textContent = isMac ? '⌘' : 'Ctrl'; });
+
+        // ---- 1) magic-line nav indicator ----
+        const nav = document.getElementById('site-nav');
+        const ind = document.getElementById('nav-indicator');
+        if (nav && ind) {
+            let first = true;
+            const items = () => [...nav.querySelectorAll(':scope > a, :scope > .nav-group > .nav-group-btn')];
+            const place = (el, isRest) => {
+                if (!el || getComputedStyle(ind).display === 'none') { ind.style.opacity = 0; return; }
+                const n = nav.getBoundingClientRect(), r = el.getBoundingClientRect();
+                if (first) ind.classList.add('no-anim');
+                ind.style.width = r.width + 'px';
+                ind.style.transform = 'translateX(' + (r.left - n.left) + 'px)';
+                ind.style.opacity = 1;
+                ind.classList.toggle('is-rest', !!isRest);
+                if (first) {
+                    first = false;
+                    requestAnimationFrame(() => requestAnimationFrame(() => ind.classList.remove('no-anim')));
+                }
+            };
+            const rest = () => place(nav.querySelector(':scope > a.active, :scope > .nav-group > .nav-group-btn.active'), true);
+
+            items().forEach(el => {
+                el.addEventListener('mouseenter', () => place(el, false));
+                el.addEventListener('focus', () => place(el, false));
+            });
+            nav.addEventListener('mouseleave', rest);
+            nav.addEventListener('focusout', (e) => { if (!nav.contains(e.relatedTarget)) rest(); });
+            window.addEventListener('resize', rest);
+            if (document.fonts && document.fonts.ready) document.fonts.ready.then(rest);
+
+            // page bodlale (active class bodlale) indicator nijei sore jabe
+            new MutationObserver((m) => { if (m.some(x => x.target !== ind)) rest(); })
+                .observe(nav, { attributes: true, attributeFilter: ['class'], subtree: true });
+            // header scroll e chhoto hole position bodlay
+            const hdr = document.querySelector('.site-header');
+            if (hdr) new MutationObserver(() => setTimeout(rest, 460))
+                .observe(hdr, { attributes: true, attributeFilter: ['class'] });
+            rest();
+        }
+
+        // ---- 2) command palette (Ctrl/⌘ + K) ----
+        const root = document.getElementById('cmdk');
+        if (root) {
+            const input = document.getElementById('cmdk-input');
+            const empty = document.getElementById('cmdk-empty');
+            const items = [...root.querySelectorAll('.cmdk-item')];
+            let idx = 0, lastFocus = null;
+            root.inert = true;
+
+            const visible = () => items.filter(a => !a.closest('li').hidden);
+            const setActive = (i) => {
+                const v = visible();
+                items.forEach(a => a.classList.remove('is-sel'));
+                if (!v.length) return;
+                idx = (i + v.length) % v.length;
+                v[idx].classList.add('is-sel');
+                v[idx].scrollIntoView({ block: 'nearest' });
+            };
+            const filter = () => {
+                const words = input.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+                items.forEach(a => {
+                    const hay = (a.textContent + ' ' + (a.dataset.k || '')).toLowerCase();
+                    a.closest('li').hidden = !words.every(w => hay.includes(w));
+                });
+                empty.hidden = visible().length > 0;
+                setActive(0);
+            };
+            const open = () => {
+                if (root.classList.contains('open')) return;
+                lastFocus = document.activeElement;
+                root.inert = false;
+                root.classList.add('open');
+                root.setAttribute('aria-hidden', 'false');
+                document.documentElement.style.overflow = 'hidden';
+                input.value = '';
+                filter();
+                setTimeout(() => input.focus(), 40);
+            };
+            const close = () => {
+                if (!root.classList.contains('open')) return;
+                root.classList.remove('open');
+                root.setAttribute('aria-hidden', 'true');
+                root.inert = true;
+                document.documentElement.style.overflow = '';
+                if (lastFocus && lastFocus.focus) lastFocus.focus();
+            };
+
+            input.addEventListener('input', filter);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowDown') { e.preventDefault(); setActive(idx + 1); }
+                else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(idx - 1); }
+                else if (e.key === 'Enter') { e.preventDefault(); const v = visible(); if (v[idx]) v[idx].click(); }
+            });
+            root.addEventListener('mousemove', (e) => {
+                const a = e.target.closest('.cmdk-item');
+                if (a && !a.classList.contains('is-sel')) setActive(visible().indexOf(a));
+            });
+            root.addEventListener('click', (e) => {
+                if (e.target.closest('[data-close]') || e.target.closest('.cmdk-item')) close();
+            });
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('[data-open-cmdk]')) { e.stopPropagation(); open(); }
+            });
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                    e.preventDefault();
+                    root.classList.contains('open') ? close() : open();
+                } else if (e.key === 'Escape') close();
+            });
+        }
+
+        // ---- 3) footer CTA: 3D tilt + glare ----
+        const cta = document.getElementById('fcta');
+        if (cta && fine && !reduced) {
+            const wrap = cta.parentElement;   // wrapper ta sthir thake, tai tilt er somoy jitter hoy na
+            wrap.addEventListener('mousemove', (e) => {
+                const r = wrap.getBoundingClientRect();
+                const x = (e.clientX - r.left) / r.width;
+                const y = (e.clientY - r.top) / r.height;
+                cta.classList.add('is-hot');
+                cta.style.setProperty('--ry', ((x - 0.5) * 10).toFixed(2) + 'deg');
+                cta.style.setProperty('--rx', ((0.5 - y) * 8).toFixed(2) + 'deg');
+                cta.style.setProperty('--gx', (x * 100).toFixed(1) + '%');
+                cta.style.setProperty('--gy', (y * 100).toFixed(1) + '%');
+            });
+            wrap.addEventListener('mouseleave', () => {
+                cta.classList.remove('is-hot');
+                cta.style.setProperty('--rx', '0deg');
+                cta.style.setProperty('--ry', '0deg');
+            });
+        }
+
+        // ---- 4) footer wordmark: mouse spotlight ----
+        const mark = document.querySelector('.footer-mark');
+        if (mark && fine) {
+            mark.addEventListener('mousemove', (e) => {
+                const r = mark.getBoundingClientRect();
+                mark.style.setProperty('--fx', (e.clientX - r.left) + 'px');
+                mark.style.setProperty('--fy', (e.clientY - r.top) + 'px');
+            });
+        }
+    })();
+    
+
+
+
 </script>
 
 {# extra_scripts এখন #page-scripts এর ভেতরে, যাতে router নেভিগেশনের সময় এগুলো আবার লোড করতে পারে #}

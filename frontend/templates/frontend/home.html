@@ -140,12 +140,11 @@
             </div>
         </div>
 
-        <div class="hero-filters" id="hero-filters">
-            <a href="#section-share" class="filter-btn">Share</a>
+        {% comment %} <div class="hero-filters" id="hero-filters">
             <a href="#section-edit" class="filter-btn">Edit PDFs</a>
             <a href="#section-convert" class="filter-btn">Convert</a>
             <a href="#section-compress" class="filter-btn">Compress</a>
-        </div>
+        </div> {% endcomment %}
     </section>
 
     {# ===== LIVE DEMO: নিজে নিজে চলা editor (শুধু CSS animation, কোনো আসল ফাইল লাগে না) ===== #}
@@ -374,6 +373,32 @@ FF.ready(function () {
 
         // swipe (mobile) + arrow keys
         const stage = hs.querySelector('.hs-stage');
+
+
+
+                // 3D parallax: mouse nore gele object ar chip gulo depth onujayi nore
+        if (window.matchMedia('(pointer: fine)').matches && !reduce) {
+            stage.addEventListener('pointermove', (e) => {
+                const r = stage.getBoundingClientRect();
+                hs.style.setProperty('--mx', (((e.clientX - r.left) / r.width) * 2 - 1).toFixed(3));
+                hs.style.setProperty('--my', (((e.clientY - r.top) / r.height) * 2 - 1).toFixed(3));
+            });
+            stage.addEventListener('pointerleave', () => {
+                hs.style.setProperty('--mx', 0);
+                hs.style.setProperty('--my', 0);
+            });
+        }
+
+
+
+
+
+
+
+
+
+
+
         let sx = null;
         stage.addEventListener('pointerdown', e => { sx = e.clientX; });
         stage.addEventListener('pointercancel', () => { sx = null; });
