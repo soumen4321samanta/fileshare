@@ -4,200 +4,238 @@
 
 
 {% block content %}
-<div class="home-wrap">
-    <section class="hero2" id="hero">
-        <div class="hero2-copy">
-            <div class="eyebrow"><span class="dot"></span> No signup, no watermarks</div>
-            <h1 class="reveal-heading">
-                <span class="line">Every file tool,</span>
-                <span class="line">in <span class="accent">one place</span>.</span>
-            </h1>
-            <p>Send files, convert between formats, compress to an exact size, and edit PDFs right in your browser. All free.</p>
-            <div class="hero2-actions">
-                <a class="demo-cta" href="{% url 'editor_page' %}">
-                    Try the PDF editor
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </a>
-                <a class="hero2-ghost" href="#section-edit">Browse all tools</a>
-            </div>
+{# Full-screen hero #}
+<section class="home-hero hero-full" id="hero">
+    <div class="hero-glow"></div>
+    <div class="hero-floaters" id="hero-floaters">
+        <svg class="floater f1" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg class="floater f2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+        <svg class="floater f3" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="18" rx="1"/><rect x="13" y="3" width="8" height="18" rx="1"/><path d="M11 12h2"/></svg>
+        <svg class="floater f4" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4a1 1 0 011-1h3M20 7V4a1 1 0 00-1-1h-3M4 17v3a1 1 0 001 1h3M20 17v3a1 1 0 01-1 1h-3"/></svg>
+        <span class="floater f5 dot-shape"></span>
+        <span class="floater f6 ring-shape"></span>
+    </div>
+
+    <div class="hero-inner">
+        <div class="eyebrow"><span class="dot"></span> No signup · No watermarks</div>
+        <h1 class="reveal-heading">
+            <span class="line">Every file tool,</span>
+            <span class="line">in <span class="accent">one place</span>.</span>
+        </h1>
+        <p>Send files, convert between formats, compress to an exact size, and edit PDFs right in your browser — all free.</p>
+        <div class="hero-cta">
+            <a class="btn-primary" href="#tour" data-scroll="tour">Take the tour <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12l7 7 7-7" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+            <a class="btn-ghost" href="{% url 'editor_page' %}">Open PDF Editor</a>
         </div>
+    </div>
 
-        <div class="hs" id="hs" role="region" aria-roledescription="carousel" aria-label="Featured tools">
-            <div class="hs-stage">
+    <a class="scroll-cue" href="#tour" data-scroll="tour"><span>Scroll</span><i class="mouse"><b></b></i></a>
 
-                <!-- 1. PDF Editor -->
-                <article class="hs-slide" style="--accent:#cf4520;--on:#fff" aria-label="PDF Editor">
-                    <div class="hs-glow"></div>
-                    <div class="hs-word" aria-hidden="true">edit</div>
-                    <div class="hs-art">
-                        <div class="hs-float">
-                            <div class="sv-paper">
-                                <div class="sv-sel"><span class="sv-typed">Deadline: 24 Oct</span></div>
-                            </div>
-                            <span class="sv-chip hot c1">🧽 Erase</span>
-                            <span class="sv-chip c2">Aa Add text</span>
-                        </div>
-                        <div class="hs-ground"></div>
-                    </div>
-                    <div class="hs-cap">
-                        <h3>PDF Editor</h3>
-                        <p>Erase old text and type new text anywhere on the page.</p>
-                        <a class="hs-open" href="{% url 'editor_page' %}">Open PDF Editor</a>
-                    </div>
-                </article>
-
-                <!-- 2. Merge -->
-                <article class="hs-slide" style="--accent:#4fae8a;--on:#0d1117" aria-label="Merge PDF">
-                    <div class="hs-glow"></div>
-                    <div class="hs-word" aria-hidden="true">merge</div>
-                    <div class="hs-art">
-                        <div class="hs-float sv-merge">
-                            <div class="sv-paper mp1" style="--accent:#8890a3"></div>
-                            <div class="sv-paper mp2"></div>
-                            <span class="sv-join">2→1</span>
-                            <span class="sv-chip hot c1">2 files → 1</span>
-                            <span class="sv-chip c2">Drag to reorder</span>
-                        </div>
-                        <div class="hs-ground"></div>
-                    </div>
-                    <div class="hs-cap">
-                        <h3>Merge PDF</h3>
-                        <p>Combine several PDFs into one, in the order you want.</p>
-                        <a class="hs-open" href="{% url 'merge_pdf' %}">Open Merge PDF</a>
-                    </div>
-                </article>
-
-                <!-- 3. Compress -->
-                <article class="hs-slide" style="--accent:#e0a43a;--on:#0d1117" aria-label="Compress PDF">
-                    <div class="hs-glow"></div>
-                    <div class="hs-word" aria-hidden="true">shrink</div>
-                    <div class="hs-art">
-                        <div class="hs-float sv-compress">
-                            <div class="sv-paper">
-                                <div class="sv-meter">
-                                    <span>8.4 MB → 1.2 MB</span>
-                                    <div class="track"><i class="fillbar"></i></div>
-                                </div>
-                            </div>
-                            <span class="sv-chip hot c1">−86%</span>
-                            <span class="sv-chip c2">Target: 1 MB</span>
-                        </div>
-                        <div class="hs-ground"></div>
-                    </div>
-                    <div class="hs-cap">
-                        <h3>Compress PDF</h3>
-                        <p>Shrink a PDF to the exact size you need.</p>
-                        <a class="hs-open" href="{% url 'pdf_compress' %}">Open Compress PDF</a>
-                    </div>
-                </article>
-
-                <!-- 4. OCR -->
-                <article class="hs-slide" style="--accent:#5b8def;--on:#0d1117" aria-label="OCR">
-                    <div class="hs-glow"></div>
-                    <div class="hs-word" aria-hidden="true">scan</div>
-                    <div class="hs-art">
-                        <div class="hs-float sv-ocr">
-                            <div class="sv-paper"><span class="sv-beam"></span></div>
-                            <span class="sv-chip c1">Searchable</span>
-                            <span class="sv-chip hot c2">✓ Copied</span>
-                        </div>
-                        <div class="hs-ground"></div>
-                    </div>
-                    <div class="hs-cap">
-                        <h3>OCR</h3>
-                        <p>Turn scanned pages into searchable, copyable text.</p>
-                        <a class="hs-open" href="{% url 'ocr_page' %}">Open OCR</a>
-                    </div>
-                </article>
-
-                <!-- 5. JPG to PDF -->
-                <article class="hs-slide" style="--accent:#9b7bf0;--on:#0d1117" aria-label="JPG to PDF">
-                    <div class="hs-glow"></div>
-                    <div class="hs-word" aria-hidden="true">images</div>
-                    <div class="hs-art">
-                        <div class="hs-float sv-jpg">
-                            <div class="sv-paper"></div>
-                            <i class="sv-img i1"></i><i class="sv-img i2"></i><i class="sv-img i3"></i>
-                            <span class="sv-chip hot c1">3 images → PDF</span>
-                            <span class="sv-chip c2">Any order</span>
-                        </div>
-                        <div class="hs-ground"></div>
-                    </div>
-                    <div class="hs-cap">
-                        <h3>JPG to PDF</h3>
-                        <p>Turn photos and scans into a single PDF.</p>
-                        <a class="hs-open" href="{% url 'jpg_to_pdf' %}">Open JPG to PDF</a>
-                    </div>
-                </article>
-            </div>
-
-            <div class="hs-dots">
-                <button class="hs-dot" type="button" aria-label="PDF Editor"><span class="bar"><i class="fill"></i></span><span class="lbl">Editor</span></button>
-                <button class="hs-dot" type="button" aria-label="Merge PDF"><span class="bar"><i class="fill"></i></span><span class="lbl">Merge</span></button>
-                <button class="hs-dot" type="button" aria-label="Compress PDF"><span class="bar"><i class="fill"></i></span><span class="lbl">Compress</span></button>
-                <button class="hs-dot" type="button" aria-label="OCR"><span class="bar"><i class="fill"></i></span><span class="lbl">OCR</span></button>
-                <button class="hs-dot" type="button" aria-label="JPG to PDF"><span class="bar"><i class="fill"></i></span><span class="lbl">Images</span></button>
-            </div>
+    <div class="hero-marquee" aria-hidden="true">
+        <div class="marquee-track">
+            <span class="mq-pill"><i style="background:#cf4520"></i>PDF Editor</span>
+                <span class="mq-pill"><i style="background:#2f8567"></i>Merge PDF</span>
+                <span class="mq-pill"><i style="background:#c9383a"></i>Delete Pages</span>
+                <span class="mq-pill"><i style="background:#7a62d6"></i>Reorder Pages</span>
+                <span class="mq-pill"><i style="background:#b87a1f"></i>Rotate Pages</span>
+                <span class="mq-pill"><i style="background:#2f8f9d"></i>OCR</span>
+                <span class="mq-pill"><i style="background:#3f6fc4"></i>JPG to PDF</span>
+                <span class="mq-pill"><i style="background:#d0568a"></i>PDF to JPG</span>
+                <span class="mq-pill"><i style="background:#2b579a"></i>PDF to Word</span>
+                <span class="mq-pill"><i style="background:#3a9a5b"></i>Compress PDF</span>
+                <span class="mq-pill"><i style="background:#c06a2b"></i>Compress JPG</span>
+            <span class="mq-pill"><i style="background:#cf4520"></i>PDF Editor</span>
+                <span class="mq-pill"><i style="background:#2f8567"></i>Merge PDF</span>
+                <span class="mq-pill"><i style="background:#c9383a"></i>Delete Pages</span>
+                <span class="mq-pill"><i style="background:#7a62d6"></i>Reorder Pages</span>
+                <span class="mq-pill"><i style="background:#b87a1f"></i>Rotate Pages</span>
+                <span class="mq-pill"><i style="background:#2f8f9d"></i>OCR</span>
+                <span class="mq-pill"><i style="background:#3f6fc4"></i>JPG to PDF</span>
+                <span class="mq-pill"><i style="background:#d0568a"></i>PDF to JPG</span>
+                <span class="mq-pill"><i style="background:#2b579a"></i>PDF to Word</span>
+                <span class="mq-pill"><i style="background:#3a9a5b"></i>Compress PDF</span>
+                <span class="mq-pill"><i style="background:#c06a2b"></i>Compress JPG</span>
         </div>
+    </div>
+</section>
 
-        {% comment %} <div class="hero-filters" id="hero-filters">
-            <a href="#section-edit" class="filter-btn">Edit PDFs</a>
-            <a href="#section-convert" class="filter-btn">Convert</a>
-            <a href="#section-compress" class="filter-btn">Compress</a>
-        </div> {% endcomment %}
-    </section>
-
-    {# ===== LIVE DEMO: নিজে নিজে চলা editor (শুধু CSS animation, কোনো আসল ফাইল লাগে না) ===== #}
-    {% comment %} <div class="demo-wrap" id="demo">
-        <div class="demo-window" role="img" aria-label="Animated demo: erasing an old date in a PDF and typing a new one">
-            <div class="demo-bar" aria-hidden="true">
-                <span class="demo-dots"><i></i><i></i><i></i></span>
-                <span class="demo-title">report.pdf — PDF Editor</span>
-                <span class="demo-live"><i></i> LIVE DEMO</span>
-            </div>
-
-            <div class="demo-tools" aria-hidden="true">
-                <span class="demo-pill demo-pill-erase">🧽 Erase</span>
-                <span class="demo-pill demo-pill-text">🔤 Add Text</span>
-            </div>
-
-            <div class="demo-scale" aria-hidden="true">
-                <div class="demo-stage">
-                    <div class="demo-paper">
-                        <div class="demo-doc-title">Project Report</div>
-                        <div class="demo-line" style="top:56px; width:300px;"></div>
-                        <div class="demo-line" style="top:74px; width:240px;"></div>
-                        <div class="demo-line" style="top:92px; width:270px;"></div>
-                        <div class="demo-orig">Deadline: 10 Sept</div>
-                        <div class="demo-line" style="top:166px; width:310px;"></div>
-                        <div class="demo-line" style="top:184px; width:250px;"></div>
-                        <div class="demo-line" style="top:202px; width:290px;"></div>
-                        <div class="demo-line" style="top:220px; width:180px;"></div>
-                    </div>
-
-                    <div class="demo-layer">
-                        <div class="demo-erase">
-                            <i class="demo-h-dot d1"></i><i class="demo-h-dot d2"></i>
-                            <i class="demo-h-dot d3"></i><i class="demo-h-dot d4"></i>
-                        </div>
-                        <div class="demo-typed">
-                            <span class="demo-typed-text">Deadline: 24 Oct</span>
-                            <i class="demo-h-dot"></i>
-                        </div>
-                    </div>
-
-                    <div class="demo-ripple"></div>
-                    <svg class="demo-cursor" width="18" height="18" viewBox="0 0 24 24"><path d="M3 2l7.5 19 2.6-7.9L21 10.5 3 2z" fill="#ffffff" stroke="#12131a" stroke-width="1.5" stroke-linejoin="round"/></svg>
+{# Tour: the stage stays pinned while you scroll, and one tool at a time takes over the screen #}
+<section class="tour" id="tour" style="--n: 11;">
+    <div class="tour-sticky">
+        <div class="tour-bar"><i></i></div>
+        <div class="tour-scenes">
+            <article class="scene is-active" data-i="0" data-num="01" data-enter="zoom" data-ac="#cf4520" aria-hidden="false" style="--ac:#cf4520; --ar:207,69,32;">
+                <div class="scene-art">
+                    <div class="art-frame"><div class="art-box"><div class="dz-art dz-editor"><div class="ed-page"><i class="ed-line ed-l1"></i><i class="ed-line ed-l2"></i><i class="ed-line ed-l3"></i><div class="ed-layer"><i class="ed-box"></i><i class="ed-new"></i></div><svg class="ed-cursor" width="12" height="12" viewBox="0 0 24 24"><path d="M3 2l7.5 19 2.6-7.9L21 10.5 3 2z" fill="#ffffff" stroke="#12131a" stroke-width="1.8" stroke-linejoin="round"/></svg></div></div></div></div>
                 </div>
+                <div class="scene-text">
+                    <span class="scene-num">01 <small>/ 11</small></span>
+                    <h2>PDF Editor</h2>
+                    <p>Erase text, type new words in the same font, and move or resize anything on the page.</p>
+                    <ul class="scene-tags"><li>Free</li><li>No signup</li><li>No watermark</li></ul>
+                    <a class="scene-cta" href="{% url 'editor_page' %}">Open PDF Editor <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+                </div>
+            </article>
+            <article class="scene" data-i="1" data-num="02" data-enter="slide" data-ac="#2f8567" aria-hidden="true" style="--ac:#2f8567; --ar:47,133,103;">
+                <div class="scene-art">
+                    <div class="art-frame"><div class="art-box"><div class="dz-art dz-merge"><span class="dz-pg a"></span><span class="dz-pg b"></span><span class="dz-pg m"></span><span class="dz-badge">✓</span></div></div></div>
+                </div>
+                <div class="scene-text">
+                    <span class="scene-num">02 <small>/ 11</small></span>
+                    <h2>Merge PDF</h2>
+                    <p>Combine several PDFs into one file, in exactly the order you choose.</p>
+                    <ul class="scene-tags"><li>Free</li><li>No signup</li><li>No watermark</li></ul>
+                    <a class="scene-cta" href="{% url 'merge_pdf' %}">Open Merge PDF <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+                </div>
+            </article>
+            <article class="scene" data-i="2" data-num="03" data-enter="rise" data-ac="#c9383a" aria-hidden="true" style="--ac:#c9383a; --ar:201,56,58;">
+                <div class="scene-art">
+                    <div class="art-frame"><div class="art-box"><div class="dz-art dz-delete"><span class="dz-pg a"></span><span class="dz-pg b"></span><span class="dz-pg c"></span><span class="dz-badge">✕</span></div></div></div>
+                </div>
+                <div class="scene-text">
+                    <span class="scene-num">03 <small>/ 11</small></span>
+                    <h2>Delete Pages</h2>
+                    <p>See every page as a thumbnail and tick the ones you don't need.</p>
+                    <ul class="scene-tags"><li>Free</li><li>No signup</li><li>No watermark</li></ul>
+                    <a class="scene-cta" href="{% url 'pdf_delete_pages_page' %}">Open Delete Pages <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+                </div>
+            </article>
+            <article class="scene" data-i="3" data-num="04" data-enter="flip" data-ac="#7a62d6" aria-hidden="true" style="--ac:#7a62d6; --ar:122,98,214;">
+                <div class="scene-art">
+                    <div class="art-frame"><div class="art-box"><div class="dz-art dz-reorder"><span class="dz-pg a"><b class="n">1</b></span><span class="dz-pg b"><b class="n">2</b></span><span class="dz-pg c"><b class="n">3</b></span><span class="dz-badge">✓</span></div></div></div>
+                </div>
+                <div class="scene-text">
+                    <span class="scene-num">04 <small>/ 11</small></span>
+                    <h2>Reorder Pages</h2>
+                    <p>Drag pages into a new order, or nudge them with the arrow buttons.</p>
+                    <ul class="scene-tags"><li>Free</li><li>No signup</li><li>No watermark</li></ul>
+                    <a class="scene-cta" href="{% url 'reorder_pages_page' %}">Open Reorder Pages <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+                </div>
+            </article>
+            <article class="scene" data-i="4" data-num="05" data-enter="rotate" data-ac="#b87a1f" aria-hidden="true" style="--ac:#b87a1f; --ar:184,122,31;">
+                <div class="scene-art">
+                    <div class="art-frame"><div class="art-box"><div class="dz-art dz-rotate"><span class="dz-pg r"></span><span class="dz-badge">↻</span></div></div></div>
+                </div>
+                <div class="scene-text">
+                    <span class="scene-num">05 <small>/ 11</small></span>
+                    <h2>Rotate Pages</h2>
+                    <p>Turn individual pages 90° at a time and save the fix.</p>
+                    <ul class="scene-tags"><li>Free</li><li>No signup</li><li>No watermark</li></ul>
+                    <a class="scene-cta" href="{% url 'rotate_pages_page' %}">Open Rotate Pages <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+                </div>
+            </article>
+            <article class="scene" data-i="5" data-num="06" data-enter="blur" data-ac="#2f8f9d" aria-hidden="true" style="--ac:#2f8f9d; --ar:47,143,157;">
+                <div class="scene-art art-wide">
+                    <div class="art-frame"><div class="art-box"><div class="ocr-art"><div class="ocr-scan"><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i><i class="b5"></i><span class="ocr-beam"></span></div><svg class="ocr-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="ocr-text"><span class="ocr-tl t1">Invoice no. 2048</span><span class="ocr-tl t2">Total due: 1,250</span><span class="ocr-tl t3">Pay by 24 Oct</span></div><span class="ocr-chip">✓ Copied</span></div></div></div>
+                </div>
+                <div class="scene-text">
+                    <span class="scene-num">06 <small>/ 11</small></span>
+                    <h2>OCR</h2>
+                    <p>Make scanned PDFs searchable so you can find and copy their text.</p>
+                    <ul class="scene-tags"><li>Free</li><li>No signup</li><li>No watermark</li></ul>
+                    <a class="scene-cta" href="{% url 'ocr_page' %}">Open OCR <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+                </div>
+            </article>
+            <article class="scene" data-i="6" data-num="07" data-enter="slide" data-ac="#3f6fc4" aria-hidden="true" style="--ac:#3f6fc4; --ar:63,111,196;">
+                <div class="scene-art">
+                    <div class="art-frame"><div class="art-box"><div class="dz-art dz-jpg"><span class="jp-img"></span><span class="dz-pg p"></span><span class="dz-badge">PDF</span></div></div></div>
+                </div>
+                <div class="scene-text">
+                    <span class="scene-num">07 <small>/ 11</small></span>
+                    <h2>JPG to PDF</h2>
+                    <p>Turn photos and scans into a single, tidy PDF.</p>
+                    <ul class="scene-tags"><li>Free</li><li>No signup</li><li>No watermark</li></ul>
+                    <a class="scene-cta" href="{% url 'jpg_to_pdf' %}">Open JPG to PDF <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+                </div>
+            </article>
+            <article class="scene" data-i="7" data-num="08" data-enter="zoom" data-ac="#d0568a" aria-hidden="true" style="--ac:#d0568a; --ar:208,86,138;">
+                <div class="scene-art">
+                    <div class="art-frame"><div class="art-box"><div class="dz-art dz-p2j"><span class="dz-pg p"></span><span class="jp-img l"></span><span class="jp-img r"></span><span class="dz-badge">JPG</span></div></div></div>
+                </div>
+                <div class="scene-text">
+                    <span class="scene-num">08 <small>/ 11</small></span>
+                    <h2>PDF to JPG</h2>
+                    <p>Export every page as an image, or a ZIP when there are many.</p>
+                    <ul class="scene-tags"><li>Free</li><li>No signup</li><li>No watermark</li></ul>
+                    <a class="scene-cta" href="{% url 'pdf_to_jpg' %}">Open PDF to JPG <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+                </div>
+            </article>
+            <article class="scene" data-i="8" data-num="09" data-enter="rise" data-ac="#2b579a" aria-hidden="true" style="--ac:#2b579a; --ar:43,87,154;">
+                <div class="scene-art">
+                    <div class="art-frame"><div class="art-box"><div class="dz-art dz-p2w"><span class="dz-pg p"></span><span class="dz-pg w"><i class="caret"></i></span><span class="dz-badge">DOCX</span></div></div></div>
+                </div>
+                <div class="scene-text">
+                    <span class="scene-num">09 <small>/ 11</small></span>
+                    <h2>PDF to Word</h2>
+                    <p>Get an editable .docx from a text-based PDF.</p>
+                    <ul class="scene-tags"><li>Free</li><li>No signup</li><li>No watermark</li></ul>
+                    <a class="scene-cta" href="{% url 'pdf_to_word' %}">Open PDF to Word <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+                </div>
+            </article>
+            <article class="scene" data-i="9" data-num="10" data-enter="flip" data-ac="#3a9a5b" aria-hidden="true" style="--ac:#3a9a5b; --ar:58,154,91;">
+                <div class="scene-art">
+                    <div class="art-frame"><div class="art-box"><div class="dz-art dz-compress"><span class="dz-pg c"></span><span class="ar l">›</span><span class="ar r">‹</span><span class="dz-badge">SMALLER</span></div></div></div>
+                </div>
+                <div class="scene-text">
+                    <span class="scene-num">10 <small>/ 11</small></span>
+                    <h2>Compress PDF</h2>
+                    <p>Shrink a PDF toward the size you need, without guessing quality sliders.</p>
+                    <ul class="scene-tags"><li>Free</li><li>No signup</li><li>No watermark</li></ul>
+                    <a class="scene-cta" href="{% url 'pdf_compress' %}">Open Compress PDF <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+                </div>
+            </article>
+            <article class="scene" data-i="10" data-num="11" data-enter="rotate" data-ac="#c06a2b" aria-hidden="true" style="--ac:#c06a2b; --ar:192,106,43;">
+                <div class="scene-art">
+                    <div class="art-frame"><div class="art-box"><div class="dz-art dz-compress dz-cjpg"><span class="jp-img c"></span><span class="ar l">›</span><span class="ar r">‹</span><span class="dz-badge">SMALLER</span></div></div></div>
+                </div>
+                <div class="scene-text">
+                    <span class="scene-num">11 <small>/ 11</small></span>
+                    <h2>Compress JPG</h2>
+                    <p>Set a target size and get an image as close to it as possible.</p>
+                    <ul class="scene-tags"><li>Free</li><li>No signup</li><li>No watermark</li></ul>
+                    <a class="scene-cta" href="{% url 'jpg_compress' %}">Open Compress JPG <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+                </div>
+            </article>
+        </div>
+        <div class="tour-rail" role="tablist" aria-label="Tools">
+            <button type="button" class="tour-dot" data-go="0" title="PDF Editor" aria-label="Show PDF Editor"></button>
+            <button type="button" class="tour-dot" data-go="1" title="Merge PDF" aria-label="Show Merge PDF"></button>
+            <button type="button" class="tour-dot" data-go="2" title="Delete Pages" aria-label="Show Delete Pages"></button>
+            <button type="button" class="tour-dot" data-go="3" title="Reorder Pages" aria-label="Show Reorder Pages"></button>
+            <button type="button" class="tour-dot" data-go="4" title="Rotate Pages" aria-label="Show Rotate Pages"></button>
+            <button type="button" class="tour-dot" data-go="5" title="OCR" aria-label="Show OCR"></button>
+            <button type="button" class="tour-dot" data-go="6" title="JPG to PDF" aria-label="Show JPG to PDF"></button>
+            <button type="button" class="tour-dot" data-go="7" title="PDF to JPG" aria-label="Show PDF to JPG"></button>
+            <button type="button" class="tour-dot" data-go="8" title="PDF to Word" aria-label="Show PDF to Word"></button>
+            <button type="button" class="tour-dot" data-go="9" title="Compress PDF" aria-label="Show Compress PDF"></button>
+            <button type="button" class="tour-dot" data-go="10" title="Compress JPG" aria-label="Show Compress JPG"></button>
+        </div>
+        <a class="tour-skip" href="#all-tools" data-scroll="all-tools">Skip to all tools ↓</a>
+    </div>
+</section>
+
+<div class="home-wrap" id="all-tools">
+    <div class="stats-band">
+        <div class="hero-stats" id="hero-stats">
+            <div class="stat">
+                <span class="stat-num" data-target="12000" data-suffix="+">0</span>
+                <span class="stat-label">Files processed</span>
+            </div>
+            <div class="stat-sep"></div>
+            <div class="stat">
+                <span class="stat-num" data-target="11" data-suffix="">0</span>
+                <span class="stat-label">Tools available</span>
+            </div>
+            <div class="stat-sep"></div>
+            <div class="stat">
+                <span class="stat-num" data-target="0" data-suffix="">0</span>
+                <span class="stat-label">Signups required</span>
             </div>
         </div>
+    </div>
 
-        <p class="demo-caption">Erase the wrong, type the right — all in your browser.</p>
-        <a class="demo-cta" href="{% url 'editor_page' %}">
-            Try it yourself
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </a>
-    </div> {% endcomment %}
+    <h2 class="all-title">All tools</h2>
+    <p class="all-sub">Pick one and start. No account needed.</p>
 
     {% comment %} <div class="section-label" id="section-share">Share</div>
     <div class="tool-grid">
@@ -328,100 +366,10 @@
 
 <script>
 FF.ready(function () {
-        // ---- Hero showcase (rotating tools) ----
-    const hs = document.getElementById('hs');
-    if (hs) {
-        const slides = [...hs.querySelectorAll('.hs-slide')];
-        const dots = [...hs.querySelectorAll('.hs-dot')];
-        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        let cur = -1;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const clamp = (v, a, b) => Math.max(a, Math.min(v, b));
 
-        if (reduce) hs.classList.add('hs-static');   // autoplay off
-        slides.forEach(s => { s.inert = true; });
-
-        function show(n) {
-            n = (n + slides.length) % slides.length;
-            if (n === cur) return;
-
-            if (cur > -1) {
-                const old = slides[cur];
-                old.classList.remove('is-active');
-                old.classList.add('is-leaving');
-                old.inert = true;
-                clearTimeout(old._t);
-                old._t = setTimeout(() => old.classList.remove('is-leaving'), 900);
-                dots[cur].classList.remove('active');
-                dots[cur].removeAttribute('aria-current');
-            }
-
-            const nxt = slides[n];
-            clearTimeout(nxt._t);
-            nxt.classList.remove('is-leaving');
-            nxt.classList.add('is-active');
-            nxt.inert = false;
-            dots[n].classList.add('active');
-            dots[n].setAttribute('aria-current', 'true');
-            cur = n;
-        }
-
-        // progress bar shesh hole next slide (CSS animation-ই timer)
-        hs.addEventListener('animationend', (e) => {
-            if (e.animationName === 'hsFill' && !reduce) show(cur + 1);
-        });
-
-        dots.forEach((d, i) => d.addEventListener('click', () => show(i)));
-
-        // swipe (mobile) + arrow keys
-        const stage = hs.querySelector('.hs-stage');
-
-
-
-                // 3D parallax: mouse nore gele object ar chip gulo depth onujayi nore
-        if (window.matchMedia('(pointer: fine)').matches && !reduce) {
-            stage.addEventListener('pointermove', (e) => {
-                const r = stage.getBoundingClientRect();
-                hs.style.setProperty('--mx', (((e.clientX - r.left) / r.width) * 2 - 1).toFixed(3));
-                hs.style.setProperty('--my', (((e.clientY - r.top) / r.height) * 2 - 1).toFixed(3));
-            });
-            stage.addEventListener('pointerleave', () => {
-                hs.style.setProperty('--mx', 0);
-                hs.style.setProperty('--my', 0);
-            });
-        }
-
-
-
-
-
-
-
-
-
-
-
-        let sx = null;
-        stage.addEventListener('pointerdown', e => { sx = e.clientX; });
-        stage.addEventListener('pointercancel', () => { sx = null; });
-        stage.addEventListener('pointerup', e => {
-            if (sx === null) return;
-            const dx = e.clientX - sx; sx = null;
-            if (Math.abs(dx) > 45) show(cur + (dx < 0 ? 1 : -1));
-        });
-        hs.addEventListener('keydown', e => {
-            if (e.key === 'ArrowRight') show(cur + 1);
-            if (e.key === 'ArrowLeft') show(cur - 1);
-        });
-
-        // screen er bahire gele / tab hidden hole timer thame
-        if ('IntersectionObserver' in window) {
-            new IntersectionObserver(en => hs.classList.toggle('is-paused', !en[0].isIntersecting),
-                { threshold: 0.2 }).observe(hs);
-        }
-        document.addEventListener('visibilitychange', () => hs.classList.toggle('is-paused', document.hidden));
-
-        // heading reveal sesh hole prothom slide ashe
-        setTimeout(() => show(0), 450);
-    }
+    // ---- Hero: floating icons follow the mouse ----
     const hero = document.getElementById('hero');
     const floaters = document.querySelectorAll('#hero-floaters .floater');
     if (hero && window.matchMedia('(pointer: fine)').matches) {
@@ -442,41 +390,6 @@ FF.ready(function () {
             });
         });
     }
-
-    // ---- Animated counting stats (runs once when scrolled into view) ----
-    const statNums = document.querySelectorAll('.stat-num');
-    if (statNums.length) {
-        const animateCount = (el) => {
-            const target = parseInt(el.dataset.target, 10);
-            const suffix = el.dataset.suffix || '';
-            const duration = 1400;
-            const start = performance.now();
-            const easeOutExpo = t => t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
-
-            function tick(now) {
-                const progress = Math.min((now - start) / duration, 1);
-                const eased = easeOutExpo(progress);
-                const value = Math.round(target * eased);
-                el.textContent = value.toLocaleString() + suffix;
-                if (progress < 1) requestAnimationFrame(tick);
-            }
-            requestAnimationFrame(tick);
-        };
-
-        const statsObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    animateCount(entry.target);
-                    statsObserver.unobserve(entry.target);
-                }
-            });
-        }, { threshold: 0.5 });
-
-        statNums.forEach(el => statsObserver.observe(el));
-    }
-
-    
-    // ---- Floating icons: click to bounce/spin ----
     floaters.forEach(el => {
         el.style.pointerEvents = 'auto';
         el.style.cursor = 'pointer';
@@ -490,30 +403,115 @@ FF.ready(function () {
         });
     });
 
-    // ---- Hero filter buttons: smooth-scroll to section (no page reload) ----
-    const filterBtns = document.querySelectorAll('.filter-btn');
-    filterBtns.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            const target = document.querySelector(btn.getAttribute('href'));
-            if (!target) return;
-            const headerHeight = document.querySelector('.site-header').offsetHeight || 70;
-            const top = target.getBoundingClientRect().top + window.scrollY - headerHeight - 14;
-            window.scrollTo({ top, behavior: 'smooth' });
-        });
-    });
+    // ---- Tour ----
+    const tour = document.getElementById('tour');
+    const scenes = tour ? Array.from(tour.querySelectorAll('.scene')) : [];
+    const dots = tour ? Array.from(tour.querySelectorAll('.tour-dot')) : [];
+    let active = -1;
+    let raf = null;
 
-    const sectionEls = ['section-share', 'section-edit', 'section-convert', 'section-compress']
-        .map(id => document.getElementById(id)).filter(Boolean);
-    if (sectionEls.length) {
-        const sectionObserver = new IntersectionObserver((entries) => {
+    // restart a scene's artwork animations from the beginning
+    function restartArt(scene) {
+        const els = scene.querySelectorAll('.scene-art *');
+        els.forEach(e => { e.style.animation = 'none'; });
+        void scene.offsetWidth;
+        els.forEach(e => { e.style.animation = ''; });
+    }
+
+    function setActive(i) {
+        scenes.forEach((s, k) => {
+            s.classList.toggle('is-active', k === i);
+            s.classList.toggle('is-before', k < i);
+            s.setAttribute('aria-hidden', k === i ? 'false' : 'true');
+        });
+        dots.forEach((d, k) => {
+            d.classList.toggle('is-active', k === i);
+            d.classList.toggle('is-done', k < i);
+        });
+        tour.style.setProperty('--accent', scenes[i].dataset.ac);
+        restartArt(scenes[i]);
+    }
+
+    function update() {
+        raf = null;
+        if (!document.body.contains(hero)) {
+            window.removeEventListener('scroll', onScroll);
+            window.removeEventListener('resize', onScroll);
+            return;
+        }
+        // hero parallax
+        const hp = clamp(window.scrollY / Math.max(1, hero.offsetHeight), 0, 1);
+        hero.style.setProperty('--hp', hp.toFixed(3));
+
+        if (!tour || reduceMotion || !scenes.length) return;
+        const r = tour.getBoundingClientRect();
+        const total = Math.max(1, tour.offsetHeight - window.innerHeight);
+        const p = clamp(-r.top / total, 0, 1);
+        tour.style.setProperty('--p', p.toFixed(4));
+
+        const n = scenes.length;
+        const idx = Math.min(n - 1, Math.floor(p * n));
+        if (idx !== active) { active = idx; setActive(idx); }
+        scenes[idx].style.setProperty('--sp', (p * n - idx).toFixed(3));
+    }
+    function onScroll() { if (!raf) raf = requestAnimationFrame(update); }
+
+    if (tour && reduceMotion) tour.classList.add('no-tour');
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    update();
+
+    // dots jump to a tool
+    dots.forEach((d, i) => d.addEventListener('click', () => {
+        const top = window.scrollY + tour.getBoundingClientRect().top;
+        const total = tour.offsetHeight - window.innerHeight;
+        window.scrollTo({ top: top + ((i + 0.5) / scenes.length) * total, behavior: 'smooth' });
+    }));
+
+    // smooth scroll for the hero button, scroll cue and skip link
+    document.querySelectorAll('[data-scroll]').forEach(a => a.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = document.getElementById(a.dataset.scroll);
+        if (!target) return;
+        const y = window.scrollY + target.getBoundingClientRect().top;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+    }));
+
+    // ---- Animated counting stats (runs once when scrolled into view) ----
+    const statNums = document.querySelectorAll('.stat-num');
+    if (statNums.length) {
+        const animateCount = (el) => {
+            const target = parseInt(el.dataset.target, 10);
+            const suffix = el.dataset.suffix || '';
+            const duration = 1400;
+            const start = performance.now();
+            const easeOutExpo = t => t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+            function tick(now) {
+                const progress = Math.min((now - start) / duration, 1);
+                const value = Math.round(target * easeOutExpo(progress));
+                el.textContent = value.toLocaleString() + suffix;
+                if (progress < 1) requestAnimationFrame(tick);
+            }
+            requestAnimationFrame(tick);
+        };
+        const statsObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
-                    filterBtns.forEach(b => b.classList.toggle('active', b.getAttribute('href') === '#' + entry.target.id));
+                    animateCount(entry.target);
+                    statsObserver.unobserve(entry.target);
                 }
             });
-        }, { rootMargin: '-30% 0px -60% 0px', threshold: 0 });
-        sectionEls.forEach(el => sectionObserver.observe(el));
+        }, { threshold: 0.5 });
+        statNums.forEach(el => statsObserver.observe(el));
+    }
+
+    // ---- Card artwork (editor / OCR cards): pause when off-screen ----
+    const artEls = document.querySelectorAll('.tool-card .fx-art, .tool-card .ocr-art');
+    if (artEls.length && 'IntersectionObserver' in window) {
+        const artObserver = new IntersectionObserver((entries) => {
+            entries.forEach(en => en.target.classList.toggle('is-paused', !en.isIntersecting));
+        }, { threshold: 0.1 });
+        artEls.forEach(el => artObserver.observe(el));
     }
 });
 </script>
