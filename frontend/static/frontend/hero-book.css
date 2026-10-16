@@ -1,0 +1,172 @@
+/* Hero showcase as an open book: each tool turns like a page. Load after style.css; rules are scoped to .hs-book. */
+
+/* Give the book room: wider stage, slightly smaller headline */
+.hero2 { grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr); }
+.hero2 h1 { font-size: clamp(34px, 4.6vw, 50px); }
+@media (max-width: 900px) { .hero2 { grid-template-columns: 1fr; } }
+
+/* ---------- Pages ---------- */
+.hs-book .hs-stage { overflow: hidden; }
+
+.bk-base-left, .bk-base-right, .bk-leaf {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 50%;
+}
+.bk-base-left  { left: 0;   z-index: 1; }
+.bk-base-right { left: 50%; z-index: 1; }
+
+.bk-base-left, .bk-base-right, .bk-face {
+    background:
+        radial-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1.4px) 0 0 / 18px 18px,
+        linear-gradient(180deg, #232738, #1b1e2b);
+}
+
+/* A leaf is hinged on the spine; JS animates its rotateY */
+.bk-leaf {
+    left: 50%;
+    transform-origin: 0 50%;
+    transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
+    transform: perspective(1800px) rotateY(0deg);
+    will-change: transform;
+}
+.bk-face {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+.bk-back { transform: rotateY(180deg); }
+.bk-front { box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.07); }
+.bk-back, .bk-base-left { box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.07); }
+
+/* Gutter shading, darker toward the spine */
+.bk-front::after, .bk-base-right::after,
+.bk-back::after,  .bk-base-left::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    pointer-events: none;
+}
+.bk-front::after, .bk-base-right::after { background: linear-gradient(90deg, rgba(0, 0, 0, 0.4), transparent 24%); }
+.bk-back::after,  .bk-base-left::after  { background: linear-gradient(270deg, rgba(0, 0, 0, 0.4), transparent 24%); }
+
+/* Shading that the turning page casts (opacity animated from JS) */
+.bk-sh {
+    position: absolute;
+    inset: 0;
+    z-index: 7;
+    opacity: 0;
+    pointer-events: none;
+}
+.bk-front .bk-sh { background: linear-gradient(270deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.8)); }
+.bk-back  .bk-sh { background: linear-gradient(90deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.8)); }
+
+.bk-shade-r, .bk-shade-l {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 50%;
+    z-index: 150;
+    opacity: 0;
+    pointer-events: none;
+}
+.bk-shade-r { left: 50%; background: linear-gradient(90deg, rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.25) 55%, transparent); }
+.bk-shade-l { left: 0;   background: linear-gradient(270deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.2) 55%, transparent); }
+
+.bk-spine {
+    position: absolute;
+    left: 50%; top: 0; bottom: 0;
+    width: 28px;
+    margin-left: -14px;
+    z-index: 300;
+    pointer-events: none;
+    background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.6) 50%, transparent);
+}
+.bk-spine::after {
+    content: '';
+    position: absolute;
+    left: 50%; top: 0; bottom: 0;
+    width: 1px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* ---------- Left page: the tool's caption ---------- */
+.bk-cap {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 34px 26px 34px 34px;
+}
+.bk-cap::before {                         /* bookmark ribbon */
+    content: '';
+    position: absolute;
+    top: 0; left: 30px;
+    width: 16px; height: 54px;
+    background: var(--accent);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%);
+}
+.bk-num {
+    margin-bottom: 14px;
+    font: 500 11px 'JetBrains Mono', monospace;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+}
+.bk-cap h3 {
+    margin: 0 0 10px;
+    font: 700 clamp(26px, 2.6vw, 34px) / 1.1 'Space Grotesk', sans-serif;
+    letter-spacing: -0.02em;
+}
+.bk-cap p {
+    margin: 0 0 18px;
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--muted);
+}
+.bk-cap .hs-open { align-self: flex-start; }
+
+/* ---------- Right page: the old slide, without its enter/exit transitions ---------- */
+.hs-book .hs-slide .hs-art,
+.hs-book .hs-slide.is-active .hs-art,
+.hs-book .hs-slide.is-leaving .hs-art {
+    opacity: 1;
+    transform: translateZ(0) rotateX(9deg) rotateY(-18deg);
+    transition: none;
+}
+.hs-book .hs-slide .hs-word,
+.hs-book .hs-slide.is-active .hs-word,
+.hs-book .hs-slide.is-leaving .hs-word {
+    opacity: 1;
+    transform: none;
+    font-size: clamp(64px, 7.4vw, 104px);
+    transition: translate 0.3s ease-out;
+}
+.hs-book .hs-slide .hs-cap,
+.hs-book .hs-slide.is-active .hs-cap,
+.hs-book .hs-slide.is-leaving .hs-cap {
+    opacity: 1;
+    transform: none;
+    transition: none;
+}
+.hs-book .sv-chip.c1 { right: -26px; }
+.hs-book .sv-chip.c2 { left: -26px; }
+
+/* Two pages: the caption lives on the left page, so hide the one on the slide */
+@media (min-width: 561px) {
+    .hs-book .hs-cap { display: none; }
+}
+
+/* Phones: a single page that turns around its left edge */
+@media (max-width: 560px) {
+    .bk-base-left, .bk-back, .bk-spine, .bk-shade-l { display: none; }
+    .bk-base-right, .bk-leaf, .bk-shade-r { left: 0; width: 100%; }
+    .hs-book .hs-slide .hs-word,
+    .hs-book .hs-slide.is-active .hs-word,
+    .hs-book .hs-slide.is-leaving .hs-word { font-size: clamp(88px, 12vw, 150px); }
+    .hs-book .sv-chip.c1 { right: -34px; }
+    .hs-book .sv-chip.c2 { left: -34px; }
+}

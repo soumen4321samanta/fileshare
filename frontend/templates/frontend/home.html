@@ -22,57 +22,77 @@
             </div>
         </div>
 
-        <div class="hs" id="hs" role="region" aria-roledescription="carousel" aria-label="Featured tools">
+        {# The tools sit in an open book: each leaf's front is a tool, its back is the next tool's caption #}
+        <div class="hs hs-book" id="hs" role="region" aria-roledescription="carousel" aria-label="Featured tools">
             <div class="hs-stage">
+                <div class="bk-base-right"></div>
+                <div class="bk-base-left">
+                    <div class="bk-cap" style="--accent:#cf4520;--on:#fff"><span class="bk-num">01 / 05</span><h3>PDF Editor</h3><p>Erase old text and type new text anywhere on the page.</p><a class="hs-open" href="{% url 'editor_page' %}">Open PDF Editor</a></div>
+                </div>
 
-                <!-- 1. PDF Editor -->
-                <article class="hs-slide" style="--accent:#cf4520;--on:#fff" aria-label="PDF Editor">
-                    <div class="hs-glow"></div>
-                    <div class="hs-word" aria-hidden="true">edit</div>
-                    <div class="hs-art">
-                        <div class="hs-float">
+                <div class="bk-leaf" data-i="0" style="z-index:50">
+                    <div class="bk-face bk-front">
+                        <article class="hs-slide" style="--accent:#cf4520;--on:#fff" aria-label="PDF Editor">
+                            <div class="hs-glow"></div>
+                            <div class="hs-word" aria-hidden="true">edit</div>
+                            <div class="hs-art">
+                                <div class="hs-float">
                             <div class="sv-paper">
                                 <div class="sv-sel"><span class="sv-typed">Deadline: 24 Oct</span></div>
                             </div>
                             <span class="sv-chip hot c1">🧽 Erase</span>
                             <span class="sv-chip c2">Aa Add text</span>
                         </div>
-                        <div class="hs-ground"></div>
+                                <div class="hs-ground"></div>
+                            </div>
+                            <div class="hs-cap">
+                                <h3>PDF Editor</h3>
+                                <p>Erase old text and type new text anywhere on the page.</p>
+                                <a class="hs-open" href="{% url 'editor_page' %}">Open PDF Editor</a>
+                            </div>
+                        </article>
+                        <i class="bk-sh"></i>
                     </div>
-                    <div class="hs-cap">
-                        <h3>PDF Editor</h3>
-                        <p>Erase old text and type new text anywhere on the page.</p>
-                        <a class="hs-open" href="{% url 'editor_page' %}">Open PDF Editor</a>
+                    <div class="bk-face bk-back">
+                        <div class="bk-cap" style="--accent:#4fae8a;--on:#0d1117"><span class="bk-num">02 / 05</span><h3>Merge PDF</h3><p>Combine several PDFs into one, in the order you want.</p><a class="hs-open" href="{% url 'merge_pdf' %}">Open Merge PDF</a></div>
+                        <i class="bk-sh"></i>
                     </div>
-                </article>
-
-                <!-- 2. Merge -->
-                <article class="hs-slide" style="--accent:#4fae8a;--on:#0d1117" aria-label="Merge PDF">
-                    <div class="hs-glow"></div>
-                    <div class="hs-word" aria-hidden="true">merge</div>
-                    <div class="hs-art">
-                        <div class="hs-float sv-merge">
+                </div>
+                <div class="bk-leaf" data-i="1" style="z-index:49">
+                    <div class="bk-face bk-front">
+                        <article class="hs-slide" style="--accent:#4fae8a;--on:#0d1117" aria-label="Merge PDF">
+                            <div class="hs-glow"></div>
+                            <div class="hs-word" aria-hidden="true">merge</div>
+                            <div class="hs-art">
+                                <div class="hs-float sv-merge">
                             <div class="sv-paper mp1" style="--accent:#8890a3"></div>
                             <div class="sv-paper mp2"></div>
                             <span class="sv-join">2→1</span>
                             <span class="sv-chip hot c1">2 files → 1</span>
                             <span class="sv-chip c2">Drag to reorder</span>
                         </div>
-                        <div class="hs-ground"></div>
+                                <div class="hs-ground"></div>
+                            </div>
+                            <div class="hs-cap">
+                                <h3>Merge PDF</h3>
+                                <p>Combine several PDFs into one, in the order you want.</p>
+                                <a class="hs-open" href="{% url 'merge_pdf' %}">Open Merge PDF</a>
+                            </div>
+                        </article>
+                        <i class="bk-sh"></i>
                     </div>
-                    <div class="hs-cap">
-                        <h3>Merge PDF</h3>
-                        <p>Combine several PDFs into one, in the order you want.</p>
-                        <a class="hs-open" href="{% url 'merge_pdf' %}">Open Merge PDF</a>
+                    <div class="bk-face bk-back">
+                        <div class="bk-cap" style="--accent:#e0a43a;--on:#0d1117"><span class="bk-num">03 / 05</span><h3>Compress PDF</h3><p>Shrink a PDF to the exact size you need.</p><a class="hs-open" href="{% url 'pdf_compress' %}">Open Compress PDF</a></div>
+                        <i class="bk-sh"></i>
                     </div>
-                </article>
-
-                <!-- 3. Compress -->
-                <article class="hs-slide" style="--accent:#e0a43a;--on:#0d1117" aria-label="Compress PDF">
-                    <div class="hs-glow"></div>
-                    <div class="hs-word" aria-hidden="true">shrink</div>
-                    <div class="hs-art">
-                        <div class="hs-float sv-compress">
+                </div>
+                <div class="bk-leaf" data-i="2" style="z-index:48">
+                    <div class="bk-face bk-front">
+                        <article class="hs-slide" style="--accent:#e0a43a;--on:#0d1117" aria-label="Compress PDF">
+                            <div class="hs-glow"></div>
+                            <div class="hs-word" aria-hidden="true">shrink</div>
+                            <div class="hs-art">
+                                <div class="hs-float sv-compress">
                             <div class="sv-paper">
                                 <div class="sv-meter">
                                     <span>8.4 MB → 1.2 MB</span>
@@ -82,53 +102,78 @@
                             <span class="sv-chip hot c1">−86%</span>
                             <span class="sv-chip c2">Target: 1 MB</span>
                         </div>
-                        <div class="hs-ground"></div>
+                                <div class="hs-ground"></div>
+                            </div>
+                            <div class="hs-cap">
+                                <h3>Compress PDF</h3>
+                                <p>Shrink a PDF to the exact size you need.</p>
+                                <a class="hs-open" href="{% url 'pdf_compress' %}">Open Compress PDF</a>
+                            </div>
+                        </article>
+                        <i class="bk-sh"></i>
                     </div>
-                    <div class="hs-cap">
-                        <h3>Compress PDF</h3>
-                        <p>Shrink a PDF to the exact size you need.</p>
-                        <a class="hs-open" href="{% url 'pdf_compress' %}">Open Compress PDF</a>
+                    <div class="bk-face bk-back">
+                        <div class="bk-cap" style="--accent:#5b8def;--on:#0d1117"><span class="bk-num">04 / 05</span><h3>OCR</h3><p>Turn scanned pages into searchable, copyable text.</p><a class="hs-open" href="{% url 'ocr_page' %}">Open OCR</a></div>
+                        <i class="bk-sh"></i>
                     </div>
-                </article>
-
-                <!-- 4. OCR -->
-                <article class="hs-slide" style="--accent:#5b8def;--on:#0d1117" aria-label="OCR">
-                    <div class="hs-glow"></div>
-                    <div class="hs-word" aria-hidden="true">scan</div>
-                    <div class="hs-art">
-                        <div class="hs-float sv-ocr">
+                </div>
+                <div class="bk-leaf" data-i="3" style="z-index:47">
+                    <div class="bk-face bk-front">
+                        <article class="hs-slide" style="--accent:#5b8def;--on:#0d1117" aria-label="OCR">
+                            <div class="hs-glow"></div>
+                            <div class="hs-word" aria-hidden="true">scan</div>
+                            <div class="hs-art">
+                                <div class="hs-float sv-ocr">
                             <div class="sv-paper"><span class="sv-beam"></span></div>
                             <span class="sv-chip c1">Searchable</span>
                             <span class="sv-chip hot c2">✓ Copied</span>
                         </div>
-                        <div class="hs-ground"></div>
+                                <div class="hs-ground"></div>
+                            </div>
+                            <div class="hs-cap">
+                                <h3>OCR</h3>
+                                <p>Turn scanned pages into searchable, copyable text.</p>
+                                <a class="hs-open" href="{% url 'ocr_page' %}">Open OCR</a>
+                            </div>
+                        </article>
+                        <i class="bk-sh"></i>
                     </div>
-                    <div class="hs-cap">
-                        <h3>OCR</h3>
-                        <p>Turn scanned pages into searchable, copyable text.</p>
-                        <a class="hs-open" href="{% url 'ocr_page' %}">Open OCR</a>
+                    <div class="bk-face bk-back">
+                        <div class="bk-cap" style="--accent:#9b7bf0;--on:#0d1117"><span class="bk-num">05 / 05</span><h3>JPG to PDF</h3><p>Turn photos and scans into a single PDF.</p><a class="hs-open" href="{% url 'jpg_to_pdf' %}">Open JPG to PDF</a></div>
+                        <i class="bk-sh"></i>
                     </div>
-                </article>
-
-                <!-- 5. JPG to PDF -->
-                <article class="hs-slide" style="--accent:#9b7bf0;--on:#0d1117" aria-label="JPG to PDF">
-                    <div class="hs-glow"></div>
-                    <div class="hs-word" aria-hidden="true">images</div>
-                    <div class="hs-art">
-                        <div class="hs-float sv-jpg">
+                </div>
+                <div class="bk-leaf" data-i="4" style="z-index:46">
+                    <div class="bk-face bk-front">
+                        <article class="hs-slide" style="--accent:#9b7bf0;--on:#0d1117" aria-label="JPG to PDF">
+                            <div class="hs-glow"></div>
+                            <div class="hs-word" aria-hidden="true">images</div>
+                            <div class="hs-art">
+                                <div class="hs-float sv-jpg">
                             <div class="sv-paper"></div>
                             <i class="sv-img i1"></i><i class="sv-img i2"></i><i class="sv-img i3"></i>
                             <span class="sv-chip hot c1">3 images → PDF</span>
                             <span class="sv-chip c2">Any order</span>
                         </div>
-                        <div class="hs-ground"></div>
+                                <div class="hs-ground"></div>
+                            </div>
+                            <div class="hs-cap">
+                                <h3>JPG to PDF</h3>
+                                <p>Turn photos and scans into a single PDF.</p>
+                                <a class="hs-open" href="{% url 'jpg_to_pdf' %}">Open JPG to PDF</a>
+                            </div>
+                        </article>
+                        <i class="bk-sh"></i>
                     </div>
-                    <div class="hs-cap">
-                        <h3>JPG to PDF</h3>
-                        <p>Turn photos and scans into a single PDF.</p>
-                        <a class="hs-open" href="{% url 'jpg_to_pdf' %}">Open JPG to PDF</a>
+                    <div class="bk-face bk-back">
+                        <div class="bk-cap" style="--accent:#cf4520;--on:#fff"><span class="bk-num">01 / 05</span><h3>PDF Editor</h3><p>Erase old text and type new text anywhere on the page.</p><a class="hs-open" href="{% url 'editor_page' %}">Open PDF Editor</a></div>
+                        <i class="bk-sh"></i>
                     </div>
-                </article>
+                </div>
+
+                <i class="bk-shade-r"></i>
+                <i class="bk-shade-l"></i>
+                <i class="bk-spine"></i>
             </div>
 
             <div class="hs-dots">
@@ -139,65 +184,7 @@
                 <button class="hs-dot" type="button" aria-label="JPG to PDF"><span class="bar"><i class="fill"></i></span><span class="lbl">Images</span></button>
             </div>
         </div>
-
-        {% comment %} <div class="hero-filters" id="hero-filters">
-            <a href="#section-edit" class="filter-btn">Edit PDFs</a>
-            <a href="#section-convert" class="filter-btn">Convert</a>
-            <a href="#section-compress" class="filter-btn">Compress</a>
-        </div> {% endcomment %}
     </section>
-
-    {# ===== LIVE DEMO: নিজে নিজে চলা editor (শুধু CSS animation, কোনো আসল ফাইল লাগে না) ===== #}
-    {% comment %} <div class="demo-wrap" id="demo">
-        <div class="demo-window" role="img" aria-label="Animated demo: erasing an old date in a PDF and typing a new one">
-            <div class="demo-bar" aria-hidden="true">
-                <span class="demo-dots"><i></i><i></i><i></i></span>
-                <span class="demo-title">report.pdf — PDF Editor</span>
-                <span class="demo-live"><i></i> LIVE DEMO</span>
-            </div>
-
-            <div class="demo-tools" aria-hidden="true">
-                <span class="demo-pill demo-pill-erase">🧽 Erase</span>
-                <span class="demo-pill demo-pill-text">🔤 Add Text</span>
-            </div>
-
-            <div class="demo-scale" aria-hidden="true">
-                <div class="demo-stage">
-                    <div class="demo-paper">
-                        <div class="demo-doc-title">Project Report</div>
-                        <div class="demo-line" style="top:56px; width:300px;"></div>
-                        <div class="demo-line" style="top:74px; width:240px;"></div>
-                        <div class="demo-line" style="top:92px; width:270px;"></div>
-                        <div class="demo-orig">Deadline: 10 Sept</div>
-                        <div class="demo-line" style="top:166px; width:310px;"></div>
-                        <div class="demo-line" style="top:184px; width:250px;"></div>
-                        <div class="demo-line" style="top:202px; width:290px;"></div>
-                        <div class="demo-line" style="top:220px; width:180px;"></div>
-                    </div>
-
-                    <div class="demo-layer">
-                        <div class="demo-erase">
-                            <i class="demo-h-dot d1"></i><i class="demo-h-dot d2"></i>
-                            <i class="demo-h-dot d3"></i><i class="demo-h-dot d4"></i>
-                        </div>
-                        <div class="demo-typed">
-                            <span class="demo-typed-text">Deadline: 24 Oct</span>
-                            <i class="demo-h-dot"></i>
-                        </div>
-                    </div>
-
-                    <div class="demo-ripple"></div>
-                    <svg class="demo-cursor" width="18" height="18" viewBox="0 0 24 24"><path d="M3 2l7.5 19 2.6-7.9L21 10.5 3 2z" fill="#ffffff" stroke="#12131a" stroke-width="1.5" stroke-linejoin="round"/></svg>
-                </div>
-            </div>
-        </div>
-
-        <p class="demo-caption">Erase the wrong, type the right — all in your browser.</p>
-        <a class="demo-cta" href="{% url 'editor_page' %}">
-            Try it yourself
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </a>
-    </div> {% endcomment %}
 
     {% comment %} <div class="section-label" id="section-share">Share</div>
     <div class="tool-grid">
@@ -328,55 +315,134 @@
 
 <script>
 FF.ready(function () {
-        // ---- Hero showcase (rotating tools) ----
+    // ---- Hero: tools turn like the pages of a book ----
     const hs = document.getElementById('hs');
     if (hs) {
-        const slides = [...hs.querySelectorAll('.hs-slide')];
+        const stage = hs.querySelector('.hs-stage');
+        const leaves = [...hs.querySelectorAll('.bk-leaf')];
+        const slides = leaves.map(l => l.querySelector('.hs-slide'));
+        const fronts = leaves.map(l => l.querySelector('.bk-front'));
+        const backs = leaves.map(l => l.querySelector('.bk-back'));
+        const baseLeft = hs.querySelector('.bk-base-left');
+        const shadeR = hs.querySelector('.bk-shade-r');
+        const shadeL = hs.querySelector('.bk-shade-l');
         const dots = [...hs.querySelectorAll('.hs-dot')];
         const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        let cur = -1;
+        const n = leaves.length;
+
+        const TURN = (deg) => `perspective(1800px) rotateY(${deg}deg)`;
+        const EASE = 'cubic-bezier(0.5, 0.05, 0.25, 1)';
+        const side = leaves.map(() => 'R');   // R = on the right (unturned), L = turned onto the left
+        let cur = 0;                          // tool shown on the right page
+        let target = 0;
+        let busy = false;
 
         if (reduce) hs.classList.add('hs-static');   // autoplay off
-        slides.forEach(s => { s.inert = true; });
 
-        function show(n) {
-            n = (n + slides.length) % slides.length;
-            if (n === cur) return;
-
-            if (cur > -1) {
-                const old = slides[cur];
-                old.classList.remove('is-active');
-                old.classList.add('is-leaving');
-                old.inert = true;
-                clearTimeout(old._t);
-                old._t = setTimeout(() => old.classList.remove('is-leaving'), 900);
-                dots[cur].classList.remove('active');
-                dots[cur].removeAttribute('aria-current');
-            }
-
-            const nxt = slides[n];
-            clearTimeout(nxt._t);
-            nxt.classList.remove('is-leaving');
-            nxt.classList.add('is-active');
-            nxt.inert = false;
-            dots[n].classList.add('active');
-            dots[n].setAttribute('aria-current', 'true');
-            cur = n;
+        // z-order: right pile counts down from the current page, left pile from the last turned page
+        function applyZ() {
+            leaves.forEach((leaf, i) => {
+                leaf.style.zIndex = side[i] === 'R'
+                    ? 50 - ((i - cur + n) % n)
+                    : 100 - ((cur - 1 - i + n) % n);
+            });
+        }
+        function applyInert() {
+            const leftTop = (cur - 1 + n) % n;
+            leaves.forEach((leaf, i) => {
+                fronts[i].inert = !(side[i] === 'R' && i === cur);
+                backs[i].inert = !(side[i] === 'L' && i === leftTop);
+            });
+            baseLeft.inert = side[leftTop] === 'L';    // the base page only shows before the first turn
+        }
+        function setSide(i, s) {
+            side[i] = s;
+            leaves[i].style.transform = TURN(s === 'L' ? -180 : 0);
+        }
+        function setDot(i) {
+            dots.forEach((d, k) => {
+                d.classList.toggle('active', k === i);
+                if (k === i) d.setAttribute('aria-current', 'true'); else d.removeAttribute('aria-current');
+            });
         }
 
-        // progress bar shesh hole next slide (CSS animation-ই timer)
+        // keyframes [offset, value]; reversed in time for a backward turn
+        function kf(arr, back) {
+            const a = back ? arr.map(([o, v]) => [1 - o, v]).reverse() : arr;
+            return a.map(([o, v]) => ({ offset: o, opacity: v }));
+        }
+
+        function turn(leaf, back, dur) {
+            const i = leaves.indexOf(leaf);
+            const from = back ? -180 : 0, to = back ? 0 : -180;
+            const opts = (d) => ({ duration: d, easing: 'linear' });
+            const anims = [
+                leaf.animate([{ transform: TURN(from) }, { transform: TURN(to) }], { duration: dur, easing: EASE, fill: 'forwards' }),
+                fronts[i].querySelector('.bk-sh').animate(kf([[0, 0], [0.5, 0.55], [1, 0.55]], back), opts(dur)),
+                backs[i].querySelector('.bk-sh').animate(kf([[0, 0.6], [0.5, 0.5], [1, 0]], back), opts(dur)),
+                shadeR.animate(kf([[0, 0], [0.25, 0.5], [0.5, 0.7], [0.8, 0.3], [1, 0]], back), opts(dur)),
+                shadeL.animate(kf([[0, 0], [0.5, 0], [0.8, 0.55], [1, 0]], back), opts(dur)),
+            ];
+            return anims[0].finished.then(() => {
+                leaf.style.transform = TURN(to);
+                anims.forEach(a => a.cancel());
+            });
+        }
+
+        // one page forward (back = false) or one page back (back = true)
+        async function step(back, dur) {
+            const moving = back ? (cur - 1 + n) % n : cur;       // the leaf that turns
+            const incoming = back ? moving : (cur + 1) % n;      // the tool that becomes current
+            const outgoing = back ? cur : moving;
+
+            if (!back) {
+                if (side[incoming] === 'L') setSide(incoming, 'R');       // bring it under the turning page, unseen
+            } else {
+                const under = (moving - 1 + n) % n;                       // needs to be waiting on the left
+                if (side[moving] === 'R') setSide(moving, 'L');
+                if (side[under] === 'R') setSide(under, 'L');
+            }
+            applyZ();
+
+            slides[incoming].classList.remove('is-leaving');
+            slides[incoming].classList.add('is-active');
+            slides[outgoing].classList.remove('is-active');
+            slides[outgoing].classList.add('is-leaving');
+            leaves[moving].style.zIndex = 200;
+
+            if (dur > 0) await turn(leaves[moving], back, dur);
+            else leaves[moving].style.transform = TURN(back ? 0 : -180);
+
+            setSide(moving, back ? 'R' : 'L');
+            cur = incoming;
+            applyZ();
+            applyInert();
+            slides[outgoing].classList.remove('is-leaving');
+        }
+
+        // go to tool j by the shortest way, turning one page at a time
+        async function goTo(j) {
+            target = ((j % n) + n) % n;
+            if (busy) return;
+            busy = true;
+            if (cur !== target) dots.forEach(d => d.classList.remove('active'));
+            while (cur !== target) {
+                const fwd = (target - cur + n) % n;
+                const back = n - fwd;
+                const dur = reduce ? 0 : (Math.min(fwd, back) > 1 ? 520 : 1100);
+                await step(fwd > back, dur);
+            }
+            busy = false;
+            setDot(cur);
+        }
+
+        // when a dot's progress bar fills, turn to the next page
         hs.addEventListener('animationend', (e) => {
-            if (e.animationName === 'hsFill' && !reduce) show(cur + 1);
+            if (e.animationName === 'hsFill' && !reduce) goTo(cur + 1);
         });
+        dots.forEach((d, i) => d.addEventListener('click', () => goTo(i)));
 
-        dots.forEach((d, i) => d.addEventListener('click', () => show(i)));
-
-        // swipe (mobile) + arrow keys
-        const stage = hs.querySelector('.hs-stage');
-
-
-
-                // 3D parallax: mouse nore gele object ar chip gulo depth onujayi nore
+        // mouse parallax for the 3D objects
         if (window.matchMedia('(pointer: fine)').matches && !reduce) {
             stage.addEventListener('pointermove', (e) => {
                 const r = stage.getBoundingClientRect();
@@ -389,39 +455,33 @@ FF.ready(function () {
             });
         }
 
-
-
-
-
-
-
-
-
-
-
+        // swipe (mobile) + arrow keys
         let sx = null;
         stage.addEventListener('pointerdown', e => { sx = e.clientX; });
         stage.addEventListener('pointercancel', () => { sx = null; });
         stage.addEventListener('pointerup', e => {
             if (sx === null) return;
             const dx = e.clientX - sx; sx = null;
-            if (Math.abs(dx) > 45) show(cur + (dx < 0 ? 1 : -1));
+            if (Math.abs(dx) > 45) goTo(cur + (dx < 0 ? 1 : -1));
         });
         hs.addEventListener('keydown', e => {
-            if (e.key === 'ArrowRight') show(cur + 1);
-            if (e.key === 'ArrowLeft') show(cur - 1);
+            if (e.key === 'ArrowRight') goTo(cur + 1);
+            if (e.key === 'ArrowLeft') goTo(cur - 1);
         });
 
-        // screen er bahire gele / tab hidden hole timer thame
+        // pause the timer off-screen or when the tab is hidden
         if ('IntersectionObserver' in window) {
             new IntersectionObserver(en => hs.classList.toggle('is-paused', !en[0].isIntersecting),
                 { threshold: 0.2 }).observe(hs);
         }
         document.addEventListener('visibilitychange', () => hs.classList.toggle('is-paused', document.hidden));
 
-        // heading reveal sesh hole prothom slide ashe
-        setTimeout(() => show(0), 450);
+        // start once the heading reveal is done
+        applyZ();
+        applyInert();
+        setTimeout(() => { slides[0].classList.add('is-active'); setDot(0); }, 450);
     }
+
     const hero = document.getElementById('hero');
     const floaters = document.querySelectorAll('#hero-floaters .floater');
     if (hero && window.matchMedia('(pointer: fine)').matches) {
@@ -452,17 +512,14 @@ FF.ready(function () {
             const duration = 1400;
             const start = performance.now();
             const easeOutExpo = t => t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
-
             function tick(now) {
                 const progress = Math.min((now - start) / duration, 1);
-                const eased = easeOutExpo(progress);
-                const value = Math.round(target * eased);
+                const value = Math.round(target * easeOutExpo(progress));
                 el.textContent = value.toLocaleString() + suffix;
                 if (progress < 1) requestAnimationFrame(tick);
             }
             requestAnimationFrame(tick);
         };
-
         const statsObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
@@ -471,11 +528,18 @@ FF.ready(function () {
                 }
             });
         }, { threshold: 0.5 });
-
         statNums.forEach(el => statsObserver.observe(el));
     }
 
-    
+    // ---- Card artwork (editor / OCR cards): pause when off-screen ----
+    const artEls = document.querySelectorAll('.tool-card .fx-art, .tool-card .ocr-art');
+    if (artEls.length && 'IntersectionObserver' in window) {
+        const artObserver = new IntersectionObserver((entries) => {
+            entries.forEach(en => en.target.classList.toggle('is-paused', !en.isIntersecting));
+        }, { threshold: 0.1 });
+        artEls.forEach(el => artObserver.observe(el));
+    }
+
     // ---- Floating icons: click to bounce/spin ----
     floaters.forEach(el => {
         el.style.pointerEvents = 'auto';
@@ -489,32 +553,6 @@ FF.ready(function () {
             if (e.animationName === 'floaterPop') el.classList.remove('floater-pop');
         });
     });
-
-    // ---- Hero filter buttons: smooth-scroll to section (no page reload) ----
-    const filterBtns = document.querySelectorAll('.filter-btn');
-    filterBtns.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            const target = document.querySelector(btn.getAttribute('href'));
-            if (!target) return;
-            const headerHeight = document.querySelector('.site-header').offsetHeight || 70;
-            const top = target.getBoundingClientRect().top + window.scrollY - headerHeight - 14;
-            window.scrollTo({ top, behavior: 'smooth' });
-        });
-    });
-
-    const sectionEls = ['section-share', 'section-edit', 'section-convert', 'section-compress']
-        .map(id => document.getElementById(id)).filter(Boolean);
-    if (sectionEls.length) {
-        const sectionObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    filterBtns.forEach(b => b.classList.toggle('active', b.getAttribute('href') === '#' + entry.target.id));
-                }
-            });
-        }, { rootMargin: '-30% 0px -60% 0px', threshold: 0 });
-        sectionEls.forEach(el => sectionObserver.observe(el));
-    }
 });
 </script>
 {% endblock %}
